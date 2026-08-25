@@ -76,7 +76,7 @@ venv\Scripts\activate
 pip install -r requirements.txt
 python run.py
 ```
-*API is accessible at `http://127.0.0.1:5000` with interactive Swagger docs at `http://127.0.0.1:5000/docs`.*
+*API is accessible at `https://mlm-lkod.onrender.com` with interactive Swagger docs at `https://mlm-lkod.onrender.com/docs`.*
 
 ### 2. Start React Frontend (Port 5173)
 ```bash
