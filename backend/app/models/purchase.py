@@ -12,6 +12,8 @@ class Purchase(Base):
     package_id = Column(Integer, ForeignKey('packages.id', ondelete='RESTRICT'), nullable=False)
     
     amount = Column(Float, nullable=False)          # ₹35,000
+    product_value = Column(Float, default=30000.0, nullable=False)   # ₹30,000
+    gst_amount = Column(Float, default=5000.0, nullable=False)      # ₹5,000
     bv = Column(Float, nullable=False)              # 30,000 BV
     status = Column(String(20), default='COMPLETED', nullable=False)
     idempotency_key = Column(String(64), unique=True, nullable=True, index=True)
@@ -28,6 +30,8 @@ class Purchase(Base):
             'package_id': self.package_id,
             'package_name': self.package.name if self.package else None,
             'amount': self.amount,
+            'product_value': self.product_value,
+            'gst_amount': self.gst_amount,
             'bv': self.bv,
             'status': self.status,
             'created_at': self.created_at.isoformat() if self.created_at else None
