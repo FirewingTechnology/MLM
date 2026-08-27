@@ -1,11 +1,19 @@
 import axios from 'axios';
 
 const getBaseURL = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
+    let formatted = envUrl.trim();
+    if (!formatted.startsWith('http://') && !formatted.startsWith('https://') && !formatted.startsWith('/')) {
+      formatted = `https://${formatted}`;
+    }
+    if (!formatted.endsWith('/api') && !formatted.includes('/api/')) {
+      formatted = `${formatted.replace(/\/$/, '')}/api`;
+    }
+    return formatted;
   }
   return import.meta.env.PROD
-    ? 'https://mlm-lkod.onrender.com/api'
+    ? '/api'
     : '/api';
 };
 

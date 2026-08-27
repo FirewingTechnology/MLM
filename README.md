@@ -76,7 +76,7 @@ venv\Scripts\activate
 pip install -r requirements.txt
 python run.py
 ```
-*API is accessible at `https://mlm-lkod.onrender.com` with interactive Swagger docs at `https://mlm-lkod.onrender.com/docs`.*
+*API is accessible at `http://127.0.0.1:5000` with interactive Swagger docs at `http://127.0.0.1:5000/docs`.*
 
 ### 2. Start React Frontend (Port 5173)
 ```bash
@@ -90,3 +90,75 @@ npm run dev
 ```bash
 $env:PYTHONPATH="backend"; backend\venv\Scripts\pytest backend/tests
 ```
+
+---
+
+## 6. 100% Free Deployment on Render (render.com)
+
+You can deploy the entire stack for **₹0 / $0 (100% Free)** on Render using individual free services (No Blueprint / No Credit Card required):
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1. Backend Web Service  (Free Tier - Python FastAPI)        │
+│ 2. Frontend Static Site (Free Forever - React / Vite)       │
+│ 3. Database: Built-in SQLite (Auto-seeds demo data on boot) │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Step 1: Deploy Backend (FastAPI Web Service - FREE)
+
+1. Go to [dashboard.render.com](https://dashboard.render.com) and click **New +** → **Web Service**.
+2. Connect your Git repository (GitHub / GitLab).
+3. Configure the following settings:
+   - **Name**: `mlm-backend` *(or any name you choose)*
+   - **Language**: `Python 3`
+   - **Root Directory**: `backend`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **Instance Type**: **Free**
+4. Scroll down to **Environment Variables** and add:
+   | Key | Value | Notes |
+   | :--- | :--- | :--- |
+   | `ENV` | `production` | Enables production mode |
+   | `SECRET_KEY` | `virtual-binary-mlm-super-secret-key-2026` | Random secure string |
+   | `JWT_SECRET_KEY` | `virtual-binary-mlm-jwt-secret-2026` | Random secure string |
+   | `DATABASE_URL` | `sqlite:///./mlm_demo.db` | Built-in SQLite (Free) |
+   | `FRONTEND_URL` | `*` | Allows frontend requests |
+5. Click **Create Web Service**.
+6. 📋 **Copy your Backend URL** once deployed (e.g., `https://mlm-backend-xxxx.onrender.com`).
+
+---
+
+### Step 2: Deploy Frontend (React Static Site - 100% FREE)
+
+1. In Render Dashboard, click **New +** → **Static Site**.
+2. Connect the same Git repository.
+3. Configure the following settings:
+   - **Name**: `mlm-frontend` *(or any name you choose)*
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `dist`
+4. In **Redirects / Rewrites** tab (under settings):
+   - Click **Add Rewrite / Redirect**
+   - **Type**: `Rewrite`
+   - **Source Path**: `/*`
+   - **Destination**: `/index.html`
+   *(This ensures client-side routing works on refresh)*
+5. In **Environment Variables** tab, add:
+   | Key | Value |
+   | :--- | :--- |
+   | `VITE_API_URL` | `https://mlm-backend-xxxx.onrender.com/api` *(paste your Step 1 backend URL + `/api`)* |
+6. Click **Create Static Site**.
+
+---
+
+### Step 3: Test Your Free Live App!
+
+- Open your frontend Static Site URL (e.g., `https://mlm-frontend-xxxx.onrender.com`).
+- The app will connect to your FastAPI backend and allow 1-click demo logins (`Amol Root` or `System Admin`) immediately!
+
+> [!NOTE]
+> **Free Tier Sleep/Wakeup**: On Render's Free tier, the backend web service spins down after 15 minutes of inactivity. When you open the frontend after a period of inactivity, the first API request takes ~30–45 seconds to wake up the server. Subsequent requests are instant.
+

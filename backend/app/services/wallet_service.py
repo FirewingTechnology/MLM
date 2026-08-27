@@ -18,7 +18,7 @@ def get_or_create_wallet(db: Session, user_id: int) -> Wallet:
         db.flush()
     return wallet
 
-def credit_wallet(db: Session, user_id: int, amount: float, category: str, description: str, reference_id: str = None) -> WalletTransaction:
+def credit_wallet(db: Session, user_id: int, amount: float, category: str, description: str, reference_id: str = None, slot_id: str = None) -> WalletTransaction:
     if amount <= 0:
         raise InvalidTransactionError("Credit amount must be strictly positive.")
         
@@ -36,6 +36,7 @@ def credit_wallet(db: Session, user_id: int, amount: float, category: str, descr
         balance_before=balance_before,
         balance_after=balance_after,
         category=category,
+        slot_id=slot_id,
         reference_id=reference_id,
         description=description
     )
@@ -45,12 +46,13 @@ def credit_wallet(db: Session, user_id: int, amount: float, category: str, descr
     log_action(db, 'WALLET_CREDITED', 'Wallet', wallet.id, user_id, {
         'amount': amount,
         'category': category,
+        'slot_id': slot_id,
         'reference_id': reference_id,
         'balance_after': balance_after
     })
     return txn
 
-def debit_wallet(db: Session, user_id: int, amount: float, category: str, description: str, reference_id: str = None) -> WalletTransaction:
+def debit_wallet(db: Session, user_id: int, amount: float, category: str, description: str, reference_id: str = None, slot_id: str = None) -> WalletTransaction:
     if amount <= 0:
         raise InvalidTransactionError("Debit amount must be strictly positive.")
         
@@ -72,6 +74,7 @@ def debit_wallet(db: Session, user_id: int, amount: float, category: str, descri
         balance_before=balance_before,
         balance_after=balance_after,
         category=category,
+        slot_id=slot_id,
         reference_id=reference_id,
         description=description
     )
@@ -81,12 +84,13 @@ def debit_wallet(db: Session, user_id: int, amount: float, category: str, descri
     log_action(db, 'WALLET_DEBITED', 'Wallet', wallet.id, user_id, {
         'amount': amount,
         'category': category,
+        'slot_id': slot_id,
         'reference_id': reference_id,
         'balance_after': balance_after
     })
     return txn
 
-def adjust_wallet_balance(db: Session, user_id: int, amount: float, admin_id: int, reason: str) -> WalletTransaction:
+def adjust_wallet_balance(db: Session, user_id: int, amount: float, admin_id: int, reason: str, slot_id: str = None) -> WalletTransaction:
     wallet = get_or_create_wallet(db, user_id)
     balance_before = wallet.balance
     new_balance = balance_before + amount
@@ -106,6 +110,7 @@ def adjust_wallet_balance(db: Session, user_id: int, amount: float, admin_id: in
         balance_before=balance_before,
         balance_after=balance_after,
         category='ADMIN_ADJUSTMENT',
+        slot_id=slot_id,
         reference_id=f"ADMIN-ADJ-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
         description=f"Admin Adjustment: {reason}"
     )
@@ -116,8 +121,10 @@ def adjust_wallet_balance(db: Session, user_id: int, amount: float, admin_id: in
         'adjusted_user_id': user_id,
         'adjustment_amount': amount,
         'reason': reason,
+        'slot_id': slot_id,
         'balance_after': balance_after
     })
+
     return txn
 
 def create_withdrawal_request(db: Session, user_id: int, amount: float, payout_method: str = 'VIRTUAL_UPI', payout_details: dict = None) -> Withdrawal:

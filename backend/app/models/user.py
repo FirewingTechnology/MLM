@@ -35,6 +35,9 @@ class User(Base):
     purchases = relationship('Purchase', back_populates='user', cascade='all, delete-orphan')
     commissions = relationship('Commission', foreign_keys='Commission.beneficiary_id', back_populates='beneficiary')
     withdrawals = relationship('Withdrawal', foreign_keys='Withdrawal.user_id', back_populates='user', cascade='all, delete-orphan')
+    period_volumes = relationship('BinaryPeriodVolume', back_populates='user', cascade='all, delete-orphan')
+    volume_ledger_entries = relationship('VolumeLedger', foreign_keys='VolumeLedger.ancestor_user_id', back_populates='ancestor_user', cascade='all, delete-orphan')
+    slot_settlements = relationship('SlotSettlement', back_populates='user', cascade='all, delete-orphan')
 
     __table_args__ = (
         UniqueConstraint('binary_parent_id', 'binary_position', name='uq_binary_parent_position'),

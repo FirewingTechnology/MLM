@@ -38,25 +38,25 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-center justify-between p-4 rounded-xl shadow-2xl backdrop-blur-md border text-sm font-medium transition-all transform translate-y-0 ${
+            className={`pointer-events-auto flex items-center justify-between p-4 rounded-2xl shadow-wealth-elevated border text-xs sm:text-sm font-semibold transition-all transform translate-y-0 bg-[#FFFEF9] ${
               toast.type === 'success'
-                ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-100 shadow-emerald-950/50'
+                ? 'border-[#063B32]/30 text-[#18211F]'
                 : toast.type === 'error'
-                ? 'bg-rose-950/90 border-rose-500/50 text-rose-100 shadow-rose-950/50'
-                : 'bg-blue-950/90 border-blue-500/50 text-blue-100 shadow-blue-950/50'
+                ? 'border-[#C94B4B]/30 text-[#18211F]'
+                : 'border-[#C9A227]/40 text-[#18211F]'
             }`}
           >
             <div className="flex items-center gap-3">
-              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
-              {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}
-              {toast.type === 'info' && <Info className="w-5 h-5 text-blue-400 shrink-0" />}
-              <span>{toast.message}</span>
+              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-[#063B32] shrink-0" />}
+              {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-[#C94B4B] shrink-0" />}
+              {toast.type === 'info' && <Info className="w-5 h-5 text-[#C9A227] shrink-0" />}
+              <span className="leading-tight">{toast.message}</span>
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="p-1 hover:bg-white/10 rounded-lg transition-colors ml-3"
+              className="p-1 hover:bg-[#EFECE2] rounded-lg transition-colors ml-3 text-[#69736F] hover:text-[#18211F] cursor-pointer"
             >
-              <X className="w-4 h-4 opacity-70 hover:opacity-100" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         ))}
@@ -72,3 +72,4 @@ export const useToast = () => {
   }
   return context;
 };
+

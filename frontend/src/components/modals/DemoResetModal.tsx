@@ -36,30 +36,30 @@ export const DemoResetModal: React.FC<DemoResetModalProps> = ({ isOpen, onClose 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-md rounded-2xl glass-panel border border-rose-500/40 shadow-2xl p-6 relative overflow-hidden"
+        className="w-full max-w-md rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 relative overflow-hidden text-[#18211F]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-xl text-[#69736F] hover:text-[#18211F] hover:bg-[#EFECE2] transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center mb-4">
-          <AlertTriangle className="w-6 h-6" />
+        <div className="w-12 h-12 rounded-2xl bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] flex items-center justify-center mb-4">
+          <AlertTriangle className="w-6 h-6 text-[#C88A16]" />
         </div>
 
-        <h2 className="text-xl font-bold text-white mb-2">
+        <h2 className="text-xl font-heading font-extrabold text-[#18211F] mb-2 tracking-tight">
           Reset Demo Environment?
         </h2>
-        <p className="text-xs text-slate-300 mb-4 leading-relaxed">
+        <p className="text-xs text-[#69736F] mb-4 leading-relaxed">
           This action will permanently wipe all test purchases, commissions, withdrawals, and custom users, and recreate the default clean demo seed network (Amol, Rahul, Priya, Akash, etc.).
         </p>
 
-        <div className="p-3 rounded-xl bg-navy-900 border border-slate-800 text-[11px] text-slate-400 mb-5">
+        <div className="p-3.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[11px] text-[#063B32] mb-5 font-medium">
           ✓ Ideal for starting a fresh demonstration for new clients or investors.
         </div>
 
@@ -67,7 +67,7 @@ export const DemoResetModal: React.FC<DemoResetModalProps> = ({ isOpen, onClose 
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-semibold"
+            className="flex-1 py-3 rounded-2xl border border-[#E5E0D3] hover:bg-[#EFECE2] text-[#18211F] text-xs font-semibold cursor-pointer"
           >
             Cancel
           </button>
@@ -75,12 +75,12 @@ export const DemoResetModal: React.FC<DemoResetModalProps> = ({ isOpen, onClose 
             type="button"
             disabled={loading}
             onClick={handleReset}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-950 transition-colors disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-[#C94B4B] hover:bg-[#A83838] text-white text-xs font-heading font-bold shadow-sm transition-colors disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Resetting...</span>
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+                <span>Reseting...</span>
               </>
             ) : (
               <>
@@ -94,3 +94,4 @@ export const DemoResetModal: React.FC<DemoResetModalProps> = ({ isOpen, onClose 
     </div>
   );
 };
+

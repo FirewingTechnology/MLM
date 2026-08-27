@@ -7,8 +7,8 @@ def test_package_purchase_and_commissions(client):
         "password": "Demo@123",
         "confirm_password": "Demo@123",
         "referral_code": "AMOL001",
-        "binary_parent_code": "SNEHA001",
-        "binary_position": "RIGHT"
+        "binary_parent_code": "AMOL001",
+        "binary_position": "LEFT"
     })
     assert reg.status_code == 201
     karan_token = reg.json()["data"]["token"]

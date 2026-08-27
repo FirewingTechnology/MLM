@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://mlm-lkod.onrender.com',
+        target: 'http://localhost:7070',
         changeOrigin: true,
         secure: false,
       }

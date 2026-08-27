@@ -21,8 +21,8 @@ export const AdminLayout: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-navy-950 flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+      <div className="min-h-screen bg-[#F7F4EC] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-2 border-[#C9A227] border-t-[#063B32] animate-spin" />
       </div>
     );
   }
@@ -37,20 +37,20 @@ export const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-navy-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#F7F4EC] text-[#18211F] flex flex-col">
       <DemoBanner />
 
       {/* Admin Navbar */}
-      <header className="h-16 border-b border-amber-500/30 bg-navy-900/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
+      <header className="h-16 border-b border-[#E5E0D3] bg-[#FFFEF9]/95 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-wealth-card">
         <div className="flex items-center gap-4">
-          <Link to="/admin/dashboard" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center shadow-glow-amber">
-              <ShieldAlert className="w-5 h-5 text-navy-950 font-bold" />
+          <Link to="/admin/dashboard" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#063B32] border border-[#C9A227]/50 flex items-center justify-center shadow-wealth-gold">
+              <ShieldAlert className="w-5 h-5 text-[#C9A227]" />
             </div>
             <div>
-              <div className="font-black text-sm tracking-tight text-white flex items-center gap-2">
-                <span>ADMIN PORTAL</span>
-                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
+              <div className="font-heading font-extrabold text-sm tracking-tight text-[#18211F] flex items-center gap-2">
+                <span>ADMIN CONTROL</span>
+                <span className="text-[10px] bg-[#FAF4DC] text-[#8C6C16] font-bold px-2 py-0.5 rounded border border-[#E2C766]/60 font-mono">
                   SUPERUSER
                 </span>
               </div>
@@ -62,7 +62,7 @@ export const AdminLayout: React.FC = () => {
           {/* Quick Demo Reset button */}
           <button
             onClick={() => setResetModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FDF2F2] hover:bg-[#FDE8E8] text-[#C94B4B] border border-[#F8B4B4] text-xs font-bold transition-all cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Demo DB</span>
@@ -70,15 +70,15 @@ export const AdminLayout: React.FC = () => {
 
           <Link
             to="/dashboard"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EFECE2] hover:bg-[#E5E0D3] text-[#18211F] text-xs font-semibold transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-3.5 h-3.5 text-[#063B32]" />
             <span>User View</span>
           </Link>
 
           <button
             onClick={handleLogout}
-            className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-xl text-[#69736F] hover:text-[#C94B4B] hover:bg-[#FDF2F2] transition-colors cursor-pointer"
             title="Sign Out"
           >
             <LogOut className="w-4 h-4" />
@@ -87,48 +87,60 @@ export const AdminLayout: React.FC = () => {
       </header>
 
       {/* Admin Nav Sub-bar */}
-      <div className="border-b border-slate-800 bg-navy-900/60 px-4 sm:px-6 py-2 flex items-center gap-2 overflow-x-auto">
+      <div className="border-b border-[#E5E0D3] bg-[#FFFEF9] px-4 sm:px-6 py-2 flex items-center gap-2 overflow-x-auto">
         <NavLink
           to="/admin/dashboard"
           end
           className={({ isActive }) =>
-            `px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+            `px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
               isActive
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[#063B32] text-[#FFFEF9] shadow-sm'
+                : 'text-[#69736F] hover:text-[#18211F] hover:bg-[#EFECE2]'
             }`
           }
         >
-          <LayoutDashboard className="w-3.5 h-3.5" />
-          <span>System KPIs</span>
+          {({ isActive }) => (
+            <>
+              <LayoutDashboard className={`w-3.5 h-3.5 ${isActive ? 'text-[#C9A227]' : 'text-[#69736F]'}`} />
+              <span>System KPIs</span>
+            </>
+          )}
         </NavLink>
 
         <NavLink
           to="/admin/users"
           className={({ isActive }) =>
-            `px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+            `px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
               isActive
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[#063B32] text-[#FFFEF9] shadow-sm'
+                : 'text-[#69736F] hover:text-[#18211F] hover:bg-[#EFECE2]'
             }`
           }
         >
-          <Users className="w-3.5 h-3.5" />
-          <span>All Distributors</span>
+          {({ isActive }) => (
+            <>
+              <Users className={`w-3.5 h-3.5 ${isActive ? 'text-[#C9A227]' : 'text-[#69736F]'}`} />
+              <span>All Distributors</span>
+            </>
+          )}
         </NavLink>
 
         <NavLink
           to="/admin/withdrawals"
           className={({ isActive }) =>
-            `px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+            `px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
               isActive
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[#063B32] text-[#FFFEF9] shadow-sm'
+                : 'text-[#69736F] hover:text-[#18211F] hover:bg-[#EFECE2]'
             }`
           }
         >
-          <Wallet className="w-3.5 h-3.5" />
-          <span>Withdrawal Approvals</span>
+          {({ isActive }) => (
+            <>
+              <Wallet className={`w-3.5 h-3.5 ${isActive ? 'text-[#C9A227]' : 'text-[#69736F]'}`} />
+              <span>Withdrawal Approvals</span>
+            </>
+          )}
         </NavLink>
       </div>
 
@@ -144,3 +156,4 @@ export const AdminLayout: React.FC = () => {
     </div>
   );
 };
+

@@ -37,12 +37,12 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
       const res = await api.post('/purchases', { idempotency_key: idempotencyKey });
       
       if (res.data?.success) {
-        // Fire festive confetti
+        // Fire festive wealth confetti
         confetti({
           particleCount: 80,
           spread: 70,
           origin: { y: 0.6 },
-          colors: ['#10b981', '#34d399', '#f59e0b', '#3b82f6']
+          colors: ['#063B32', '#C9A227', '#E2C766', '#0E9F6E']
         });
 
         setSuccessEvent(res.data.data);
@@ -73,80 +73,77 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-lg rounded-2xl glass-panel border border-slate-700/80 shadow-2xl p-6 relative overflow-hidden"
+        className="w-full max-w-lg rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 relative overflow-hidden text-[#18211F]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Glow accent */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
-
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-xl text-[#69736F] hover:text-[#18211F] hover:bg-[#EFECE2] transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {!successEvent ? (
           <div>
-            <div className="flex items-center gap-2 text-brand-400 text-xs font-bold uppercase tracking-wider mb-2">
-              <Sparkles className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-[#063B32] text-xs font-mono font-bold uppercase tracking-wider mb-1.5">
+              <Sparkles className="w-4 h-4 text-[#C9A227]" />
               <span>Demo Package Activation</span>
             </div>
 
-            <h2 className="text-2xl font-extrabold text-white mb-2">
+            <h2 className="text-2xl font-heading font-extrabold text-[#18211F] mb-1 tracking-tight">
               Premium Business Package
             </h2>
-            <p className="text-slate-400 text-xs mb-5">
+            <p className="text-[#69736F] text-xs mb-5">
               Unlock your virtual MLM distributor status, generate 30,000 personal BV, and activate binary matching commissions.
             </p>
 
             {/* Price breakdown card */}
-            <div className="rounded-xl bg-navy-900/80 border border-slate-800 p-4 mb-5 space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Product / Business Value</span>
-                <span className="font-semibold text-slate-200">₹30,000</span>
+            <div className="rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] p-4 sm:p-5 mb-5 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#69736F] font-medium">Product / Business Value</span>
+                <span className="font-semibold text-[#18211F] font-mono">₹30,000</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">GST (18% Fictional)</span>
-                <span className="font-semibold text-slate-200">₹5,000</span>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#69736F] font-medium">GST (18% Fictional)</span>
+                <span className="font-semibold text-[#18211F] font-mono">₹5,000</span>
               </div>
-              <div className="h-px bg-slate-800" />
+              <div className="h-px bg-[#E5E0D3]" />
               <div className="flex items-center justify-between">
-                <span className="text-base font-bold text-white">Total Virtual Price</span>
-                <span className="text-2xl font-extrabold text-brand-400">₹35,000</span>
+                <span className="text-sm font-bold text-[#18211F]">Total Virtual Price</span>
+                <span className="text-2xl font-heading font-black text-[#063B32] font-mono">₹35,000</span>
               </div>
               <div className="flex items-center justify-between pt-1">
-                <span className="text-xs text-brand-300 font-medium flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-brand-400" />
+                <span className="text-xs text-[#18211F] font-semibold flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-[#C9A227]" />
                   Business Volume (BV) Generated:
                 </span>
-                <span className="font-mono font-bold text-sm bg-brand-500/20 text-brand-300 border border-brand-500/30 px-2.5 py-0.5 rounded-lg">
+                <span className="font-mono font-bold text-xs bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]/60 px-3 py-1 rounded-xl">
                   30,000 BV
                 </span>
               </div>
             </div>
 
             {/* Feature highlights */}
-            <div className="space-y-2 mb-6">
-              <div className="flex items-center gap-2.5 text-xs text-slate-300">
-                <Award className="w-4 h-4 text-brand-400 shrink-0" />
+            <div className="space-y-2.5 mb-6">
+              <div className="flex items-center gap-2.5 text-xs text-[#18211F]">
+                <Award className="w-4 h-4 text-[#063B32] shrink-0" />
                 <span>10% Direct Referral Bonus (₹3,000) for your direct sponsor</span>
               </div>
-              <div className="flex items-center gap-2.5 text-xs text-slate-300">
-                <Award className="w-4 h-4 text-brand-400 shrink-0" />
+              <div className="flex items-center gap-2.5 text-xs text-[#18211F]">
+                <Award className="w-4 h-4 text-[#063B32] shrink-0" />
                 <span>30,000 BV propagates up your binary upline tree</span>
               </div>
-              <div className="flex items-center gap-2.5 text-xs text-slate-300">
-                <Award className="w-4 h-4 text-brand-400 shrink-0" />
-                <span>10% Binary matching bonus calculated on matched volume</span>
+              <div className="flex items-center gap-2.5 text-xs text-[#18211F]">
+                <Award className="w-4 h-4 text-[#C9A227] shrink-0" />
+                <span>Qualifies for ₹15,000 Binary Pair Bonus per 30k/30k match</span>
               </div>
             </div>
 
             {/* Virtual Demo Notice */}
-            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs mb-6">
-              <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] text-xs mb-6">
+              <ShieldAlert className="w-4 h-4 text-[#C88A16] shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold">Virtual Demo Purchase:</span> No credit card, UPI, or real bank account will be charged. This simulates a real package activation instantly in the database.
               </div>
@@ -157,7 +154,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-sm font-semibold transition-colors"
+                className="flex-1 px-4 py-3 rounded-2xl border border-[#E5E0D3] hover:bg-[#EFECE2] text-[#18211F] text-xs font-semibold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -165,17 +162,17 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                 type="button"
                 disabled={loading}
                 onClick={handlePurchase}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-emerald-600 hover:from-brand-400 hover:to-emerald-500 text-navy-950 text-sm font-bold shadow-glow-emerald transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/30 text-xs font-heading font-bold shadow-wealth-card transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#C9A227]" />
                     <span>Processing Demo...</span>
                   </>
                 ) : (
                   <>
-                    <ShoppingBag className="w-4 h-4" />
-                    <span>Buy Virtual Package</span>
+                    <ShoppingBag className="w-4 h-4 text-[#C9A227]" />
+                    <span>Activate Virtual Package</span>
                   </>
                 )}
               </button>
@@ -183,35 +180,35 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
           </div>
         ) : (
           <div className="text-center py-4">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto mb-4 animate-bounce">
-              <CheckCircle2 className="w-10 h-10" />
+            <div className="w-16 h-16 rounded-2xl bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] flex items-center justify-center mx-auto mb-4 animate-bounce">
+              <CheckCircle2 className="w-10 h-10 text-[#063B32]" />
             </div>
 
-            <h3 className="text-2xl font-black text-white mb-1">Package Activated!</h3>
-            <p className="text-emerald-400 font-semibold text-sm mb-4">
+            <h3 className="text-2xl font-heading font-extrabold text-[#18211F] mb-1">Package Activated!</h3>
+            <p className="text-[#063B32] font-bold text-sm mb-4">
               ₹35,000 Virtual Package Successful
             </p>
 
-            <div className="p-4 rounded-xl bg-navy-900/80 border border-slate-800 mb-6 text-left space-y-2 text-xs">
+            <div className="p-4 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] mb-6 text-left space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-slate-400">Transaction Ref:</span>
-                <span className="font-mono text-slate-200 font-bold">{successEvent.purchase?.purchase_code}</span>
+                <span className="text-[#69736F] font-medium">Transaction Ref:</span>
+                <span className="font-mono text-[#18211F] font-bold">{successEvent.purchase?.purchase_code}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">BV Added:</span>
-                <span className="text-brand-400 font-bold font-mono">+30,000 BV</span>
+                <span className="text-[#69736F] font-medium">BV Added:</span>
+                <span className="text-[#063B32] font-bold font-mono">+30,000 BV</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Status:</span>
-                <span className="text-emerald-400 font-semibold">Active Distributor</span>
+                <span className="text-[#69736F] font-medium">Status:</span>
+                <span className="text-[#063B32] font-semibold">Active Distributor</span>
               </div>
               {successEvent.events && successEvent.events.length > 0 && (
-                <div className="pt-2 border-t border-slate-800">
-                  <div className="text-slate-400 mb-1 font-semibold">Commissions Triggered:</div>
+                <div className="pt-2 border-t border-[#E5E0D3]">
+                  <div className="text-[#18211F] mb-1 font-semibold">Commissions Triggered:</div>
                   {successEvent.events.map((ev: any, idx: number) => (
-                    <div key={idx} className="text-slate-300 flex justify-between">
+                    <div key={idx} className="text-[#69736F] flex justify-between">
                       <span>• {ev.type === 'DIRECT_REFERRAL' ? 'Direct Bonus' : 'Matching Bonus'} to {ev.beneficiary}</span>
-                      <span className="text-brand-400 font-mono font-bold">+₹{ev.amount?.toLocaleString()}</span>
+                      <span className="text-[#0E9F6E] font-mono font-bold">+₹{ev.amount?.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
@@ -220,7 +217,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
 
             <button
               onClick={handleClose}
-              className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold transition-colors"
+              className="w-full py-3 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/30 text-xs font-bold transition-colors cursor-pointer"
             >
               Continue to Dashboard
             </button>
@@ -230,3 +227,4 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
     </div>
   );
 };
+

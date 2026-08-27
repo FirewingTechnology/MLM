@@ -19,7 +19,13 @@ def get_commissions(
 ):
     query = db.query(Commission).filter(Commission.beneficiary_id == current_user.id)
     if comm_type:
-        query = query.filter(Commission.commission_type == comm_type.strip())
+        ctype = comm_type.strip()
+        if ctype in ('DIRECT_REFERRAL', 'DIRECT_COMMISSION'):
+            query = query.filter(Commission.commission_type.in_(['DIRECT_REFERRAL', 'DIRECT_COMMISSION']))
+        elif ctype in ('MATCHING_COMMISSION', 'BINARY_MATCHING'):
+            query = query.filter(Commission.commission_type.in_(['MATCHING_COMMISSION', 'BINARY_MATCHING']))
+        else:
+            query = query.filter(Commission.commission_type == ctype)
 
     total = query.count()
     offset = (page - 1) * per_page
@@ -28,11 +34,19 @@ def get_commissions(
     pages = (total + per_page - 1) // per_page if total > 0 else 1
     direct_all = db.query(Commission).filter(
         Commission.beneficiary_id == current_user.id,
-        Commission.commission_type == 'DIRECT_REFERRAL'
+        Commission.commission_type.in_(['DIRECT_REFERRAL', 'DIRECT_COMMISSION'])
     ).all()
     matching_all = db.query(Commission).filter(
         Commission.beneficiary_id == current_user.id,
-        Commission.commission_type == 'BINARY_MATCHING'
+        Commission.commission_type.in_(['MATCHING_COMMISSION', 'BINARY_MATCHING'])
+    ).all()
+    pair_all = db.query(Commission).filter(
+        Commission.beneficiary_id == current_user.id,
+        Commission.commission_type == 'PAIR_BONUS'
+    ).all()
+    carry_all = db.query(Commission).filter(
+        Commission.beneficiary_id == current_user.id,
+        Commission.commission_type == 'CARRY_COMMISSION'
     ).all()
 
     return success_response({
@@ -42,7 +56,9 @@ def get_commissions(
         'pages': pages,
         'per_page': per_page,
         'total_direct_amount': sum(c.amount for c in direct_all),
-        'total_matching_amount': sum(c.amount for c in matching_all)
+        'total_pair_amount': sum(c.amount for c in pair_all),
+        'total_matching_amount': sum(c.amount for c in matching_all),
+        'total_carry_amount': sum(c.amount for c in carry_all)
     })
 
 @router.get("/{commission_id}")

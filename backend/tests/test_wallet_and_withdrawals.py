@@ -7,6 +7,18 @@ def test_wallet_and_withdrawal_flow(client):
     amol_token = login_amol.json()["data"]["token"]
     amol_headers = {"Authorization": f"Bearer {amol_token}"}
 
+    # 1b. Admin gives demo funds
+    login_admin = client.post("/api/auth/login", json={
+        "identifier": "admin@demo.com",
+        "password": "Admin@123"
+    })
+    admin_token = login_admin.json()["data"]["token"]
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    
+    users = client.get("/api/admin/users", headers=admin_headers).json()["data"]["items"]
+    amol_id = [u for u in users if u["email"] == "amol@demo.com"][0]["id"]
+    client.post(f"/api/admin/users/{amol_id}/adjust-wallet", json={"amount": 10000.0, "reason": "Test funding"}, headers=admin_headers)
+
     # 2. Check wallet
     wal = client.get("/api/wallet", headers=amol_headers)
     assert wal.status_code == 200

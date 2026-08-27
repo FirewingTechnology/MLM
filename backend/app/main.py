@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.database import engine, Base, SessionLocal
+from app.database import engine, Base, SessionLocal, apply_migrations
 from app.services.seed_service import seed_database
 from app.routers import (
     auth,
@@ -14,13 +14,15 @@ from app.routers import (
     wallet,
     commissions,
     withdrawals,
-    admin
+    admin,
+    time
 )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Create tables
+    # 1. Create tables & migrate schema
     Base.metadata.create_all(bind=engine)
+    apply_migrations(engine)
     
     # 2. Auto-seed initial demo dataset
     db = SessionLocal()
@@ -29,6 +31,7 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
     yield
+
 
 app = FastAPI(
     title="Virtual Binary MLM Demo API",
@@ -66,6 +69,8 @@ app.include_router(wallet.router)
 app.include_router(commissions.router)
 app.include_router(withdrawals.router)
 app.include_router(admin.router)
+app.include_router(time.router)
+
 
 @app.get("/api/health")
 def health_check():

@@ -13,6 +13,7 @@ class Commission(Base):
     purchase_id = Column(Integer, ForeignKey('purchases.id', ondelete='SET NULL'), nullable=True)
     
     commission_type = Column(String(32), nullable=False, index=True)  # 'DIRECT_REFERRAL', 'BINARY_MATCHING'
+    slot_id = Column(String(32), nullable=True, index=True)
     amount = Column(Float, nullable=False)
     bv_basis = Column(Float, nullable=False)
     percentage = Column(Float, nullable=False)
@@ -49,9 +50,11 @@ class Commission(Base):
             'source_user_code': self.source_user.user_code if self.source_user else None,
             'purchase_id': self.purchase_id,
             'commission_type': self.commission_type,
+            'slot_id': self.slot_id,
             'amount': self.amount,
             'bv_basis': self.bv_basis,
             'percentage': self.percentage,
             'calculation_details': self.calculation_details,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { TimeProvider } from './context/TimeContext';
 
 // Layouts
 import { AppLayout } from './components/layout/AppLayout';
@@ -39,40 +40,43 @@ export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+        <TimeProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
 
-              {/* Protected User Dashboard Routes */}
-              <Route element={<AppLayout />}>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/network" element={<NetworkPage />} />
-                <Route path="/packages" element={<PackagesPage />} />
-                <Route path="/wallet" element={<WalletPage />} />
-                <Route path="/commissions" element={<CommissionsPage />} />
-                <Route path="/referrals" element={<ReferralsPage />} />
-              </Route>
+                {/* Protected User Dashboard Routes */}
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/network" element={<NetworkPage />} />
+                  <Route path="/packages" element={<PackagesPage />} />
+                  <Route path="/wallet" element={<WalletPage />} />
+                  <Route path="/commissions" element={<CommissionsPage />} />
+                  <Route path="/referrals" element={<ReferralsPage />} />
+                </Route>
 
-              {/* Protected Admin Routes */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboardPage />} />
-                <Route path="users" element={<AdminUsersPage />} />
-                <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
-              </Route>
+                {/* Protected Admin Routes */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="dashboard" element={<AdminDashboardPage />} />
+                  <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
+                </Route>
 
-              {/* Catch-all fallback */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
+                {/* Catch-all fallback */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </TimeProvider>
       </ToastProvider>
     </QueryClientProvider>
   );
 };
+
 
 export default App;

@@ -7,7 +7,6 @@ import {
   PackageCheck, 
   Sparkles, 
   CheckCircle2, 
-  ShieldAlert, 
   ShoppingBag, 
   Award, 
   Coins, 
@@ -35,79 +34,81 @@ export const PackagesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-400 mb-1">
-          <PackageCheck className="w-4 h-4" />
+      <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card">
+        <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-[#C9A227] mb-1">
+          <PackageCheck className="w-4 h-4 text-[#063B32]" />
           <span>Virtual Marketplace</span>
         </div>
-        <h1 className="text-2xl font-black text-white">Business Packages</h1>
-        <p className="text-xs text-slate-400">
+        <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Business Packages</h1>
+        <p className="text-xs sm:text-sm text-[#69736F] font-medium">
           Activate distributor status and generate Business Volume (BV) across your binary network.
         </p>
       </div>
 
-      <div className="max-w-xl mx-auto pt-4">
-        <div className="rounded-3xl glass-panel p-6 sm:p-8 border border-slate-800 relative overflow-hidden glass-panel-hover">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="max-w-xl mx-auto pt-2">
+        <div className="rounded-3xl bg-[#FFFEF9] p-6 sm:p-8 border-2 border-[#C9A227]/40 shadow-wealth-gold relative overflow-hidden">
+          {/* Top Gold Ribbon */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C9A227] via-[#E2C766] to-[#C9A227]" />
 
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/40 px-3 py-1 rounded-full">
-              Standard Qualifying Tier
+          <div className="flex items-center justify-between mb-4 mt-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]/60 px-3 py-1 rounded-full flex items-center gap-1 font-mono">
+              <Sparkles className="w-3 h-3 text-[#C9A227]" />
+              <span>Standard Qualifying Tier</span>
             </span>
-            <span className="text-xs font-mono font-bold text-slate-400">100% VIRTUAL DEMO</span>
+            <span className="text-xs font-mono font-bold text-[#69736F]">100% VIRTUAL SIMULATION</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
+          <h2 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] mb-2 tracking-tight">
             {pkg.name}
           </h2>
-          <p className="text-xs text-slate-300 mb-6 leading-relaxed">
+          <p className="text-xs text-[#69736F] mb-6 leading-relaxed">
             {pkg.description}
           </p>
 
           {/* Pricing breakdown */}
-          <div className="p-4 rounded-2xl bg-navy-950/80 border border-slate-800 space-y-3 mb-6 font-mono text-xs">
-            <div className="flex justify-between text-slate-400">
+          <div className="p-5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] space-y-3 mb-6 font-mono text-xs">
+            <div className="flex justify-between text-[#69736F]">
               <span className="font-sans">Business Value:</span>
-              <span className="text-slate-200 font-bold">₹{pkg.product_value.toLocaleString()}</span>
+              <span className="text-[#18211F] font-bold">₹{pkg.product_value.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between text-slate-400">
+            <div className="flex justify-between text-[#69736F]">
               <span className="font-sans">Simulated GST:</span>
-              <span className="text-slate-200 font-bold">₹{pkg.gst_amount.toLocaleString()}</span>
+              <span className="text-[#18211F] font-bold">₹{pkg.gst_amount.toLocaleString()}</span>
             </div>
-            <div className="h-px bg-slate-800" />
+            <div className="h-px bg-[#E5E0D3]" />
             <div className="flex justify-between items-center text-sm">
-              <span className="font-sans font-bold text-white">Total Package Price:</span>
-              <span className="text-2xl font-black text-brand-400">₹{pkg.price.toLocaleString()}</span>
+              <span className="font-sans font-bold text-[#18211F]">Total Package Price:</span>
+              <span className="text-2xl sm:text-3xl font-heading font-black text-[#063B32]">₹{pkg.price.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between items-center pt-2 border-t border-slate-800/80">
-              <span className="font-sans text-brand-300 font-semibold flex items-center gap-1">
-                <TrendingUp className="w-4 h-4" />
+            <div className="flex justify-between items-center pt-2 border-t border-[#E5E0D3]">
+              <span className="font-sans text-[#18211F] font-semibold flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4 text-[#C9A227]" />
                 BV Credited to Network:
               </span>
-              <span className="bg-brand-500/20 text-brand-300 border border-brand-500/30 px-3 py-0.5 rounded-lg font-bold">
+              <span className="bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]/60 px-3 py-0.5 rounded-lg font-bold">
                 {pkg.bv.toLocaleString()} BV
               </span>
             </div>
           </div>
 
           {/* Feature highlights */}
-          <div className="space-y-3 mb-8 text-xs text-slate-300">
+          <div className="space-y-3 mb-8 text-xs text-[#18211F]">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-4 h-4 text-brand-400 shrink-0" />
-              <span>Direct Sponsor receives <strong className="text-white">10% referral commission (₹3,000)</strong></span>
+              <CheckCircle2 className="w-4 h-4 text-[#063B32] shrink-0" />
+              <span>Direct Sponsor receives <strong className="text-[#063B32]">10% referral commission (₹3,000)</strong></span>
             </div>
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-4 h-4 text-brand-400 shrink-0" />
-              <span>Full <strong className="text-white">30,000 BV</strong> propagates upward through the binary ancestry</span>
+              <CheckCircle2 className="w-4 h-4 text-[#063B32] shrink-0" />
+              <span>Full <strong className="text-[#063B32]">30,000 BV</strong> propagates upward through the binary ancestry</span>
             </div>
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-4 h-4 text-brand-400 shrink-0" />
-              <span>Generates <strong className="text-white">10% Binary Matching Bonus</strong> on matched volume</span>
+              <CheckCircle2 className="w-4 h-4 text-[#063B32] shrink-0" />
+              <span>Qualifies for <strong className="text-[#8C6C16]">₹15,000 Binary Pair Bonus</strong> per 30k/30k match</span>
             </div>
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-4 h-4 text-brand-400 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#063B32] shrink-0" />
               <span>Activates full Virtual Wallet withdrawal rights in the demo</span>
             </div>
           </div>
@@ -115,13 +116,14 @@ export const PackagesPage: React.FC = () => {
           {/* CTA */}
           <button
             onClick={openPurchaseModal}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-gradient-to-r from-brand-500 to-emerald-600 hover:from-brand-400 hover:to-emerald-500 text-navy-950 font-black text-sm shadow-glow-emerald transition-all transform hover:scale-[1.01] active:scale-[0.99]"
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/40 font-heading font-black text-sm shadow-wealth-card transition-all transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span>Buy Virtual Package (₹35,000)</span>
+            <ShoppingBag className="w-4 h-4 text-[#C9A227]" />
+            <span>ACTIVATE VIRTUAL PACKAGE (₹35,000)</span>
           </button>
         </div>
       </div>
     </div>
   );
 };
+

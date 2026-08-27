@@ -38,6 +38,7 @@ class WalletTransaction(Base):
     balance_after = Column(Float, nullable=False)
     
     category = Column(String(50), nullable=False)  # 'DIRECT_COMMISSION', 'MATCHING_COMMISSION', 'WITHDRAWAL', 'ADMIN_ADJUSTMENT'
+    slot_id = Column(String(32), nullable=True, index=True)
     reference_id = Column(String(64), nullable=True, index=True)
     description = Column(String(255), nullable=False)
     
@@ -54,7 +55,9 @@ class WalletTransaction(Base):
             'balance_before': self.balance_before,
             'balance_after': self.balance_after,
             'category': self.category,
+            'slot_id': self.slot_id,
             'reference_id': self.reference_id,
             'description': self.description,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+

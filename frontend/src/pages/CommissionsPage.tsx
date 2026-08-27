@@ -11,7 +11,7 @@ import {
   Filter, 
   ChevronLeft, 
   ChevronRight, 
-  ArrowUpRight 
+  Sparkles 
 } from 'lucide-react';
 
 export const CommissionsPage: React.FC = () => {
@@ -26,6 +26,8 @@ export const CommissionsPage: React.FC = () => {
     page: number;
     total_direct_amount: number;
     total_matching_amount: number;
+    total_pair_amount?: number;
+    total_carry_amount?: number;
   }>({
     queryKey: ['commissions', page, selectedType],
     queryFn: async () => {
@@ -36,65 +38,105 @@ export const CommissionsPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-400 mb-1">
-          <Coins className="w-4 h-4" />
+      <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card">
+        <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-[#C9A227] mb-1">
+          <Coins className="w-4 h-4 text-[#063B32]" />
           <span>Earnings Breakdown</span>
         </div>
-        <h1 className="text-2xl font-black text-white">Commissions & Transparency Audit</h1>
-        <p className="text-xs text-slate-400">
-          Fully auditable record of all direct sponsor and binary matching commissions generated.
+        <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Commissions & Transparency Audit</h1>
+        <p className="text-xs sm:text-sm text-[#69736F] font-medium">
+          Fully auditable record of all direct sponsor, binary pair bonus, matching upline, and carry commissions.
         </p>
       </div>
 
       {/* Summary Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-3xl glass-panel p-6 border border-slate-800 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Direct Referral Bonuses (10%)
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        {/* Direct Referral Bonus in Deep Emerald Card */}
+        <div className="rounded-3xl bg-[#FFFEF9] p-4 sm:p-5 border border-[#8DCFBF] shadow-wealth-card flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#063B32] flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-[#0E9F6E]" />
+              <span>Direct Sponsor (10%)</span>
             </span>
-            <div className="text-2xl font-black text-brand-400 font-mono mt-1">
-              ₹{data?.total_direct_amount?.toLocaleString() || 0}
+            <div className="w-7 h-7 rounded-lg bg-[#E0F3EE] text-[#063B32] flex items-center justify-center">
+              <Award className="w-3.5 h-3.5" />
             </div>
-            <div className="text-xs text-slate-400 mt-1">Earned when sponsored team buys packages</div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-400 flex items-center justify-center">
-            <Award className="w-6 h-6" />
+          <div className="text-xl sm:text-2xl font-heading font-black text-[#063B32] font-mono mt-2">
+            ₹{data?.total_direct_amount?.toLocaleString() || 0}
           </div>
+          <div className="text-[10px] text-[#69736F] mt-1">Direct member purchases</div>
         </div>
 
-        <div className="rounded-3xl glass-panel p-6 border border-slate-800 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Binary Matching Bonuses (10%)
+        {/* Pair Bonus in Champagne Gold Card */}
+        <div className="rounded-3xl bg-[#FFFEF9] p-4 sm:p-5 border border-[#E2C766] shadow-wealth-card flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C6C16] flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-[#C9A227]" />
+              <span>Pair Bonus (₹15k)</span>
             </span>
-            <div className="text-2xl font-black text-emerald-400 font-mono mt-1">
-              ₹{data?.total_matching_amount?.toLocaleString() || 0}
+            <div className="w-7 h-7 rounded-lg bg-[#FAF4DC] text-[#8C6C16] flex items-center justify-center">
+              <Sparkles className="w-3.5 h-3.5" />
             </div>
-            <div className="text-xs text-slate-400 mt-1">Earned when Left & Right legs match volume</div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-            <GitFork className="w-6 h-6" />
+          <div className="text-xl sm:text-2xl font-heading font-black text-[#8C6C16] font-mono mt-2">
+            ₹{(data?.total_pair_amount || 0).toLocaleString()}
           </div>
+          <div className="text-[10px] text-[#69736F] mt-1">30k/30k matching pair</div>
+        </div>
+
+        {/* Matching Upline Commission */}
+        <div className="rounded-3xl bg-[#FFFEF9] p-4 sm:p-5 border border-[#FDBA74] shadow-wealth-card flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#C2410C] flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-[#EA580C]" />
+              <span>Matching Upline</span>
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-[#FFEDD5] text-[#C2410C] flex items-center justify-center">
+              <GitFork className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-heading font-black text-[#C2410C] font-mono mt-2">
+            ₹{data?.total_matching_amount?.toLocaleString() || 0}
+          </div>
+          <div className="text-[10px] text-[#69736F] mt-1">Earned on child pairs</div>
+        </div>
+
+        {/* Carry Commission */}
+        <div className="rounded-3xl bg-[#FFFEF9] p-4 sm:p-5 border border-[#93C5FD] shadow-wealth-card flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#1D4ED8] flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
+              <span>Carry Commission</span>
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-[#DBEAFE] text-[#1D4ED8] flex items-center justify-center">
+              <Coins className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-heading font-black text-[#1D4ED8] font-mono mt-2">
+            ₹{data?.total_carry_amount?.toLocaleString() || 0}
+          </div>
+          <div className="text-[10px] text-[#69736F] mt-1">Override & carry bonus</div>
         </div>
       </div>
 
       {/* Filter Tabs & Commission Table */}
-      <div className="rounded-3xl glass-panel p-6 border border-slate-800 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div className="rounded-3xl bg-[#FFFEF9] p-6 border border-[#E5E0D3] shadow-wealth-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E0D3] pb-4">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-brand-400" />
-            <span className="text-sm font-bold text-white">Commissions Log</span>
+            <Filter className="w-4 h-4 text-[#063B32]" />
+            <span className="text-sm font-heading font-extrabold text-[#18211F]">Commissions Log</span>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
             {[
               { label: 'All Commissions', value: '' },
-              { label: 'Direct Referral Bonus', value: 'DIRECT_REFERRAL' },
-              { label: 'Binary Matching Bonus', value: 'BINARY_MATCHING' },
+              { label: '🟢 Direct Sponsor', value: 'DIRECT_COMMISSION' },
+              { label: '🟣 Pair Bonus (₹15k)', value: 'PAIR_BONUS' },
+              { label: '🟠 Matching Upline', value: 'MATCHING_COMMISSION' },
+              { label: '🔵 Carry Commission', value: 'CARRY_COMMISSION' },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -102,10 +144,10 @@ export const CommissionsPage: React.FC = () => {
                   setSelectedType(tab.value);
                   setPage(1);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   selectedType === tab.value
-                    ? 'bg-brand-500 text-navy-950 font-bold shadow-glow-emerald'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    ? 'bg-[#063B32] text-[#FFFEF9] font-bold shadow-xs'
+                    : 'text-[#69736F] hover:text-[#18211F] hover:bg-[#F7F4EC]'
                 }`}
               >
                 {tab.label}
@@ -118,57 +160,67 @@ export const CommissionsPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800/80 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-[#E5E0D3] text-[#69736F] font-bold uppercase tracking-wider text-[10px] bg-[#F7F4EC]/60">
                 <th className="py-3 px-4">Commission ID</th>
                 <th className="py-3 px-4">Type</th>
                 <th className="py-3 px-4">Triggered By</th>
                 <th className="py-3 px-4 text-right">BV Basis</th>
-                <th className="py-3 px-4 text-right">Commission (10%)</th>
+                <th className="py-3 px-4 text-right">Commission</th>
                 <th className="py-3 px-4 text-right">Date</th>
                 <th className="py-3 px-4 text-center">Audit</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono">
+            <tbody className="divide-y divide-[#E5E0D3]/60 font-mono">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-[#69736F]">
                     Loading commissions...
                   </td>
                 </tr>
               ) : data?.items && data.items.length > 0 ? (
                 data.items.map((comm) => (
-                  <tr key={comm.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3 px-4 text-slate-300 font-bold">
+                  <tr key={comm.id} className="hover:bg-[#F7F4EC]/40 transition-colors">
+                    <td className="py-3 px-4 text-[#18211F] font-bold">
                       {comm.commission_code}
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-sans font-semibold border ${
-                        comm.commission_type === 'DIRECT_REFERRAL'
-                          ? 'bg-brand-500/10 text-brand-300 border-brand-500/30'
-                          : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                      <span className={`text-[10px] px-2.5 py-0.5 rounded font-sans font-bold border ${
+                        comm.commission_type === 'PAIR_BONUS'
+                          ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
+                          : comm.commission_type === 'DIRECT_REFERRAL' || comm.commission_type === 'DIRECT_COMMISSION'
+                          ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
+                          : comm.commission_type === 'MATCHING_COMMISSION' || comm.commission_type === 'BINARY_MATCHING'
+                          ? 'bg-[#FFEDD5] text-[#C2410C] border-[#FDBA74]'
+                          : 'bg-[#DBEAFE] text-[#1D4ED8] border-[#93C5FD]'
                       }`}>
-                        {comm.commission_type === 'DIRECT_REFERRAL' ? 'Direct Bonus' : 'Binary Match'}
+                        {comm.commission_type === 'PAIR_BONUS'
+                          ? '🟣 Pair Bonus (₹15k)'
+                          : comm.commission_type === 'DIRECT_REFERRAL' || comm.commission_type === 'DIRECT_COMMISSION'
+                          ? '🟢 Direct Sponsor'
+                          : comm.commission_type === 'MATCHING_COMMISSION' || comm.commission_type === 'BINARY_MATCHING'
+                          ? '🟠 Matching Upline'
+                          : '🔵 Carry Bonus'}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-sans text-slate-200 font-medium">
+                    <td className="py-3 px-4 font-sans text-[#18211F] font-medium">
                       {comm.source_user_name || 'Network Member'}
-                      {comm.source_user_code && <span className="text-slate-400 font-mono ml-1 font-normal">({comm.source_user_code})</span>}
+                      {comm.source_user_code && <span className="text-[#69736F] font-mono ml-1 font-normal">({comm.source_user_code})</span>}
                     </td>
-                    <td className="py-3 px-4 text-right text-slate-300">
-                      {comm.bv_amount.toLocaleString()} BV
+                    <td className="py-3 px-4 text-right text-[#18211F] font-medium">
+                      {comm.bv_basis ? `₹${comm.bv_basis.toLocaleString()}` : `${comm.bv_amount.toLocaleString()} BV`}
                     </td>
-                    <td className="py-3 px-4 text-right text-emerald-400 font-bold">
+                    <td className="py-3 px-4 text-right text-[#063B32] font-bold">
                       +₹{comm.amount.toLocaleString()}
                     </td>
-                    <td className="py-3 px-4 text-right text-slate-400 text-[11px]">
+                    <td className="py-3 px-4 text-right text-[#69736F] text-[11px]">
                       {new Date(comm.created_at).toLocaleDateString()}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <button
                         onClick={() => setSelectedCommission(comm)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-brand-500 hover:text-navy-950 text-slate-300 text-[11px] font-sans font-bold transition-all"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#F7F4EC] hover:bg-[#063B32] hover:text-[#FFFEF9] text-[#18211F] text-[11px] font-sans font-bold transition-all border border-[#E5E0D3] cursor-pointer"
                       >
-                        <HelpCircle className="w-3.5 h-3.5" />
+                        <HelpCircle className="w-3.5 h-3.5 text-[#C9A227]" />
                         <span>Why received?</span>
                       </button>
                     </td>
@@ -176,7 +228,7 @@ export const CommissionsPage: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500 font-sans">
+                  <td colSpan={7} className="py-8 text-center text-[#69736F] font-sans">
                     No commissions found.
                   </td>
                 </tr>
@@ -187,22 +239,22 @@ export const CommissionsPage: React.FC = () => {
 
         {/* Pagination */}
         {data && data.pages > 1 && (
-          <div className="flex items-center justify-between pt-4 border-t border-slate-800 text-xs">
-            <span className="text-slate-400">
+          <div className="flex items-center justify-between pt-4 border-t border-[#E5E0D3] text-xs">
+            <span className="text-[#69736F]">
               Page {data.page} of {data.pages} ({data.total} records)
             </span>
             <div className="flex items-center gap-2">
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300"
+                className="p-2 rounded-xl bg-[#F7F4EC] hover:bg-[#EFECE2] disabled:opacity-40 text-[#18211F] cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 disabled={page >= data.pages}
                 onClick={() => setPage((p) => p + 1)}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300"
+                className="p-2 rounded-xl bg-[#F7F4EC] hover:bg-[#EFECE2] disabled:opacity-40 text-[#18211F] cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -218,3 +270,4 @@ export const CommissionsPage: React.FC = () => {
     </div>
   );
 };
+

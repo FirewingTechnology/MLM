@@ -56,35 +56,35 @@ export const AdminAdjustmentModal: React.FC<AdminAdjustmentModalProps> = ({ user
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-md rounded-2xl glass-panel border border-slate-700/80 shadow-2xl p-6 relative overflow-hidden"
+        className="w-full max-w-md rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 relative overflow-hidden text-[#18211F]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-xl text-[#69736F] hover:text-[#18211F] hover:bg-[#EFECE2] transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">
-          <ShieldAlert className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-[#8C6C16] text-xs font-mono font-bold uppercase tracking-wider mb-1.5">
+          <ShieldAlert className="w-4 h-4 text-[#C9A227]" />
           <span>Admin Financial Tool</span>
         </div>
 
-        <h2 className="text-xl font-bold text-white mb-1">
+        <h2 className="text-xl font-heading font-extrabold text-[#18211F] mb-1 tracking-tight">
           Adjust Virtual Wallet
         </h2>
-        <p className="text-xs text-slate-400 mb-4">
-          Target User: <span className="text-white font-semibold">{user.full_name}</span> ({user.user_code})
+        <p className="text-xs text-[#69736F] mb-4">
+          Target User: <span className="text-[#063B32] font-bold">{user.full_name}</span> ({user.user_code})
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Current balance */}
-          <div className="flex justify-between p-3 rounded-xl bg-navy-900 border border-slate-800 text-xs font-mono">
-            <span className="text-slate-400">Current Balance:</span>
-            <span className="text-emerald-400 font-bold">₹{user.wallet_balance?.toLocaleString() || 0}</span>
+          <div className="flex justify-between p-3.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-xs font-mono">
+            <span className="text-[#69736F] font-sans font-medium">Current Balance:</span>
+            <span className="text-[#063B32] font-bold">₹{user.wallet_balance?.toLocaleString() || 0}</span>
           </div>
 
           {/* Type: Credit or Debit */}
@@ -92,10 +92,10 @@ export const AdminAdjustmentModal: React.FC<AdminAdjustmentModalProps> = ({ user
             <button
               type="button"
               onClick={() => setType('CREDIT')}
-              className={`py-2 rounded-xl text-xs font-bold transition-all border ${
+              className={`py-2.5 rounded-2xl text-xs font-heading font-bold transition-all border cursor-pointer ${
                 type === 'CREDIT'
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                  : 'bg-navy-900 border-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF] shadow-xs'
+                  : 'bg-[#F7F4EC] border-[#E5E0D3] text-[#69736F] hover:bg-[#EFECE2]'
               }`}
             >
               + Credit Balance
@@ -103,10 +103,10 @@ export const AdminAdjustmentModal: React.FC<AdminAdjustmentModalProps> = ({ user
             <button
               type="button"
               onClick={() => setType('DEBIT')}
-              className={`py-2 rounded-xl text-xs font-bold transition-all border ${
+              className={`py-2.5 rounded-2xl text-xs font-heading font-bold transition-all border cursor-pointer ${
                 type === 'DEBIT'
-                  ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
-                  : 'bg-navy-900 border-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-rose-50 text-rose-700 border-rose-200 shadow-xs'
+                  : 'bg-[#F7F4EC] border-[#E5E0D3] text-[#69736F] hover:bg-[#EFECE2]'
               }`}
             >
               - Debit Balance
@@ -115,7 +115,7 @@ export const AdminAdjustmentModal: React.FC<AdminAdjustmentModalProps> = ({ user
 
           {/* Amount */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-bold text-[#18211F] mb-1">
               Adjustment Amount (₹)
             </label>
             <input
@@ -125,14 +125,14 @@ export const AdminAdjustmentModal: React.FC<AdminAdjustmentModalProps> = ({ user
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="e.g. 500"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-navy-950/80 border border-slate-700 text-white font-mono text-sm focus:outline-none focus:border-amber-500"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] font-mono text-sm focus:outline-none focus:border-[#063B32] shadow-xs"
               required
             />
           </div>
 
           {/* Mandatory reason */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-bold text-[#18211F] mb-1">
               Audit Reason (Mandatory)
             </label>
             <textarea
@@ -140,7 +140,7 @@ export const AdminAdjustmentModal: React.FC<AdminAdjustmentModalProps> = ({ user
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Explain why this manual adjustment is being made..."
-              className="w-full px-3.5 py-2 rounded-xl bg-navy-950/80 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-500"
+              className="w-full px-3.5 py-2 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs focus:outline-none focus:border-[#063B32] shadow-xs"
               required
             />
           </div>
@@ -149,16 +149,16 @@ export const AdminAdjustmentModal: React.FC<AdminAdjustmentModalProps> = ({ user
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-semibold"
+              className="flex-1 py-3 rounded-2xl border border-[#E5E0D3] hover:bg-[#EFECE2] text-[#18211F] text-xs font-semibold cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 text-xs font-bold shadow-glow-amber transition-colors disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/30 text-xs font-heading font-bold shadow-wealth-card transition-colors disabled:opacity-50 cursor-pointer"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Confirm Adjustment</span>}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin text-[#C9A227]" /> : <span>Confirm Adjustment</span>}
             </button>
           </div>
         </form>
@@ -166,3 +166,4 @@ export const AdminAdjustmentModal: React.FC<AdminAdjustmentModalProps> = ({ user
     </div>
   );
 };
+

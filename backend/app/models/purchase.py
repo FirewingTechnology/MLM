@@ -16,6 +16,7 @@ class Purchase(Base):
     gst_amount = Column(Float, default=5000.0, nullable=False)      # ₹5,000
     bv = Column(Float, nullable=False)              # 30,000 BV
     status = Column(String(20), default='COMPLETED', nullable=False)
+    slot_id = Column(String(32), nullable=True, index=True)
     idempotency_key = Column(String(64), unique=True, nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
@@ -34,5 +35,7 @@ class Purchase(Base):
             'gst_amount': self.gst_amount,
             'bv': self.bv,
             'status': self.status,
+            'slot_id': self.slot_id,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+

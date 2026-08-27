@@ -50,40 +50,36 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-navy-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background glowing orbs */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="min-h-screen bg-[#F7F4EC] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Top Demo Banner */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold uppercase tracking-wider mb-4">
-          <AlertTriangle className="w-3.5 h-3.5" />
-          <span>Demo Sandbox Mode</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] text-xs font-mono font-bold uppercase tracking-wider mb-4">
+          <AlertTriangle className="w-3.5 h-3.5 text-[#C88A16]" />
+          <span>Private Wealth Sandbox</span>
         </div>
 
         <div className="flex items-center justify-center gap-2.5 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center shadow-glow-emerald">
-            <Sparkles className="w-5 h-5 text-navy-950 font-bold" />
+          <div className="w-10 h-10 rounded-2xl bg-[#063B32] border border-[#C9A227]/40 flex items-center justify-center shadow-wealth-gold">
+            <Sparkles className="w-5 h-5 text-[#E2C766]" />
           </div>
-          <span className="font-extrabold text-2xl tracking-tight text-white">
-            BINARY<span className="text-brand-400">MLM</span>
+          <span className="font-heading font-black text-2xl tracking-tight text-[#18211F]">
+            WEALTH<span className="text-[#C9A227]">MLM</span>
           </span>
         </div>
-        <p className="text-xs text-slate-400">
-          Virtual Binary MLM Demonstration & Calculation Platform
+        <p className="text-xs text-[#69736F] font-medium">
+          Private Wealth & Binary Network Portfolio Platform
         </p>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800">
+        <div className="bg-[#FFFEF9] rounded-3xl p-6 sm:p-8 shadow-wealth-card border border-[#E5E0D3]">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-bold text-[#18211F] mb-1.5">
                 Email / User Code / Referral Code
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#69736F]">
                   <UserIcon className="w-4 h-4" />
                 </div>
                 <input
@@ -92,17 +88,17 @@ export const LoginPage: React.FC = () => {
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="amol@demo.com or AMOL001"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-navy-950/80 border border-slate-700/80 text-white text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-mono"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-sm focus:outline-none focus:border-[#063B32] focus:ring-2 focus:ring-[#063B32]/10 transition-all font-mono shadow-xs"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-bold text-[#18211F] mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#69736F]">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -111,7 +107,7 @@ export const LoginPage: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-navy-950/80 border border-slate-700/80 text-white text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-mono"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-sm focus:outline-none focus:border-[#063B32] focus:ring-2 focus:ring-[#063B32]/10 transition-all font-mono shadow-xs"
                 />
               </div>
             </div>
@@ -119,53 +115,53 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-brand-500 to-emerald-600 hover:from-brand-400 hover:to-emerald-500 text-navy-950 font-bold text-sm shadow-glow-emerald transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 mt-2"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/30 font-heading font-bold text-sm shadow-wealth-card transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Signing In...</span>
+                  <Loader2 className="w-4 h-4 animate-spin text-[#C9A227]" />
+                  <span>Authenticating...</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In to Dashboard</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Access Wealth Dashboard</span>
+                  <ArrowRight className="w-4 h-4 text-[#C9A227]" />
                 </>
               )}
             </button>
           </form>
 
           {/* 1-Click Quick Demo Accounts */}
-          <div className="mt-6 pt-5 border-t border-slate-800">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 text-center">
-              Quick 1-Click Accounts
+          <div className="mt-6 pt-5 border-t border-[#E5E0D3]">
+            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#69736F] mb-2.5 text-center">
+              Quick 1-Click Demo Accounts
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => handleQuickLogin('amol@demo.com', 'Demo@123')}
-                className="p-2.5 rounded-xl bg-navy-900 border border-slate-800 hover:border-brand-500/50 text-left transition-all group"
+                className="p-3 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] hover:border-[#C9A227] hover:bg-[#FAF4DC] text-left transition-all group cursor-pointer"
               >
-                <div className="text-xs font-bold text-white group-hover:text-brand-400 truncate">Amol Sharma</div>
-                <div className="text-[10px] text-slate-400 font-mono">Root Node (AMOL001)</div>
+                <div className="text-xs font-heading font-bold text-[#18211F] group-hover:text-[#063B32] truncate">Amol Sharma</div>
+                <div className="text-[10px] text-[#69736F] font-mono">Root Node (AMOL001)</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickLogin('admin@demo.com', 'Admin@123')}
-                className="p-2.5 rounded-xl bg-navy-900 border border-slate-800 hover:border-amber-500/50 text-left transition-all group"
+                className="p-3 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] hover:border-[#E2C766] hover:bg-[#FAF4DC] text-left transition-all group cursor-pointer"
               >
-                <div className="text-xs font-bold text-amber-400 truncate">System Admin</div>
-                <div className="text-[10px] text-slate-400 font-mono">admin@demo.com</div>
+                <div className="text-xs font-heading font-bold text-[#8C6C16] truncate">System Admin</div>
+                <div className="text-[10px] text-[#69736F] font-mono">admin@demo.com</div>
               </button>
             </div>
           </div>
 
           {/* Registration link */}
-          <div className="mt-5 text-center text-xs text-slate-400">
-            New to the demo?{' '}
-            <Link to="/register" className="text-brand-400 hover:text-brand-300 font-bold">
-              Register with a referral link
+          <div className="mt-5 text-center text-xs text-[#69736F]">
+            New to the wealth network?{' '}
+            <Link to="/register" className="text-[#063B32] hover:text-[#042C26] font-bold">
+              Register with an invitation code
             </Link>
           </div>
         </div>
@@ -173,3 +169,4 @@ export const LoginPage: React.FC = () => {
     </div>
   );
 };
+

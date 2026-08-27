@@ -1,8 +1,11 @@
 from collections import deque
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.models.volume import BinaryVolume
+from app.models.period_volume import BinaryPeriodVolume
 from app.models.purchase import Purchase
+from app.services.time_service import time_provider, slot_service
 
 class MLMPlacementError(Exception):
     pass
@@ -52,7 +55,6 @@ def auto_place_in_binary_tree(db: Session, root_user_id: int, preferred_leg: str
     if not root:
         raise MLMPlacementError("Root node for placement not found.")
         
-    # If preferred leg is explicitly LEFT or RIGHT, search down that leg first
     queue = deque([root])
     
     while queue:
@@ -97,7 +99,7 @@ def get_binary_ancestors(db: Session, user_id: int) -> list[tuple[User, str]]:
         parent = db.get(User, current.binary_parent_id)
         if not parent:
             break
-        position = current.binary_position
+        position = (current.binary_position or 'LEFT').strip().upper()
         ancestors.append((parent, position))
         current = parent
         
@@ -114,19 +116,43 @@ def count_total_network_members(db: Session, user_id: int) -> int:
             queue.append(child.id)
     return count
 
-def build_binary_tree_node(db: Session, user: User, depth: int = 3, current_depth: int = 1) -> dict:
+def build_binary_tree_node(
+    db: Session,
+    user: User,
+    depth: int = 3,
+    current_depth: int = 1,
+    view_mode: str = 'network',
+    slot_id: Optional[str] = None
+) -> dict:
     if not user:
         return None
         
     vol = get_or_create_binary_volume(db, user.id)
     
-    # Left and Right immediate children
+    # Resolve slot ID if not provided
+    if not slot_id:
+        slot_info = time_provider.get_current_slot_info(db)
+        slot_id = slot_info.slot_id
+
+    from app.services.pair_service import pair_service
+    period_vol = pair_service.get_or_create_period_volume(db, user.id, slot_id)
+
+    current_left = period_vol.current_left_bv
+    current_right = period_vol.current_right_bv
+    starting_carry_left = period_vol.starting_carry_left
+    starting_carry_right = period_vol.starting_carry_right
+    effective_left = period_vol.effective_left_bv
+    effective_right = period_vol.effective_right_bv
+    ending_carry_left = period_vol.ending_carry_left
+    ending_carry_right = period_vol.ending_carry_right
+    pair_completed = period_vol.pair_completed
+    pair_bonus = period_vol.pair_bonus
+
+    # Immediate children
     left_child = db.query(User).filter(User.binary_parent_id == user.id, User.binary_position == 'LEFT').first()
     right_child = db.query(User).filter(User.binary_parent_id == user.id, User.binary_position == 'RIGHT').first()
     
     direct_count = db.query(User).filter(User.sponsor_id == user.id).count()
-    
-    # Get active package name if any
     last_purchase = db.query(Purchase).filter(Purchase.user_id == user.id).order_by(Purchase.created_at.desc()).first()
     
     node = {
@@ -148,15 +174,28 @@ def build_binary_tree_node(db: Session, user: User, depth: int = 3, current_dept
         'personal_bv': vol.personal_bv,
         'accumulated_left_bv': vol.accumulated_left_bv,
         'accumulated_right_bv': vol.accumulated_right_bv,
-        'carry_left_bv': vol.carry_left_bv,
-        'carry_right_bv': vol.carry_right_bv,
+        'carry_left_bv': ending_carry_left,
+        'carry_right_bv': ending_carry_right,
         'matched_bv': vol.matched_bv,
+        'slot_id': slot_id,
+        'view_mode': view_mode,
+        'current_left_bv': current_left,
+        'current_right_bv': current_right,
+        'starting_carry_left': starting_carry_left,
+        'starting_carry_right': starting_carry_right,
+        'effective_left_bv': effective_left,
+        'effective_right_bv': effective_right,
+        'ending_carry_left': ending_carry_left,
+        'ending_carry_right': ending_carry_right,
+        'pair_completed': pair_completed,
+        'pair_bonus': pair_bonus,
+        'has_active_slot_volume': (current_left > 0 or current_right > 0 or (last_purchase and last_purchase.slot_id == slot_id)),
         'left': None,
         'right': None
     }
     
     if current_depth < depth:
-        node['left'] = build_binary_tree_node(db, left_child, depth, current_depth + 1) if left_child else None
-        node['right'] = build_binary_tree_node(db, right_child, depth, current_depth + 1) if right_child else None
+        node['left'] = build_binary_tree_node(db, left_child, depth, current_depth + 1, view_mode, slot_id) if left_child else None
+        node['right'] = build_binary_tree_node(db, right_child, depth, current_depth + 1, view_mode, slot_id) if right_child else None
         
     return node

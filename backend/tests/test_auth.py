@@ -39,7 +39,7 @@ def test_register_new_member(client):
         "password": "Demo@123",
         "confirm_password": "Demo@123",
         "referral_code": "AMOL001",
-        "binary_parent_code": "SNEHA001",
+        "binary_parent_code": "AMOL001",
         "binary_position": "LEFT"
     })
     assert res.status_code == 201

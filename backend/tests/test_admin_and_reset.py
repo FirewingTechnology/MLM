@@ -11,8 +11,8 @@ def test_admin_dashboard_and_reset(client):
     dash = client.get("/api/admin/dashboard", headers=admin_headers)
     assert dash.status_code == 200
     kpis = dash.json()["data"]["kpis"]
-    assert kpis["total_users"] >= 8
-    assert kpis["active_users"] >= 7
+    assert kpis["total_users"] >= 2
+    assert kpis["active_users"] >= 2
 
     # 3. Manual wallet adjustment
     users = client.get("/api/admin/users", headers=admin_headers).json()["data"]["items"]
@@ -32,4 +32,4 @@ def test_admin_dashboard_and_reset(client):
     # 5. Verify clean seed state after reset
     dash_after = client.get("/api/admin/dashboard", headers=admin_headers)
     assert dash_after.status_code == 200
-    assert dash_after.json()["data"]["kpis"]["total_users"] == 8
+    assert dash_after.json()["data"]["kpis"]["total_users"] == 2

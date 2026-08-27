@@ -2,63 +2,97 @@
 
 @layer base {
   body {
-    background-color: #02040a;
-    color: #f1f5f9;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #F7F4EC;
+    color: #18211F;
+    font-family: 'Manrope', 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'DM Sans', 'Manrope', sans-serif;
+    color: #18211F;
   }
 }
 
-/* Custom modern scrollbars */
+/* Custom warm luxury scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: #EFECE2;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.6);
+  background: #C9C4B7;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.8);
+  background: #8C857B;
 }
 
-/* Custom fintech card styling */
+/* Premium Wealth Management Card styling */
+.wealth-card {
+  background: #FFFEF9;
+  border: 1px solid #E5E0D3;
+  box-shadow: 0 1px 3px 0 rgba(24, 33, 31, 0.04), 0 1px 2px -1px rgba(24, 33, 31, 0.04);
+}
+
+.wealth-card-gold {
+  background: #FFFEF9;
+  border: 1px solid rgba(201, 162, 39, 0.25);
+  box-shadow: 0 4px 20px -2px rgba(201, 162, 39, 0.08);
+}
+
+.wealth-card-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.wealth-card-hover:hover {
+  border-color: #D3CCA9;
+  box-shadow: 0 8px 30px -4px rgba(24, 33, 31, 0.07), 0 4px 12px -2px rgba(24, 33, 31, 0.03);
+}
+
+/* Deep Emerald Hero Surface */
+.wealth-hero {
+  background: linear-gradient(135deg, #063B32 0%, #042C26 100%);
+  border: 1px solid rgba(201, 162, 39, 0.2);
+  box-shadow: 0 12px 36px -6px rgba(6, 59, 50, 0.35);
+}
+
+/* Gold Accents & Rings */
+.gold-ring {
+  box-shadow: 0 0 0 2px #C9A227, 0 0 20px -2px rgba(201, 162, 39, 0.4);
+}
+
+.emerald-ring {
+  box-shadow: 0 0 0 2px #063B32, 0 0 20px -2px rgba(6, 59, 50, 0.3);
+}
+
+/* Subtle Shimmer */
+@keyframes goldShimmer {
+  0% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.015); box-shadow: 0 0 25px rgba(201, 162, 39, 0.3); }
+  100% { opacity: 0.85; transform: scale(1); }
+}
+
+.shimmer-gold {
+  animation: goldShimmer 3s ease-in-out infinite;
+}
+
+/* Legacy and helper mappings for complete UI consistency */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #FFFEF9;
+  border: 1px solid #E5E0D3;
+  box-shadow: 0 1px 3px 0 rgba(24, 33, 31, 0.04);
 }
-
 .glass-panel-hover {
-  transition: all 0.25s ease-in-out;
+  transition: all 0.2s ease-in-out;
 }
 .glass-panel-hover:hover {
-  border-color: rgba(16, 185, 129, 0.3);
-  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.5), 0 0 15px -3px rgba(16, 185, 129, 0.15);
+  border-color: #D3CCA9;
+  box-shadow: 0 8px 30px -4px rgba(24, 33, 31, 0.07);
 }
-
 .glass-dropdown {
-  background: rgba(11, 17, 32, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #FFFEF9;
+  border: 1px solid #E5E0D3;
+  box-shadow: 0 12px 32px -4px rgba(24, 33, 31, 0.12);
 }
 
-/* Shadows and glow helpers */
-.shadow-glow-emerald {
-  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.35);
-}
-.shadow-glow-amber {
-  box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.35);
-}
-.shadow-glow-blue {
-  box-shadow: 0 0 25px -5px rgba(59, 130, 246, 0.35);
-}
-
-/* Theme custom colors */
-.bg-navy-950 { background-color: #02040a; }
-.bg-navy-900 { background-color: #0a0f1d; }
-.bg-navy-850 { background-color: #0e1526; }
-.bg-navy-800 { background-color: #151e36; }

@@ -13,7 +13,6 @@ import {
   CheckCircle2, 
   AlertCircle, 
   ArrowRight, 
-  GitFork,
   Loader2 
 } from 'lucide-react';
 
@@ -107,7 +106,7 @@ export const RegisterPage: React.FC = () => {
 
       if (res.data?.success) {
         login(res.data.data.token, res.data.data.user);
-        showToast('Registration successful! Welcome to the Demo Binary MLM platform.', 'success');
+        showToast('Registration successful! Welcome to the Wealth MLM platform.', 'success');
         navigate('/dashboard');
       }
     } catch (err: any) {
@@ -118,47 +117,45 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-navy-950 flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="min-h-screen bg-[#F7F4EC] flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center mb-5">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center shadow-glow-emerald">
-            <Sparkles className="w-5 h-5 text-navy-950 font-bold" />
+        <div className="flex items-center justify-center gap-2.5 mb-2">
+          <div className="w-10 h-10 rounded-2xl bg-[#063B32] border border-[#C9A227]/40 flex items-center justify-center shadow-wealth-gold">
+            <Sparkles className="w-5 h-5 text-[#E2C766]" />
           </div>
-          <span className="font-extrabold text-2xl tracking-tight text-white">
-            BINARY<span className="text-brand-400">MLM</span>
+          <span className="font-heading font-black text-2xl tracking-tight text-[#18211F]">
+            WEALTH<span className="text-[#C9A227]">MLM</span>
           </span>
         </div>
-        <p className="text-xs text-slate-400">
-          Create a new simulated distributor account in the binary tree
+        <p className="text-xs text-[#69736F] font-medium">
+          Create a new simulated distributor account in the binary wealth network
         </p>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-xl px-4">
-        <div className="glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800">
+        <div className="bg-[#FFFEF9] rounded-3xl p-6 sm:p-8 shadow-wealth-card border border-[#E5E0D3]">
           {/* Sponsor card verification */}
-          <div className="mb-6 p-3.5 rounded-2xl bg-navy-900/90 border border-slate-800 flex items-center justify-between">
+          <div className="mb-6 p-4 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center">
-                <Link2 className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-[#FAF4DC] border border-[#E2C766]/60 text-[#8C6C16] flex items-center justify-center">
+                <Link2 className="w-5 h-5 text-[#063B32]" />
               </div>
               <div>
-                <div className="text-[10px] uppercase font-bold text-slate-400">Direct Sponsor</div>
+                <div className="text-[10px] uppercase font-bold text-[#69736F]">Direct Sponsor</div>
                 {sponsorInfo ? (
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-brand-400" />
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#18211F]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#063B32]" />
                     <span>{sponsorInfo.sponsor_name}</span>
-                    <span className="text-brand-400 font-mono">({sponsorInfo.referral_code})</span>
+                    <span className="text-[#8C6C16] font-mono">({sponsorInfo.referral_code})</span>
                   </div>
                 ) : checkingReferral ? (
-                  <div className="text-xs text-slate-400 flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                  <div className="text-xs text-[#69736F] flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin text-[#063B32]" />
                     <span>Verifying sponsor code...</span>
                   </div>
                 ) : (
-                  <div className="text-xs text-amber-400 flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" />
+                  <div className="text-xs text-[#C94B4B] font-medium flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 text-[#C94B4B]" />
                     <span>No valid sponsor code entered</span>
                   </div>
                 )}
@@ -166,7 +163,7 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             <div className="text-right">
-              <span className="text-[10px] text-slate-500 font-mono">Step 1 of 2</span>
+              <span className="text-[10px] text-[#69736F] font-mono">Step 1 of 2</span>
             </div>
           </div>
 
@@ -174,11 +171,11 @@ export const RegisterPage: React.FC = () => {
             {/* Full Name & Mobile */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
                   Full Name
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#69736F]">
                     <UserIcon className="w-4 h-4" />
                   </div>
                   <input
@@ -187,17 +184,17 @@ export const RegisterPage: React.FC = () => {
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="e.g. Ramesh Kumar"
                     required
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-navy-950/80 border border-slate-700 text-white text-xs focus:outline-none focus:border-brand-500 font-medium"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs focus:outline-none focus:border-[#063B32] font-medium shadow-xs"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
                   Mobile Number
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#69736F]">
                     <Phone className="w-4 h-4" />
                   </div>
                   <input
@@ -206,7 +203,7 @@ export const RegisterPage: React.FC = () => {
                     onChange={(e) => setMobile(e.target.value)}
                     placeholder="e.g. 9876543210"
                     required
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-navy-950/80 border border-slate-700 text-white text-xs focus:outline-none focus:border-brand-500 font-mono"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs focus:outline-none focus:border-[#063B32] font-mono shadow-xs"
                   />
                 </div>
               </div>
@@ -214,11 +211,11 @@ export const RegisterPage: React.FC = () => {
 
             {/* Email */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-[#18211F] mb-1">
                 Email Address
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#69736F]">
                   <Mail className="w-4 h-4" />
                 </div>
                 <input
@@ -227,7 +224,7 @@ export const RegisterPage: React.FC = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="ramesh@example.com"
                   required
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-navy-950/80 border border-slate-700 text-white text-xs focus:outline-none focus:border-brand-500 font-mono"
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs focus:outline-none focus:border-[#063B32] font-mono shadow-xs"
                 />
               </div>
             </div>
@@ -235,11 +232,11 @@ export const RegisterPage: React.FC = () => {
             {/* Password & Confirm */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
                   Password
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#69736F]">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
@@ -248,17 +245,17 @@ export const RegisterPage: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-navy-950/80 border border-slate-700 text-white text-xs focus:outline-none focus:border-brand-500 font-mono"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs focus:outline-none focus:border-[#063B32] font-mono shadow-xs"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#69736F]">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
@@ -267,7 +264,7 @@ export const RegisterPage: React.FC = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-navy-950/80 border border-slate-700 text-white text-xs focus:outline-none focus:border-brand-500 font-mono"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs focus:outline-none focus:border-[#063B32] font-mono shadow-xs"
                   />
                 </div>
               </div>
@@ -276,7 +273,7 @@ export const RegisterPage: React.FC = () => {
             {/* Referral Code & Placement */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
                   Referral Code (Sponsor)
                 </label>
                 <input
@@ -285,22 +282,22 @@ export const RegisterPage: React.FC = () => {
                   onChange={handleReferralChange}
                   placeholder="AMOL001"
                   required
-                  className="w-full px-3.5 py-2 rounded-xl bg-navy-950/80 border border-slate-700 text-white text-xs font-mono uppercase focus:outline-none focus:border-brand-500"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs font-mono uppercase focus:outline-none focus:border-[#063B32] shadow-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
                   Preferred Binary Leg
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setBinaryPosition('LEFT')}
-                    className={`py-2 rounded-xl text-xs font-bold transition-all border ${
+                    className={`py-2.5 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${
                       binaryPosition === 'LEFT'
-                        ? 'bg-brand-500/20 text-brand-400 border-brand-500/40'
-                        : 'bg-navy-950/60 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF] shadow-xs'
+                        : 'bg-[#F7F4EC] border-[#E5E0D3] text-[#69736F] hover:bg-[#EFECE2]'
                     }`}
                   >
                     Left Leg
@@ -308,10 +305,10 @@ export const RegisterPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setBinaryPosition('RIGHT')}
-                    className={`py-2 rounded-xl text-xs font-bold transition-all border ${
+                    className={`py-2.5 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${
                       binaryPosition === 'RIGHT'
-                        ? 'bg-brand-500/20 text-brand-400 border-brand-500/40'
-                        : 'bg-navy-950/60 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766] shadow-xs'
+                        : 'bg-[#F7F4EC] border-[#E5E0D3] text-[#69736F] hover:bg-[#EFECE2]'
                     }`}
                   >
                     Right Leg
@@ -322,7 +319,7 @@ export const RegisterPage: React.FC = () => {
 
             {/* Optional Specific Binary Parent code */}
             <div>
-              <label className="block text-[11px] text-slate-400 mb-1">
+              <label className="block text-[11px] font-medium text-[#69736F] mb-1">
                 Specific Placement Parent Code (Optional — leave blank for auto extreme leg placement)
               </label>
               <input
@@ -330,33 +327,33 @@ export const RegisterPage: React.FC = () => {
                 value={binaryParentCode}
                 onChange={(e) => setBinaryParentCode(e.target.value.toUpperCase())}
                 placeholder="e.g. USR-00003 or RAHUL001 (Optional)"
-                className="w-full px-3.5 py-2 rounded-xl bg-navy-950/60 border border-slate-800 text-white text-xs font-mono uppercase focus:outline-none focus:border-brand-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs font-mono uppercase focus:outline-none focus:border-[#063B32] shadow-xs"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading || !sponsorInfo}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-brand-500 to-emerald-600 hover:from-brand-400 hover:to-emerald-500 text-navy-950 font-bold text-sm shadow-glow-emerald transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 mt-2"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/30 font-heading font-bold text-sm shadow-wealth-card transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin text-[#C9A227]" />
                   <span>Registering Member...</span>
                 </>
               ) : (
                 <>
                   <span>Complete Virtual Registration</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 text-[#C9A227]" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-5 text-center text-xs text-slate-400">
+          <div className="mt-5 text-center text-xs text-[#69736F]">
             Already have an account?{' '}
-            <Link to="/login" className="text-brand-400 hover:text-brand-300 font-bold">
-              Sign In to Demo
+            <Link to="/login" className="text-[#063B32] hover:text-[#042C26] font-bold">
+              Sign In to Wealth Portal
             </Link>
           </div>
         </div>
@@ -364,3 +361,4 @@ export const RegisterPage: React.FC = () => {
     </div>
   );
 };
+
