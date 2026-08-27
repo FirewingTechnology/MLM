@@ -389,6 +389,12 @@ def test_12_child_pair_does_not_consume_parent_pair_limit(client, db_session):
     })
     b = db_session.query(User).filter(User.email == "b12@demo.com").first()
 
+    client.post("/api/auth/register", json={
+        "full_name": "C12", "email": "c12@demo.com", "mobile": "9870010029",
+        "password": "Demo@123", "confirm_password": "Demo@123",
+        "referral_code": "AMOL001", "binary_parent_code": "AMOL001", "binary_position": "RIGHT"
+    })
+
     # B pairs
     pair_service.record_bv_and_evaluate_pairs(db_session, b.id, 'LEFT', 30000.0, slot_info.slot_id)
     pair_service.record_bv_and_evaluate_pairs(db_session, b.id, 'RIGHT', 30000.0, slot_info.slot_id)
@@ -801,33 +807,33 @@ def test_23_acceptance_multiple_child_pairs_independent(client, db_session):
     })
     c = db_session.query(User).filter(User.email == "c23@demo.com").first()
 
-    # Under B: D (LEFT) and E (RIGHT)
+    # Under B: D (LEFT) and E (RIGHT) sponsored by B
     client.post("/api/auth/register", json={
         "full_name": "D23", "email": "d23@demo.com", "mobile": "9870040003",
         "password": "Demo@123", "confirm_password": "Demo@123",
-        "referral_code": "AMOL001", "binary_parent_code": b.user_code, "binary_position": "LEFT"
+        "referral_code": b.referral_code, "binary_parent_code": b.user_code, "binary_position": "LEFT"
     })
     d = db_session.query(User).filter(User.email == "d23@demo.com").first()
 
     client.post("/api/auth/register", json={
         "full_name": "E23", "email": "e23@demo.com", "mobile": "9870040004",
         "password": "Demo@123", "confirm_password": "Demo@123",
-        "referral_code": "AMOL001", "binary_parent_code": b.user_code, "binary_position": "RIGHT"
+        "referral_code": b.referral_code, "binary_parent_code": b.user_code, "binary_position": "RIGHT"
     })
     e = db_session.query(User).filter(User.email == "e23@demo.com").first()
 
-    # Under C: F (LEFT) and G (RIGHT)
+    # Under C: F (LEFT) and G (RIGHT) sponsored by C
     client.post("/api/auth/register", json={
         "full_name": "F23", "email": "f23@demo.com", "mobile": "9870040005",
         "password": "Demo@123", "confirm_password": "Demo@123",
-        "referral_code": "AMOL001", "binary_parent_code": c.user_code, "binary_position": "LEFT"
+        "referral_code": c.referral_code, "binary_parent_code": c.user_code, "binary_position": "LEFT"
     })
     f = db_session.query(User).filter(User.email == "f23@demo.com").first()
 
     client.post("/api/auth/register", json={
         "full_name": "G23", "email": "g23@demo.com", "mobile": "9870040006",
         "password": "Demo@123", "confirm_password": "Demo@123",
-        "referral_code": "AMOL001", "binary_parent_code": c.user_code, "binary_position": "RIGHT"
+        "referral_code": c.referral_code, "binary_parent_code": c.user_code, "binary_position": "RIGHT"
     })
     g = db_session.query(User).filter(User.email == "g23@demo.com").first()
 

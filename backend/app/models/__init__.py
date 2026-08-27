@@ -10,6 +10,7 @@ from app.models.volume_ledger import VolumeLedger
 from app.models.slot_settlement import SlotSettlement
 from app.models.audit_log import AuditLog
 from app.models.demo_time import DemoTimeConfig
+from app.models.pair_event import PairEvent
 
 __all__ = [
     'User',
@@ -24,6 +25,7 @@ __all__ = [
     'WalletTransaction',
     'Withdrawal',
     'AuditLog',
-    'DemoTimeConfig'
+    'DemoTimeConfig',
+    'PairEvent'
 ]
 

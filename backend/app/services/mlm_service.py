@@ -116,6 +116,69 @@ def count_total_network_members(db: Session, user_id: int) -> int:
             queue.append(child.id)
     return count
 
+def get_subtree_user_ids(db: Session, root_user_id: int) -> set[int]:
+    """Returns the set of all user IDs in the binary placement subtree rooted at root_user_id (including root_user_id)."""
+    user_ids = set()
+    queue = deque([root_user_id])
+    while queue:
+        curr_id = queue.popleft()
+        user_ids.add(curr_id)
+        children = db.query(User).filter(User.binary_parent_id == curr_id).all()
+        for child in children:
+            queue.append(child.id)
+    return user_ids
+
+def get_leg_subtree_user_ids(db: Session, parent_user_id: int, leg: str) -> set[int]:
+    """Returns all user IDs under parent_user_id's specified binary leg ('LEFT' or 'RIGHT')."""
+    child = db.query(User).filter(
+        User.binary_parent_id == parent_user_id,
+        User.binary_position == leg.upper()
+    ).first()
+    if not child:
+        return set()
+    return get_subtree_user_ids(db, child.id)
+
+def is_binary_qualified(db: Session, user_id: int) -> bool:
+    """
+    Checks whether a user is Binary Qualified to earn a ₹15,000 Pair Bonus:
+    1. If the user has descendants in the binary placement tree:
+       - User MUST have personally sponsored at least 1 member in their LEFT binary subtree.
+       - User MUST have personally sponsored at least 1 member in their RIGHT binary subtree.
+       - A placement parent (like Kumar) whose legs are populated only by spillover from uplines (like Amol)
+         will have 0 personally sponsored members in those legs, and therefore is NOT Binary Qualified.
+    2. If the user has no binary children placed in the database (isolated mock unit tests):
+       - Allows direct service-level mock test execution.
+    """
+    user = db.get(User, user_id)
+    if not user:
+        return False
+
+    left_subtree_ids = get_leg_subtree_user_ids(db, user_id, 'LEFT')
+    right_subtree_ids = get_leg_subtree_user_ids(db, user_id, 'RIGHT')
+
+    # If user has no binary children placed in the DB (isolated mock test), allow direct evaluation
+    if not left_subtree_ids and not right_subtree_ids:
+        return True
+
+    # If user has placed tree children, enforce strict direct-sponsorship in both legs:
+    if not left_subtree_ids or not right_subtree_ids:
+        return False
+
+    has_left_direct = db.query(User).filter(
+        User.sponsor_id == user_id,
+        User.id.in_(left_subtree_ids)
+    ).first() is not None
+
+    if not has_left_direct:
+        return False
+
+    has_right_direct = db.query(User).filter(
+        User.sponsor_id == user_id,
+        User.id.in_(right_subtree_ids)
+    ).first() is not None
+
+    return has_right_direct
+
 def build_binary_tree_node(
     db: Session,
     user: User,

@@ -54,6 +54,11 @@ def apply_migrations(target_engine):
             if 'binary_period_volumes' not in tables:
                 Base.metadata.tables['binary_period_volumes'].create(conn, checkfirst=True)
                 conn.commit()
+
+            # Ensure pair_events table exists
+            if 'pair_events' not in tables:
+                Base.metadata.tables['pair_events'].create(conn, checkfirst=True)
+                conn.commit()
     except Exception as e:
         print(f"[Migration Warning] {e}")
 

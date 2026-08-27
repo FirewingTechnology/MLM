@@ -647,11 +647,11 @@ def test_25_direct_commission_and_pair_bonus_independent(client, db_session):
     })
     l25 = db_session.query(User).filter(User.email == "l25@demo.com").first()
 
-    # Amol places R25 on Right (sponsored by someone else)
+    # Amol sponsors and places R25 on Right
     client.post("/api/auth/register", json={
         "full_name": "R25", "email": "r25@demo.com", "mobile": "9870000041",
         "password": "Demo@123", "confirm_password": "Demo@123",
-        "referral_code": l25.referral_code, "binary_parent_code": "AMOL001", "binary_position": "RIGHT"
+        "referral_code": "AMOL001", "binary_parent_code": "AMOL001", "binary_position": "RIGHT"
     })
     r25 = db_session.query(User).filter(User.email == "r25@demo.com").first()
 
@@ -685,6 +685,13 @@ def test_26_child_pair_does_not_consume_parent_pair(client, db_session):
         "referral_code": "AMOL001", "binary_parent_code": "AMOL001", "binary_position": "LEFT"
     })
     b = db_session.query(User).filter(User.email == "b26@demo.com").first()
+
+    # Register C under Amol RIGHT
+    client.post("/api/auth/register", json={
+        "full_name": "C26", "email": "c26@demo.com", "mobile": "9870000059",
+        "password": "Demo@123", "confirm_password": "Demo@123",
+        "referral_code": "AMOL001", "binary_parent_code": "AMOL001", "binary_position": "RIGHT"
+    })
 
     # B completes a pair
     pair_service.record_bv_and_evaluate_pairs(db_session, b.id, 'LEFT', 30000.0, slot_info.slot_id)

@@ -9,8 +9,10 @@ from app.models.volume import BinaryVolume
 from app.models.volume_ledger import VolumeLedger
 from app.models.slot_settlement import SlotSettlement
 from app.models.commission import Commission
+from app.models.pair_event import PairEvent
 from app.services.wallet_service import credit_wallet
 from app.services.audit_service import log_action
+from app.services.mlm_service import is_binary_qualified, get_leg_subtree_user_ids
 
 class PairBonusService:
     @staticmethod
@@ -242,6 +244,14 @@ class PairBonusService:
             PairBonusService.record_slot_settlement(db, user_id, slot_id, created_at)
             return None
 
+        # CRITICAL MLM QUALIFICATION RULE:
+        # A user ONLY qualifies for a ₹15,000 Pair Bonus if they are active AND Binary Qualified
+        # (personally sponsored at least 1 active member in their LEFT leg AND 1 active member in their RIGHT leg).
+        # Placement parents (like Kumar) who merely receive spillover volume do NOT earn Pair Bonuses.
+        if not is_binary_qualified(db, user_id):
+            PairBonusService.record_slot_settlement(db, user_id, slot_id, created_at)
+            return None
+
         # Exactly 1 pair is paid per slot
         period_vol.consumed_left_bv = qualifying_bv
         period_vol.consumed_right_bv = qualifying_bv
@@ -257,9 +267,43 @@ class PairBonusService:
 
         user = db.get(User, user_id)
 
+        # 0. Find representative lineage sources and record explicit PairEvent
+        left_sub = get_leg_subtree_user_ids(db, user_id, 'LEFT')
+        right_sub = get_leg_subtree_user_ids(db, user_id, 'RIGHT')
+        
+        left_direct = db.query(User).filter(
+            User.sponsor_id == user_id,
+            User.id.in_(left_sub),
+            User.is_active == True
+        ).first()
+        right_direct = db.query(User).filter(
+            User.sponsor_id == user_id,
+            User.id.in_(right_sub),
+            User.is_active == True
+        ).first()
+
+        pair_event_record = PairEvent(
+            pair_earner_user_id=user_id,
+            slot_id=slot_id,
+            purchase_id=purchase_id,
+            left_source_user_id=left_direct.id if left_direct else (source_user_id if source_user_id in left_sub else None),
+            right_source_user_id=right_direct.id if right_direct else (source_user_id if source_user_id in right_sub else None),
+            matched_left_bv=qualifying_bv,
+            matched_right_bv=qualifying_bv,
+            pair_bonus=bonus_amount,
+            matching_upline_id=user.sponsor_id if user else None,
+            matching_commission=0.0,
+            status='COMPLETED',
+            idempotency_key=f"PAIR-EVENT-{slot_id}-{user_id}",
+            created_at=created_at or datetime.utcnow()
+        )
+        db.add(pair_event_record)
+        db.flush()
+
         # 1. Record Pair Bonus Commission & Credit User Wallet
         calc_details = {
             'trigger': 'PAIR_BONUS',
+            'pair_event_id': pair_event_record.id,
             'slot_id': slot_id,
             'qualifying_bv': qualifying_bv,
             'pair_bonus_amount': bonus_amount,
@@ -305,6 +349,7 @@ class PairBonusService:
         log_action(db, 'PAIR_BONUS_AWARDED', 'Commission', comm.id, user_id, {
             'slot_id': slot_id,
             'amount': bonus_amount,
+            'pair_event_id': pair_event_record.id,
             'ending_carry_left': period_vol.ending_carry_left,
             'ending_carry_right': period_vol.ending_carry_right
         })
@@ -363,6 +408,7 @@ class PairBonusService:
                     )
                     matching_comm.calculation_details = calc_details_matching
                     db.add(matching_comm)
+                    pair_event_record.matching_commission = matching_bonus
                     db.flush()
 
                     credit_wallet(
