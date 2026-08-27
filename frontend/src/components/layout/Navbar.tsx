@@ -13,6 +13,7 @@ import {
   Clock
 } from 'lucide-react';
 
+import { MyStatusLogo } from '../common/MyStatusLogo';
 import { useTime } from '../../context/TimeContext';
 
 interface NavbarProps {
@@ -44,15 +45,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPurchaseModal, onToggleSid
         </button>
 
         <Link to="/dashboard" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-[#063B32] border border-[#C9A227]/40 flex items-center justify-center shadow-sm">
-            <Sparkles className="w-4 h-4 text-[#C9A227]" />
-          </div>
-          <div>
-            <div className="font-heading font-extrabold text-base tracking-tight text-[#18211F] flex items-center gap-1.5">
-              <span>BINARY<span className="text-[#063B32]">MLM</span></span>
-              <span className="text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]/50 font-mono">PRO</span>
-            </div>
-          </div>
+          <MyStatusLogo size="sm" />
+          <span className="hidden sm:inline-block text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]/50 font-mono">
+            PRO
+          </span>
         </Link>
       </div>
 
