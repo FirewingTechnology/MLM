@@ -36,9 +36,11 @@ export const LoginPage: React.FC = () => {
         } else {
           navigate('/dashboard');
         }
+      } else {
+        showToast(res.data?.error?.message || 'Login failed. Backend API URL is not connected or returned invalid data. Check VITE_API_URL in Render.', 'error');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.error?.message || 'Login failed. Check your credentials.', 'error');
+      showToast(err.response?.data?.error?.message || 'Login failed. Check your credentials or backend connection.', 'error');
     } finally {
       setLoading(false);
     }

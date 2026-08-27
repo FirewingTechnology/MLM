@@ -108,9 +108,11 @@ export const RegisterPage: React.FC = () => {
         login(res.data.data.token, res.data.data.user);
         showToast('Registration successful! Welcome to the Wealth MLM platform.', 'success');
         navigate('/dashboard');
+      } else {
+        showToast(res.data?.error?.message || 'Registration failed. Backend API URL is not connected or returned invalid data.', 'error');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.error?.message || 'Registration failed.', 'error');
+      showToast(err.response?.data?.error?.message || 'Registration failed. Check backend connection.', 'error');
     } finally {
       setLoading(false);
     }
