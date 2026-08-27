@@ -3,6 +3,7 @@ import { Outlet, Navigate, Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { DemoBanner } from './DemoBanner';
 import { DemoResetModal } from '../modals/DemoResetModal';
+import { MyStatusLogo } from '../common/MyStatusLogo';
 import {
   ShieldAlert,
   LayoutDashboard,
@@ -44,17 +45,10 @@ export const AdminLayout: React.FC = () => {
       <header className="h-16 border-b border-[#E5E0D3] bg-[#FFFEF9]/95 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-wealth-card">
         <div className="flex items-center gap-4">
           <Link to="/admin/dashboard" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#063B32] border border-[#C9A227]/50 flex items-center justify-center shadow-wealth-gold">
-              <ShieldAlert className="w-5 h-5 text-[#C9A227]" />
-            </div>
-            <div>
-              <div className="font-heading font-extrabold text-sm tracking-tight text-[#18211F] flex items-center gap-2">
-                <span>ADMIN CONTROL</span>
-                <span className="text-[10px] bg-[#FAF4DC] text-[#8C6C16] font-bold px-2 py-0.5 rounded border border-[#E2C766]/60 font-mono">
-                  SUPERUSER
-                </span>
-              </div>
-            </div>
+            <MyStatusLogo size="sm" />
+            <span className="text-[10px] bg-[#FAF4DC] text-[#8C6C16] font-bold px-2 py-0.5 rounded border border-[#E2C766]/60 font-mono">
+              ADMIN
+            </span>
           </Link>
         </div>
 

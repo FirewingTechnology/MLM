@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
+import { MyStatusLogo } from '../components/common/MyStatusLogo';
 import { 
   Sparkles, 
   Lock, 
@@ -57,20 +58,12 @@ export const LoginPage: React.FC = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] text-xs font-mono font-bold uppercase tracking-wider mb-4">
           <AlertTriangle className="w-3.5 h-3.5 text-[#C88A16]" />
-          <span>Private Wealth Sandbox</span>
+          <span>Demo Sandbox</span>
         </div>
 
-        <div className="flex items-center justify-center gap-2.5 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-[#063B32] border border-[#C9A227]/40 flex items-center justify-center shadow-wealth-gold">
-            <Sparkles className="w-5 h-5 text-[#E2C766]" />
-          </div>
-          <span className="font-heading font-black text-2xl tracking-tight text-[#18211F]">
-            WEALTH<span className="text-[#C9A227]">MLM</span>
-          </span>
+        <div className="flex justify-center mb-2">
+          <MyStatusLogo variant="full" size="lg" />
         </div>
-        <p className="text-xs text-[#69736F] font-medium">
-          Private Wealth & Binary Network Portfolio Platform
-        </p>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">

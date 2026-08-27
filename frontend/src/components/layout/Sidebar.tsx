@@ -14,6 +14,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+import { MyStatusLogo } from '../common/MyStatusLogo';
+
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -48,21 +50,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       >
         <div className="p-4 space-y-5">
           {/* Brand Logo & Emblem in Sidebar */}
-          <div className="px-2 pt-2 pb-1 border-b border-[#0B5145]/60 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#042C26] border border-[#C9A227]/40 flex items-center justify-center shadow-wealth-gold">
-                <Sparkles className="w-4 h-4 text-[#C9A227]" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-heading font-extrabold text-base tracking-tight text-[#FFFEF9]">
-                  BINARY<span className="text-[#C9A227]">MLM</span>
-                </span>
-                <span className="text-[9px] uppercase tracking-widest text-[#F7F4EC]/60 font-semibold">
-                  Wealth Platform
-                </span>
-              </div>
-            </div>
-            <span className="px-2 py-0.5 rounded-md border border-[#C9A227]/50 text-[#C9A227] text-[10px] font-mono font-bold">
+          <div className="px-2 pt-2 pb-2 border-b border-[#0B5145]/60 flex items-center justify-between">
+            <MyStatusLogo size="sm" theme="dark" />
+            <span className="px-2 py-0.5 rounded-md border border-[#0288D1]/50 text-[#29B6F6] text-[10px] font-mono font-bold">
               PRO
             </span>
           </div>

@@ -31,10 +31,10 @@ export const MyStatusIcon: React.FC<{ size?: number | string; className?: string
         </linearGradient>
       </defs>
 
-      <!-- Top Upward Arrow -->
+      {/* Top Upward Arrow */}
       <path d="M 160 5 L 195 55 L 175 55 L 175 80 L 145 80 L 145 55 L 125 55 Z" fill="#0288D1" />
 
-      <!-- Right Speech Bubble (Navy) -->
+      {/* Right Speech Bubble (Navy) */}
       <path 
         d="M 165 65 
            H 265 A 25 25 0 0 1 290 90 
@@ -49,10 +49,10 @@ export const MyStatusIcon: React.FC<{ size?: number | string; className?: string
         fill="url(#logoNavyGrad)" 
       />
 
-      <!-- Play Triangle in Navy Bubble -->
+      {/* Play Triangle in Navy Bubble */}
       <polygon points="208,112 208,158 246,135" fill="#FFFFFF" />
 
-      <!-- Left Speech Bubble (Sky Blue) -->
+      {/* Left Speech Bubble (Sky Blue) */}
       <path 
         d="M 50 65 
            H 160 A 25 25 0 0 1 185 90 
@@ -67,13 +67,13 @@ export const MyStatusIcon: React.FC<{ size?: number | string; className?: string
         fill="url(#logoSkyGrad)" 
       />
 
-      <!-- Bar Chart -->
+      {/* Bar Chart */}
       <rect x="58" y="135" width="13" height="30" rx="3" fill="#FFFFFF" />
       <rect x="77" y="120" width="13" height="45" rx="3" fill="#FFFFFF" />
       <rect x="96" y="110" width="13" height="55" rx="3" fill="#FFFFFF" />
       <rect x="115" y="95" width="13" height="70" rx="3" fill="#FFFFFF" />
 
-      <!-- Trendline & Arrow -->
+      {/* Trendline & Arrow */}
       <polyline 
         points="55,140 76,122 97,128 132,90" 
         fill="none" 

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
+import { MyStatusLogo } from '../components/common/MyStatusLogo';
 import { 
   Sparkles, 
   User as UserIcon, 
@@ -106,7 +107,7 @@ export const RegisterPage: React.FC = () => {
 
       if (res.data?.success) {
         login(res.data.data.token, res.data.data.user);
-        showToast('Registration successful! Welcome to the Wealth MLM platform.', 'success');
+        showToast('Registration successful! Welcome to the My Status platform.', 'success');
         navigate('/dashboard');
       } else {
         showToast(res.data?.error?.message || 'Registration failed. Backend API URL is not connected or returned invalid data.', 'error');
@@ -121,16 +122,11 @@ export const RegisterPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F7F4EC] flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center mb-5">
-        <div className="flex items-center justify-center gap-2.5 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-[#063B32] border border-[#C9A227]/40 flex items-center justify-center shadow-wealth-gold">
-            <Sparkles className="w-5 h-5 text-[#E2C766]" />
-          </div>
-          <span className="font-heading font-black text-2xl tracking-tight text-[#18211F]">
-            WEALTH<span className="text-[#C9A227]">MLM</span>
-          </span>
+        <div className="flex justify-center mb-2">
+          <MyStatusLogo variant="full" size="md" />
         </div>
-        <p className="text-xs text-[#69736F] font-medium">
-          Create a new simulated distributor account in the binary wealth network
+        <p className="text-xs text-[#69736F] font-medium mt-1">
+          Create a new simulated distributor account in the binary network
         </p>
       </div>
 
