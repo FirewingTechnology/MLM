@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <!-- Sky Blue Gradient -->
+    <linearGradient id="skyBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#29B6F6" />
+      <stop offset="100%" stop-color="#0288D1" />
+    </linearGradient>
+    <!-- Navy Blue Gradient -->
+    <linearGradient id="navyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A365D" />
+      <stop offset="100%" stop-color="#0A192F" />
+    </linearGradient>
+  </defs>
+
+  <!-- Centered Graphic Group -->
+  <g transform="translate(40, 25)">
+    <!-- Top Arrow -->
+    <path d="M 160 30 L 195 78 L 175 78 L 175 105 L 145 105 L 145 78 L 125 78 Z" fill="#0288D1" />
+
+    <!-- Right Speech Bubble (Navy) -->
+    <!-- Positioned slightly behind/to the right -->
+    <path d="M 170 85 
+             H 270 A 25 25 0 0 1 295 110 
+             V 190 A 25 25 0 0 1 270 215 
+             H 215 
+             L 245 245 
+             L 195 215 
+             H 170 
+             A 25 25 0 0 1 145 190 
+             V 110 
+             A 25 25 0 0 1 170 85 Z" 
+          fill="url(#navyGrad)" />
+
+    <!-- Play Icon in Navy Bubble -->
+    <polygon points="210,132 210,178 248,155" fill="#FFFFFF" />
+
+    <!-- Left Speech Bubble (Sky Blue) -->
+    <path d="M 50 85 
+             H 160 A 25 25 0 0 1 185 110 
+             V 190 A 25 25 0 0 1 160 215 
+             H 85 
+             L 45 245 
+             L 60 215 
+             H 50 
+             A 25 25 0 0 1 25 190 
+             V 110 
+             A 25 25 0 0 1 50 85 Z" 
+          fill="url(#skyBlueGrad)" />
+
+    <!-- Chart Icon in Sky Blue Bubble -->
+    <!-- Bar 1 -->
+    <rect x="58" y="155" width="13" height="30" rx="3" fill="#FFFFFF" />
+    <!-- Bar 2 -->
+    <rect x="77" y="140" width="13" height="45" rx="3" fill="#FFFFFF" />
+    <!-- Bar 3 -->
+    <rect x="96" y="130" width="13" height="55" rx="3" fill="#FFFFFF" />
+    <!-- Bar 4 -->
+    <rect x="115" y="115" width="13" height="70" rx="3" fill="#FFFFFF" />
+
+    <!-- Growth Trendline & Arrow -->
+    <polyline points="55,160 76,142 97,148 132,110" 
+              fill="none" 
+              stroke="#FFFFFF" 
+              stroke-width="5.5" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" />
+    <!-- Trend Arrow Tip -->
+    <polygon points="120,105 138,105 138,123" fill="#FFFFFF" />
+  </g>
+
+  <!-- Typography -->
+  <!-- "My Status" -->
+  <text x="200" y="320" text-anchor="middle" font-family="Plus Jakarta Sans, Montserrat, Inter, system-ui, sans-serif" font-weight="900" font-size="54" letter-spacing="-1">
+    <tspan fill="#0288D1">My </tspan><tspan fill="#0A192F">Status</tspan>
+  </text>
+
+  <!-- "ELEVATE YOUR REACH" -->
+  <text x="200" y="360" text-anchor="middle" font-family="Plus Jakarta Sans, Montserrat, Inter, system-ui, sans-serif" font-weight="700" font-size="16" letter-spacing="7" fill="#718096">
+    ELEVATE YOUR REACH
+  </text>
+</svg>
