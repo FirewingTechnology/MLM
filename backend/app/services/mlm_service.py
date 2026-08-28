@@ -50,41 +50,49 @@ def validate_binary_placement(db: Session, parent_id: int, position: str) -> boo
         
     return True
 
-def auto_place_in_binary_tree(db: Session, root_user_id: int, preferred_leg: str = None) -> tuple[int, str]:
-    root = db.get(User, root_user_id)
-    if not root:
-        raise MLMPlacementError("Root node for placement not found.")
-        
-    queue = deque([root])
-    
-    while queue:
-        current = queue.popleft()
-        
-        left_child = db.query(User).filter(User.binary_parent_id == current.id, User.binary_position == 'LEFT').first()
-        right_child = db.query(User).filter(User.binary_parent_id == current.id, User.binary_position == 'RIGHT').first()
-        
-        if preferred_leg == 'LEFT':
-            if not left_child:
-                return current.id, 'LEFT'
-            if not right_child:
-                return current.id, 'RIGHT'
-        elif preferred_leg == 'RIGHT':
-            if not right_child:
-                return current.id, 'RIGHT'
-            if not left_child:
-                return current.id, 'LEFT'
-        else:
-            if not left_child:
-                return current.id, 'LEFT'
-            if not right_child:
-                return current.id, 'RIGHT'
-                
-        if left_child:
-            queue.append(left_child)
-        if right_child:
-            queue.append(right_child)
-            
+def find_extreme_placement(db: Session, root_or_parent_id: int, requested_side: str = 'LEFT') -> tuple[int, str]:
+    """
+    Finds the extreme available placement position under root_or_parent_id on requested_side.
+    - If requested_side == 'LEFT':
+        Start from requested parent. Check LEFT child.
+        If empty -> place there.
+        If occupied -> move to that LEFT child and repeat recursively.
+    - If requested_side == 'RIGHT':
+        Start from requested parent. Check RIGHT child.
+        If empty -> place there.
+        If occupied -> move to that RIGHT child and repeat recursively.
+    """
+    side = (requested_side or 'LEFT').strip().upper()
+    if side not in ('LEFT', 'RIGHT'):
+        raise MLMPlacementError("Binary position must be either 'LEFT' or 'RIGHT'.")
+
+    parent = db.get(User, root_or_parent_id)
+    if not parent:
+        raise MLMPlacementError(f"Placement parent user ID {root_or_parent_id} does not exist.")
+
+    current = parent
+    visited = set()
+
+    while current:
+        if current.id in visited:
+            raise MLMPlacementError(f"Circular reference detected in binary tree at user {current.id}.")
+        visited.add(current.id)
+
+        child = db.query(User).filter(
+            User.binary_parent_id == current.id,
+            User.binary_position == side
+        ).first()
+
+        if not child:
+            return current.id, side
+
+        current = child
+
     raise MLMPlacementError("Could not find an available placement spot in binary tree.")
+
+def auto_place_in_binary_tree(db: Session, root_user_id: int, preferred_leg: str = None) -> tuple[int, str]:
+    side = (preferred_leg or 'LEFT').strip().upper()
+    return find_extreme_placement(db, root_user_id, side)
 
 def get_binary_ancestors(db: Session, user_id: int) -> list[tuple[User, str]]:
     ancestors = []

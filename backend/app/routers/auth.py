@@ -7,6 +7,7 @@ from app.security import hash_password, verify_password, create_access_token, ge
 from app.services.mlm_service import (
     resolve_sponsor_by_code,
     validate_binary_placement,
+    find_extreme_placement,
     auto_place_in_binary_tree,
     get_or_create_binary_volume
 )
@@ -32,26 +33,25 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     if not sponsor:
         return error_response("INVALID_SPONSOR", f"Referral code '{req.referral_code}' is invalid.", 400)
 
-    # 2. Binary Placement Parent & Position
-    parent_id = None
-    position = None
+    # 2. Binary Placement Parent & Position (Extreme Left / Extreme Right)
+    requested_position = (req.binary_position or 'LEFT').strip().upper()
+    if requested_position not in ('LEFT', 'RIGHT'):
+        return error_response("VALIDATION_ERROR", "Binary position must be 'LEFT' or 'RIGHT'.", 400)
 
     if req.binary_parent_code:
         parent = resolve_sponsor_by_code(db, req.binary_parent_code) or \
                  db.query(User).filter(User.user_code == req.binary_parent_code.strip().upper()).first()
         if not parent:
             return error_response("INVALID_PLACEMENT_PARENT", f"Placement parent code '{req.binary_parent_code}' not found.", 400)
-        parent_id = parent.id
-        position = req.binary_position.upper() if req.binary_position else 'LEFT'
-        try:
-            validate_binary_placement(db, parent_id, position)
-        except Exception as e:
-            return error_response("PLACEMENT_OCCUPIED", str(e), 400)
+        target_root_id = parent.id
     else:
-        try:
-            parent_id, position = auto_place_in_binary_tree(db, sponsor.id, req.binary_position)
-        except Exception as e:
-            return error_response("PLACEMENT_FAILED", str(e), 400)
+        target_root_id = sponsor.id
+
+    try:
+        parent_id, position = find_extreme_placement(db, target_root_id, requested_position)
+        validate_binary_placement(db, parent_id, position)
+    except Exception as e:
+        return error_response("PLACEMENT_FAILED", str(e), 400)
 
     user_count = db.query(User).count() + 1
     user_code = f"USR-{user_count:05d}"
