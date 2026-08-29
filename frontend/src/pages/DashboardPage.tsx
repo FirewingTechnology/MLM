@@ -78,6 +78,16 @@ export const DashboardPage: React.FC = () => {
   const leftBv = kpis?.left_bv || 0;
   const rightBv = kpis?.right_bv || 0;
 
+  const carryData = data?.carry || data?.carry_summary || kpis?.carry || kpis?.carry_summary;
+
+  const leftCarryCount = carryData?.left?.count ?? carryData?.left?.unpaid_count ?? (Math.floor((kpis?.carry_left_bv || 0) / 30000));
+  const leftPaidCount = carryData?.left?.paid_count ?? carryData?.left?.paid_pairs ?? (Math.floor((carryData?.left?.paid || 0) / 30000));
+  const leftUnpaidCount = carryData?.left?.unpaid_count ?? carryData?.left?.unpaid_pairs ?? (Math.floor((kpis?.carry_left_bv || 0) / 30000));
+
+  const rightCarryCount = carryData?.right?.count ?? carryData?.right?.unpaid_count ?? (Math.floor((kpis?.carry_right_bv || 0) / 30000));
+  const rightPaidCount = carryData?.right?.paid_count ?? carryData?.right?.paid_pairs ?? (Math.floor((carryData?.right?.paid || 0) / 30000));
+  const rightUnpaidCount = carryData?.right?.unpaid_count ?? carryData?.right?.unpaid_pairs ?? (Math.floor((kpis?.carry_right_bv || 0) / 30000));
+
   // Dynamic greeting based on current hour
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? 'Good Morning' : currentHour < 17 ? 'Good Afternoon' : 'Good Evening';
@@ -174,54 +184,110 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2b. Four Distinct Commission Streams */}
+      {/* 2b. Four Performance & Carry Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Direct Commission */}
-        <div className="p-4 rounded-2xl bg-[#FFFEF9] border border-[#8DCFBF] shadow-xs">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-[#063B32]">
-            <span className="w-2 h-2 rounded-full bg-[#0E9F6E]" />
-            <span>Direct Sponsor</span>
+        <div className="p-4 rounded-2xl bg-[#FFFEF9] border border-[#8DCFBF] shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-[#063B32]">
+              <span className="w-2 h-2 rounded-full bg-[#0E9F6E]" />
+              <span>Direct Sponsor</span>
+            </div>
+            <div className="text-lg sm:text-xl font-heading font-black text-[#063B32] font-mono mt-1">
+              ₹{(kpis?.direct_commissions || 0).toLocaleString()}
+            </div>
           </div>
-          <div className="text-lg sm:text-xl font-heading font-black text-[#063B32] font-mono mt-1">
-            ₹{(kpis?.direct_commissions || 0).toLocaleString()}
-          </div>
-          <div className="text-[10px] text-[#69736F] mt-0.5">10% on direct purchases</div>
+          <div className="text-[10px] text-[#69736F] mt-2 pt-2 border-t border-[#E5E0D3]">10% on direct purchases</div>
         </div>
 
         {/* Pair Bonus */}
-        <div className="p-4 rounded-2xl bg-[#FFFEF9] border border-[#E2C766] shadow-xs">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-[#8C6C16]">
-            <span className="w-2 h-2 rounded-full bg-[#C9A227]" />
-            <span>Pair Bonus</span>
+        <div className="p-4 rounded-2xl bg-[#FFFEF9] border border-[#E2C766] shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-[#8C6C16]">
+              <span className="w-2 h-2 rounded-full bg-[#C9A227]" />
+              <span>Pair Bonus</span>
+            </div>
+            <div className="text-lg sm:text-xl font-heading font-black text-[#8C6C16] font-mono mt-1">
+              ₹{(kpis?.pair_commissions || 0).toLocaleString()}
+            </div>
           </div>
-          <div className="text-lg sm:text-xl font-heading font-black text-[#8C6C16] font-mono mt-1">
-            ₹{(kpis?.pair_commissions || 0).toLocaleString()}
-          </div>
-          <div className="text-[10px] text-[#69736F] mt-0.5">₹15k max 1/slot</div>
+          <div className="text-[10px] text-[#69736F] mt-2 pt-2 border-t border-[#E5E0D3]">₹15k max 1/slot</div>
         </div>
 
-        {/* Matching Commission */}
-        <div className="p-4 rounded-2xl bg-[#FFFEF9] border border-[#FDBA74] shadow-xs">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-[#C2410C]">
-            <span className="w-2 h-2 rounded-full bg-[#EA580C]" />
-            <span>Matching Upline</span>
+        {/* Left Carry Card */}
+        <div className="p-4 rounded-2xl bg-[#FFFEF9] border border-[#8DCFBF] shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-[#063B32]">
+                <span className="w-2 h-2 rounded-full bg-[#0E9F6E]" />
+                <span>LEFT CARRY</span>
+              </div>
+              <span className="text-[9px] font-mono font-bold bg-[#E0F3EE] text-[#063B32] border border-[#8DCFBF]/60 px-1.5 py-0.5 rounded">
+                LEFT
+              </span>
+            </div>
+            <div className="text-xl sm:text-2xl font-heading font-black text-[#18211F] font-mono mt-2 tracking-tight">
+              {leftCarryCount} CARRY
+            </div>
           </div>
-          <div className="text-lg sm:text-xl font-heading font-black text-[#C2410C] font-mono mt-1">
-            ₹{(kpis?.matching_commissions || 0).toLocaleString()}
+          <div className="pt-2.5 mt-2.5 border-t border-[#E5E0D3] grid grid-cols-2 gap-2 text-left">
+            <div>
+              <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-[#0E9F6E]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0E9F6E]" />
+                <span>PAID</span>
+              </div>
+              <div className="text-sm sm:text-base font-black font-mono text-[#0E9F6E] mt-0.5">
+                {leftPaidCount}
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-[#E02424]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E02424]" />
+                <span>UNPAID</span>
+              </div>
+              <div className="text-sm sm:text-base font-black font-mono text-[#E02424] mt-0.5">
+                {leftUnpaidCount}
+              </div>
+            </div>
           </div>
-          <div className="text-[10px] text-[#69736F] mt-0.5">10% on child pair bonus</div>
         </div>
 
-        {/* Carry Commission */}
-        <div className="p-4 rounded-2xl bg-[#FFFEF9] border border-[#93C5FD] shadow-xs">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-[#1D4ED8]">
-            <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
-            <span>Carry / Other</span>
+        {/* Right Carry Card */}
+        <div className="p-4 rounded-2xl bg-[#FFFEF9] border border-[#E2C766] shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-[#8C6C16]">
+                <span className="w-2 h-2 rounded-full bg-[#C9A227]" />
+                <span>RIGHT CARRY</span>
+              </div>
+              <span className="text-[9px] font-mono font-bold bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]/60 px-1.5 py-0.5 rounded">
+                RIGHT
+              </span>
+            </div>
+            <div className="text-xl sm:text-2xl font-heading font-black text-[#18211F] font-mono mt-2 tracking-tight">
+              {rightCarryCount} CARRY
+            </div>
           </div>
-          <div className="text-lg sm:text-xl font-heading font-black text-[#1D4ED8] font-mono mt-1">
-            ₹{(kpis?.carry_commissions || 0).toLocaleString()}
+          <div className="pt-2.5 mt-2.5 border-t border-[#E5E0D3] grid grid-cols-2 gap-2 text-left">
+            <div>
+              <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-[#0E9F6E]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0E9F6E]" />
+                <span>PAID</span>
+              </div>
+              <div className="text-sm sm:text-base font-black font-mono text-[#0E9F6E] mt-0.5">
+                {rightPaidCount}
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-[#E02424]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E02424]" />
+                <span>UNPAID</span>
+              </div>
+              <div className="text-sm sm:text-base font-black font-mono text-[#E02424] mt-0.5">
+                {rightUnpaidCount}
+              </div>
+            </div>
           </div>
-          <div className="text-[10px] text-[#69736F] mt-0.5">Override & carry bonus</div>
         </div>
       </div>
 

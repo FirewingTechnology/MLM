@@ -252,6 +252,36 @@ export interface BinaryTreeNode {
   right?: BinaryTreeNode | null;
 }
 
+export interface CarryLegSummary {
+  bv?: number;
+  count?: number;
+  paid_count?: number;
+  unpaid_count?: number;
+  total?: number;
+  paid?: number;
+  unpaid?: number;
+  carry?: number;
+  total_pairs?: number;
+  paid_pairs?: number;
+  unpaid_pairs?: number;
+}
+
+export interface CarryPairLegSummary {
+  total_pairs: number;
+  paid_pairs: number;
+  unpaid_pairs: number;
+}
+
+export interface CarryPairSummary {
+  left: CarryPairLegSummary;
+  right: CarryPairLegSummary;
+}
+
+export interface CarrySummary {
+  left: CarryLegSummary;
+  right: CarryLegSummary;
+}
+
 export interface DashboardData {
   user: User;
   kpis: {
@@ -267,6 +297,9 @@ export interface DashboardData {
     right_bv: number;
     carry_left_bv: number;
     carry_right_bv: number;
+    carry?: CarrySummary;
+    carry_summary?: CarrySummary;
+    carry_pair_summary?: CarryPairSummary;
     matched_bv: number;
     total_bv: number;
     direct_referrals: number;
@@ -283,6 +316,9 @@ export interface DashboardData {
     current_slot_id?: string;
     pair_summary?: PairSummary;
   };
+  carry?: CarrySummary;
+  carry_summary?: CarrySummary;
+  carry_pair_summary?: CarryPairSummary;
   pair_summary?: PairSummary;
   slot_info?: SlotInfo;
   sponsor?: {

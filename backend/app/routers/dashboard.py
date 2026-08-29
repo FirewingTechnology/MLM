@@ -6,6 +6,9 @@ from app.models.user import User
 from app.models.purchase import Purchase
 from app.models.wallet import WalletTransaction
 from app.models.commission import Commission
+from app.config import settings
+from app.models.volume_ledger import VolumeLedger
+from app.models.slot_settlement import SlotSettlement
 from app.security import get_current_user
 from app.services.mlm_service import get_or_create_binary_volume, count_total_network_members
 from app.services.wallet_service import get_or_create_wallet
@@ -60,6 +63,78 @@ def get_dashboard(current_user: User = Depends(get_current_user), db: Session = 
     slot_commissions_count = db.query(Commission)\
         .filter(Commission.beneficiary_id == current_user.id, Commission.slot_id == slot_info.slot_id).count()
 
+    # Carry Accounting (Paid vs Unpaid BV and Pair Units) derived from real persisted ledger & settlements
+    left_unpaid_bv = max(0.0, float(pair_summary.get('ending_carry_left', 0.0)))
+    right_unpaid_bv = max(0.0, float(pair_summary.get('ending_carry_right', 0.0)))
+
+    left_ledger_consumed = db.query(func.coalesce(func.sum(VolumeLedger.consumed_amount), 0.0))\
+        .filter(VolumeLedger.ancestor_user_id == current_user.id, VolumeLedger.side == 'LEFT').scalar() or 0.0
+    right_ledger_consumed = db.query(func.coalesce(func.sum(VolumeLedger.consumed_amount), 0.0))\
+        .filter(VolumeLedger.ancestor_user_id == current_user.id, VolumeLedger.side == 'RIGHT').scalar() or 0.0
+
+    left_settlement_matched = db.query(func.coalesce(func.sum(SlotSettlement.left_matched), 0.0))\
+        .filter(SlotSettlement.user_id == current_user.id).scalar() or 0.0
+    right_settlement_matched = db.query(func.coalesce(func.sum(SlotSettlement.right_matched), 0.0))\
+        .filter(SlotSettlement.user_id == current_user.id).scalar() or 0.0
+
+    total_pair_bonus_count = db.query(Commission)\
+        .filter(Commission.beneficiary_id == current_user.id, Commission.commission_type == 'PAIR_BONUS').count()
+    pair_bonus_consumed = total_pair_bonus_count * 30000.0
+
+    curr_consumed_left = float(pair_summary.get('consumed_left_bv', 0.0))
+    curr_consumed_right = float(pair_summary.get('consumed_right_bv', 0.0))
+
+    left_paid_bv = max(0.0, float(left_ledger_consumed), float(left_settlement_matched), float(pair_bonus_consumed), curr_consumed_left, float(volume.matched_bv))
+    right_paid_bv = max(0.0, float(right_ledger_consumed), float(right_settlement_matched), float(pair_bonus_consumed), curr_consumed_right, float(volume.matched_bv))
+
+    left_total_bv = max(left_paid_bv + left_unpaid_bv, float(volume.accumulated_left_bv))
+    right_total_bv = max(right_paid_bv + right_unpaid_bv, float(volume.accumulated_right_bv))
+
+    left_unpaid_bv = max(0.0, left_total_bv - left_paid_bv)
+    right_unpaid_bv = max(0.0, right_total_bv - right_paid_bv)
+
+    # Convert to Authoritative Carry Counts (30,000 BV units)
+    pair_unit = float(settings.PAIR_VOLUME) if settings.PAIR_VOLUME > 0 else 30000.0
+
+    left_paid_count = int(left_paid_bv // pair_unit)
+    left_unpaid_count = int(left_unpaid_bv // pair_unit)
+    left_carry_count = left_unpaid_count  # The carry count is the remaining unmatched carry units
+    left_total_count = left_paid_count + left_unpaid_count
+
+    right_paid_count = int(right_paid_bv // pair_unit)
+    right_unpaid_count = int(right_unpaid_bv // pair_unit)
+    right_carry_count = right_unpaid_count
+    right_total_count = right_paid_count + right_unpaid_count
+
+    carry_data = {
+        'left': {
+            'bv': left_unpaid_bv,
+            'count': left_carry_count,
+            'paid_count': left_paid_count,
+            'unpaid_count': left_unpaid_count,
+            'total': left_total_bv,
+            'paid': left_paid_bv,
+            'unpaid': left_unpaid_bv,
+            'carry': left_unpaid_bv,
+            'total_pairs': left_total_count,
+            'paid_pairs': left_paid_count,
+            'unpaid_pairs': left_unpaid_count
+        },
+        'right': {
+            'bv': right_unpaid_bv,
+            'count': right_carry_count,
+            'paid_count': right_paid_count,
+            'unpaid_count': right_unpaid_count,
+            'total': right_total_bv,
+            'paid': right_paid_bv,
+            'unpaid': right_unpaid_bv,
+            'carry': right_unpaid_bv,
+            'total_pairs': right_total_count,
+            'paid_pairs': right_paid_count,
+            'unpaid_pairs': right_unpaid_count
+        }
+    }
+
     data = {
         'user': current_user.to_dict(),
         'kpis': {
@@ -75,6 +150,9 @@ def get_dashboard(current_user: User = Depends(get_current_user), db: Session = 
             'right_bv': volume.accumulated_right_bv,
             'carry_left_bv': pair_summary['ending_carry_left'],
             'carry_right_bv': pair_summary['ending_carry_right'],
+            'carry': carry_data,
+            'carry_summary': carry_data,
+            'carry_pair_summary': carry_data,
             'matched_bv': volume.matched_bv,
             'total_bv': volume.accumulated_left_bv + volume.accumulated_right_bv + volume.personal_bv,
             'direct_referrals': direct_count,
@@ -91,6 +169,9 @@ def get_dashboard(current_user: User = Depends(get_current_user), db: Session = 
             'current_slot_id': slot_info.slot_id,
             'pair_summary': pair_summary
         },
+        'carry': carry_data,
+        'carry_summary': carry_data,
+        'carry_pair_summary': carry_data,
         'pair_summary': pair_summary,
         'slot_info': slot_info.to_dict(),
         'recent_transactions': [t.to_dict() for t in recent_txns],
