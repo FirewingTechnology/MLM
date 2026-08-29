@@ -72,9 +72,9 @@ export const WalletPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-[#C9A227] mb-1">
             <WalletIcon className="w-4 h-4 text-[#063B32]" />
-            <span>Wealth Financial System</span>
+            <span>Income Financial System</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Virtual Wallet & Ledger</h1>
+          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Income Wallet & Ledger</h1>
           <p className="text-xs sm:text-sm text-[#69736F] font-medium">
             Real-time balance, transparent double-entry transactions, and withdrawal requests.
           </p>
@@ -85,7 +85,7 @@ export const WalletPage: React.FC = () => {
           className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/40 font-heading font-bold text-xs shadow-wealth-card transition-all transform hover:scale-[1.02] cursor-pointer"
         >
           <ArrowUpRight className="w-4 h-4 text-[#C9A227]" />
-          <span>Request Virtual Payout</span>
+          <span>Request Payout</span>
         </button>
       </div>
 
@@ -104,7 +104,7 @@ export const WalletPage: React.FC = () => {
           </div>
           <div className="text-xs text-[#E0F3EE] mt-2 flex items-center gap-1 font-semibold">
             <ShieldCheck className="w-4 h-4 text-[#8DCFBF]" />
-            <span>Eligible for virtual demo payout</span>
+            <span>Eligible for instant payout settlement</span>
           </div>
         </div>
 
@@ -131,7 +131,7 @@ export const WalletPage: React.FC = () => {
           <div className="text-3xl sm:text-4xl font-heading font-black text-[#8C6C16] font-mono">
             ₹{walletData?.total_withdrawn?.toLocaleString() || 0}
           </div>
-          <div className="text-xs text-[#69736F] mt-2">Approved virtual withdrawals</div>
+          <div className="text-xs text-[#69736F] mt-2">Approved withdrawals</div>
         </div>
       </div>
 

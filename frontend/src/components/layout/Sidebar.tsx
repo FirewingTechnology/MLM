@@ -26,10 +26,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/network', label: 'Binary Network Tree', icon: GitFork },
-    { to: '/packages', label: 'Virtual Packages', icon: PackageCheck },
-    { to: '/wallet', label: 'Virtual Wallet & Ledger', icon: Wallet },
-    { to: '/commissions', label: 'Commissions & Audit', icon: Coins },
+    { to: '/network', label: 'Matching Franchise Tree', icon: GitFork },
+    { to: '/packages', label: 'Sub Franchise Packages', icon: PackageCheck },
+    { to: '/wallet', label: 'Income Wallet & Ledger', icon: Wallet },
+    { to: '/commissions', label: 'Income Report', icon: Coins },
     { to: '/referrals', label: 'Direct Referrals', icon: Users },
   ];
 
@@ -164,7 +164,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <span>Wealth Rule Summary</span>
             </div>
             <div className="space-y-1 text-[11px] text-[#F7F4EC]/80 font-medium">
-              <p>• Package: <span className="text-[#FFFEF9] font-bold">₹35,000</span> (30k BV)</p>
+              <p>• Sub Franchise: <span className="text-[#FFFEF9] font-bold">₹35,000</span> (30k BV)</p>
               <p>• Direct Sponsor: <span className="text-[#C9A227] font-bold">10% (₹3,000)</span></p>
               <p>• Binary Pair Bonus: <span className="text-[#E2C766] font-bold">₹10,000 / pair</span></p>
             </div>

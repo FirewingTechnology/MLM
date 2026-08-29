@@ -16,7 +16,7 @@ export const DemoBanner: React.FC = () => {
         <AlertTriangle className="w-3.5 h-3.5 text-[#C88A16] shrink-0" />
         <span className="tracking-wider uppercase font-bold text-[#8C6C16] text-[10px]">DEMO SANDBOX</span>
         <span className="hidden md:inline text-[#69736F]/50">—</span>
-        <span className="hidden md:inline text-[#69736F] text-[11px]">100% Virtual Wealth Simulator (Virtual ₹35,000 Package, 30,000 BV & ₹10,000 Pair Bonus).</span>
+        <span className="hidden md:inline text-[#69736F] text-[11px]">Wealth Simulator (₹35,000 Package, 30,000 BV & ₹10,000 Pair Bonus).</span>
       </div>
 
       {/* Right Slot Indicator */}

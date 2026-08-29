@@ -67,14 +67,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPurchaseModal, onToggleSid
           </div>
         )}
 
-        {/* Virtual Buy Package CTA */}
+        {/* Buy Sub Franchise Package CTA */}
         {onOpenPurchaseModal && (
           <button
             onClick={onOpenPurchaseModal}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/35 font-bold text-xs sm:text-sm shadow-wealth-card transition-all transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4 text-[#C9A227]" />
-            <span>Buy Virtual Package</span>
+            <span>Buy Sub Franchise</span>
           </button>
         )}
 

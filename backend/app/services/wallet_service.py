@@ -58,7 +58,7 @@ def debit_wallet(db: Session, user_id: int, amount: float, category: str, descri
         
     wallet = get_or_create_wallet(db, user_id)
     if wallet.balance < amount:
-        raise InsufficientBalanceError(f"Insufficient virtual wallet balance. Available: ₹{wallet.balance:,.2f}, Requested: ₹{amount:,.2f}")
+        raise InsufficientBalanceError(f"Insufficient wallet balance. Available: ₹{wallet.balance:,.2f}, Requested: ₹{amount:,.2f}")
         
     balance_before = wallet.balance
     wallet.balance -= amount

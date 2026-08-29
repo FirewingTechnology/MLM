@@ -84,7 +84,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
         </div>
         <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Withdrawal Approval Queue</h1>
         <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-          Review, approve, or reject pending virtual withdrawal requests submitted by distributors.
+          Review, approve, or reject pending withdrawal requests submitted by distributors.
         </p>
       </div>
 

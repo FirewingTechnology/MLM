@@ -161,7 +161,7 @@ export const PairSummaryCard: React.FC<PairSummaryCardProps> = ({ pairSummary })
           <div className="flex items-center gap-2 text-[#8C6C16]">
             <Sparkles className="w-4 h-4 text-[#C9A227] shrink-0" />
             <span className="font-bold">
-              Pair Completed! ₹{bonusAmount.toLocaleString()} credited to Virtual Wealth Wallet.
+              Pair Completed! ₹{bonusAmount.toLocaleString()} credited to Income Wallet.
             </span>
           </div>
           <div className="text-[11px] font-mono text-[#18211F] bg-[#FFFEF9] px-2.5 py-1 rounded-lg border border-[#E5E0D3] font-medium">

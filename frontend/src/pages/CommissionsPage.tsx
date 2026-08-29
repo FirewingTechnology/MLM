@@ -43,11 +43,11 @@ export const CommissionsPage: React.FC = () => {
       <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card">
         <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-[#C9A227] mb-1">
           <Coins className="w-4 h-4 text-[#063B32]" />
-          <span>Earnings Breakdown</span>
+          <span>Income Report & Breakdown</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Commissions & Transparency Audit</h1>
+        <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Income Report & Transparency Audit</h1>
         <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-          Fully auditable record of all direct sponsor, binary pair bonus, matching upline, and carry commissions.
+          Fully auditable record of all direct sponsor, binary pair bonus, matching upline, and carry income.
         </p>
       </div>
 
@@ -109,7 +109,7 @@ export const CommissionsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#1D4ED8] flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
-              <span>Carry Commission</span>
+              <span>Carry Income</span>
             </span>
             <div className="w-7 h-7 rounded-lg bg-[#DBEAFE] text-[#1D4ED8] flex items-center justify-center">
               <Coins className="w-3.5 h-3.5" />
@@ -127,16 +127,16 @@ export const CommissionsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E0D3] pb-4">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-[#063B32]" />
-            <span className="text-sm font-heading font-extrabold text-[#18211F]">Commissions Log</span>
+            <span className="text-sm font-heading font-extrabold text-[#18211F]">Income Report Log</span>
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
             {[
-              { label: 'All Commissions', value: '' },
+              { label: 'All Income', value: '' },
               { label: '🟢 Direct Sponsor', value: 'DIRECT_COMMISSION' },
               { label: '🟣 Pair Bonus (₹10k)', value: 'PAIR_BONUS' },
               { label: '🟠 Matching Upline', value: 'MATCHING_COMMISSION' },
-              { label: '🔵 Carry Commission', value: 'CARRY_COMMISSION' },
+              { label: '🔵 Carry Income', value: 'CARRY_COMMISSION' },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -161,11 +161,11 @@ export const CommissionsPage: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-[#E5E0D3] text-[#69736F] font-bold uppercase tracking-wider text-[10px] bg-[#F7F4EC]/60">
-                <th className="py-3 px-4">Commission ID</th>
+                <th className="py-3 px-4">Income ID</th>
                 <th className="py-3 px-4">Type</th>
                 <th className="py-3 px-4">Triggered By</th>
                 <th className="py-3 px-4 text-right">BV Basis</th>
-                <th className="py-3 px-4 text-right">Commission</th>
+                <th className="py-3 px-4 text-right">Income Amount</th>
                 <th className="py-3 px-4 text-right">Date</th>
                 <th className="py-3 px-4 text-center">Audit</th>
               </tr>
@@ -174,7 +174,7 @@ export const CommissionsPage: React.FC = () => {
               {isLoading ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-[#69736F]">
-                    Loading commissions...
+                    Loading income report...
                   </td>
                 </tr>
               ) : data?.items && data.items.length > 0 ? (
@@ -229,7 +229,7 @@ export const CommissionsPage: React.FC = () => {
               ) : (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-[#69736F] font-sans">
-                    No commissions found.
+                    No income records found.
                   </td>
                 </tr>
               )}

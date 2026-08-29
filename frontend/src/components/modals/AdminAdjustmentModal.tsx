@@ -74,7 +74,7 @@ export const AdminAdjustmentModal: React.FC<AdminAdjustmentModalProps> = ({ user
         </div>
 
         <h2 className="text-xl font-heading font-extrabold text-[#18211F] mb-1 tracking-tight">
-          Adjust Virtual Wallet
+          Adjust Income Wallet
         </h2>
         <p className="text-xs text-[#69736F] mb-4">
           Target User: <span className="text-[#063B32] font-bold">{user.full_name}</span> ({user.user_code})

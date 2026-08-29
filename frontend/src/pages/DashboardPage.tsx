@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useOutletContext, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
-import { DashboardData, Commission, BinaryTreeNode } from '../types';
+import { DashboardData, Commission, BinaryTreeNode, ReferralLinksData } from '../types';
 import { CommissionDetailModal } from '../components/modals/CommissionDetailModal';
 import { WithdrawalModal } from '../components/modals/WithdrawalModal';
 import { SlotCard } from '../components/dashboard/SlotCard';
@@ -48,19 +48,46 @@ export const DashboardPage: React.FC = () => {
     },
   });
 
+  const [copiedLeft, setCopiedLeft] = useState(false);
+  const [copiedRight, setCopiedRight] = useState(false);
+
   const kpis = data?.kpis;
   const user = data?.user;
 
-  const referralLink = user?.referral_code
+  const { data: linksData } = useQuery<ReferralLinksData>({
+    queryKey: ['referralLinks'],
+    queryFn: async () => {
+      const res = await api.get('/referral/links');
+      return res.data.data;
+    },
+  });
+
+  const leftUrl = linksData?.left?.token
+    ? `${window.location.origin}/register?ref=${linksData.left.token}`
+    : user?.referral_code
     ? `${window.location.origin}/register?ref=${user.referral_code}`
     : '';
 
-  const handleCopyReferral = () => {
-    if (!referralLink) return;
-    navigator.clipboard.writeText(referralLink);
-    setCopied(true);
-    showToast('Referral link copied to clipboard!', 'success');
-    setTimeout(() => setCopied(false), 2500);
+  const rightUrl = linksData?.right?.token
+    ? `${window.location.origin}/register?ref=${linksData.right.token}`
+    : user?.referral_code
+    ? `${window.location.origin}/register?ref=${user.referral_code}`
+    : '';
+
+  const handleCopyLeft = () => {
+    if (!leftUrl) return;
+    navigator.clipboard.writeText(leftUrl);
+    setCopiedLeft(true);
+    showToast('LEFT Referral Link copied!', 'success');
+    setTimeout(() => setCopiedLeft(false), 2500);
+  };
+
+  const handleCopyRight = () => {
+    if (!rightUrl) return;
+    navigator.clipboard.writeText(rightUrl);
+    setCopiedRight(true);
+    showToast('RIGHT Referral Link copied!', 'success');
+    setTimeout(() => setCopiedRight(false), 2500);
   };
 
   if (isLoading) {
@@ -127,12 +154,12 @@ export const DashboardPage: React.FC = () => {
         slotCommissionsCount={kpis?.slot_commissions_count} 
       />
 
-      {/* 2. Main Virtual Wealth Card (Visual Centerpiece in Deep Emerald) */}
+      {/* 2. Main Wealth Card (Visual Centerpiece in Deep Emerald) */}
       <div className="rounded-3xl wealth-hero p-6 sm:p-7 relative overflow-hidden text-[#FFFEF9]">
         <div className="flex items-center justify-between text-[#F7F4EC]/75 mb-2">
           <span className="text-xs font-bold uppercase tracking-widest text-[#C9A227] flex items-center gap-1.5 font-mono">
             <Wallet className="w-4 h-4 text-[#C9A227]" />
-            <span>Virtual Wealth Wallet</span>
+            <span>Income Wallet</span>
           </span>
           <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FAF4DC]/15 text-[#E2C766] border border-[#C9A227]/30 font-mono">
             Available Balance
@@ -145,7 +172,7 @@ export const DashboardPage: React.FC = () => {
               ₹{kpis?.wallet_balance?.toLocaleString() || 0}
             </div>
             <div className="text-xs text-[#F7F4EC]/80 font-medium mt-1">
-              Eligible for instant virtual payout settlement
+              Eligible for instant payout settlement
             </div>
           </div>
 
@@ -325,13 +352,13 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Main Action: BUY ₹35,000 PACKAGE */}
+      {/* 5. Main Action: BUY ₹35,000 SUB FRANCHISE PACKAGE */}
       <button
         onClick={openPurchaseModal}
         className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/40 font-heading font-black text-base shadow-wealth-card transition-all transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
       >
         <ShoppingBag className="w-5 h-5 text-[#C9A227]" />
-        <span>ACTIVATE ₹35,000 BUSINESS PACKAGE (30,000 BV)</span>
+        <span>ACTIVATE ₹35,000 SUB FRANCHISE PACKAGE (30,000 BV)</span>
       </button>
 
       {/* 6. Referral / Invitation Section */}
@@ -339,29 +366,51 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="text-xs font-bold uppercase tracking-wider text-[#18211F] flex items-center gap-1.5">
             <Users className="w-4 h-4 text-[#063B32]" />
-            <span>Build Your Network</span>
+            <span>Build Your Network (Locked Placement Links)</span>
           </div>
           <span className="text-[10px] text-[#8C6C16] font-bold bg-[#FAF4DC] px-2 py-0.5 rounded-md border border-[#E2C766]/50">
             10% Direct Sponsor Bonus
           </span>
         </div>
 
-        <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] gap-2">
-          <div className="min-w-0 flex-1 pl-1">
-            <div className="text-sm font-mono font-black text-[#063B32] tracking-wider truncate">
-              {user?.referral_code}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Left Referral */}
+          <div className="p-3.5 rounded-2xl bg-[#F7F4EC] border border-[#8DCFBF] flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1 pl-1">
+              <div className="flex items-center gap-1 text-xs font-bold text-[#063B32]">
+                <span className="w-2 h-2 rounded-full bg-[#063B32]" />
+                <span>LEFT LEG PLACEMENT</span>
+              </div>
+              <div className="text-[10px] text-[#69736F] truncate font-mono mt-0.5">
+                {leftUrl}
+              </div>
             </div>
-            <div className="text-[11px] text-[#69736F] truncate font-mono">
-              {referralLink}
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
             <button
-              onClick={handleCopyReferral}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/30 font-bold text-xs transition-all shadow-sm cursor-pointer"
+              onClick={handleCopyLeft}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/30 font-bold text-xs transition-all shadow-sm shrink-0 cursor-pointer"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-[#C9A227]" /> : <Copy className="w-3.5 h-3.5 text-[#C9A227]" />}
-              <span>{copied ? 'Copied' : 'Copy Invitation'}</span>
+              {copiedLeft ? <Check className="w-3.5 h-3.5 text-[#C9A227]" /> : <Copy className="w-3.5 h-3.5 text-[#C9A227]" />}
+              <span>{copiedLeft ? 'Copied' : 'Copy LEFT'}</span>
+            </button>
+          </div>
+
+          {/* Right Referral */}
+          <div className="p-3.5 rounded-2xl bg-[#F7F4EC] border border-[#E2C766] flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1 pl-1">
+              <div className="flex items-center gap-1 text-xs font-bold text-[#8C6C16]">
+                <span className="w-2 h-2 rounded-full bg-[#C9A227]" />
+                <span>RIGHT LEG PLACEMENT</span>
+              </div>
+              <div className="text-[10px] text-[#69736F] truncate font-mono mt-0.5">
+                {rightUrl}
+              </div>
+            </div>
+            <button
+              onClick={handleCopyRight}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/30 font-bold text-xs transition-all shadow-sm shrink-0 cursor-pointer"
+            >
+              {copiedRight ? <Check className="w-3.5 h-3.5 text-[#C9A227]" /> : <Copy className="w-3.5 h-3.5 text-[#C9A227]" />}
+              <span>{copiedRight ? 'Copied' : 'Copy RIGHT'}</span>
             </button>
           </div>
         </div>

@@ -7,28 +7,76 @@ import {
   Users, 
   Copy, 
   Check, 
+  ExternalLink,
+  Lock,
+  Share2,
   ChevronLeft, 
   ChevronRight, 
   CheckCircle2, 
   Clock,
   Sparkles 
 } from 'lucide-react';
+import { ReferralLinksData } from '../types';
 
 export const ReferralsPage: React.FC = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [page, setPage] = useState<number>(1);
-  const [copied, setCopied] = useState(false);
+  const [copiedLeft, setCopiedLeft] = useState(false);
+  const [copiedRight, setCopiedRight] = useState(false);
 
-  const referralLink = user?.referral_code
+  // Fetch permanent locked referral links
+  const { data: linksData } = useQuery<ReferralLinksData>({
+    queryKey: ['referralLinks'],
+    queryFn: async () => {
+      const res = await api.get('/referral/links');
+      return res.data.data;
+    },
+  });
+
+  const leftUrl = linksData?.left?.token
+    ? `${window.location.origin}/register?ref=${linksData.left.token}`
+    : user?.referral_code
     ? `${window.location.origin}/register?ref=${user.referral_code}`
     : '';
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(referralLink);
-    setCopied(true);
-    showToast('Referral link copied!', 'success');
-    setTimeout(() => setCopied(false), 2500);
+  const rightUrl = linksData?.right?.token
+    ? `${window.location.origin}/register?ref=${linksData.right.token}`
+    : user?.referral_code
+    ? `${window.location.origin}/register?ref=${user.referral_code}`
+    : '';
+
+  const handleCopyLeft = () => {
+    if (!leftUrl) return;
+    navigator.clipboard.writeText(leftUrl);
+    setCopiedLeft(true);
+    showToast('LEFT Referral Link copied!', 'success');
+    setTimeout(() => setCopiedLeft(false), 2500);
+  };
+
+  const handleCopyRight = () => {
+    if (!rightUrl) return;
+    navigator.clipboard.writeText(rightUrl);
+    setCopiedRight(true);
+    showToast('RIGHT Referral Link copied!', 'success');
+    setTimeout(() => setCopiedRight(false), 2500);
+  };
+
+  const handleShare = async (title: string, url: string) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title,
+          text: `Join my MLM network via this locked placement link:`,
+          url,
+        });
+      } catch {
+        // User cancelled or unsupported
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      showToast('Referral link copied to clipboard!', 'success');
+    }
   };
 
   const { data, isLoading } = useQuery({
@@ -50,17 +98,118 @@ export const ReferralsPage: React.FC = () => {
           </div>
           <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Direct Sponsored Members</h1>
           <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-            View all members registered directly via your referral link ({user?.referral_code}).
+            Generate locked LEFT & RIGHT placement links to recruit new direct distributors.
           </p>
         </div>
+      </div>
 
-        <button
-          onClick={handleCopy}
-          className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/40 font-heading font-bold text-xs shadow-wealth-card transition-all cursor-pointer"
-        >
-          {copied ? <Check className="w-4 h-4 text-[#C9A227]" /> : <Copy className="w-4 h-4 text-[#C9A227]" />}
-          <span>{copied ? 'Copied Invitation!' : 'Copy Referral Invitation'}</span>
-        </button>
+      {/* MY REFERRAL LINKS SECTION */}
+      <div className="rounded-3xl bg-[#FFFEF9] p-6 border border-[#E5E0D3] shadow-wealth-card space-y-4">
+        <div className="flex items-center justify-between border-b border-[#E5E0D3] pb-3">
+          <div className="flex items-center gap-2 text-sm font-heading font-extrabold text-[#18211F]">
+            <Lock className="w-4 h-4 text-[#063B32]" />
+            <span>MY REFERRAL LINKS (LOCKED BINARY PLACEMENT)</span>
+          </div>
+          <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]/60">
+            Sponsor: {user?.referral_code}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          {/* LEFT LEG CARD */}
+          <div className="p-5 rounded-2xl bg-[#F7F4EC] border border-[#8DCFBF] flex flex-col justify-between space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#063B32]">
+                  <span className="w-2 h-2 rounded-full bg-[#063B32]" />
+                  <span>LEFT LEG REFERRAL</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#E0F3EE] text-[#063B32] border border-[#8DCFBF]">
+                  LEFT LOCKED
+                </span>
+              </div>
+              <p className="text-xs text-[#69736F] mb-3">
+                Places new members on your extreme-left leg automatically.
+              </p>
+              <div className="p-2.5 rounded-xl bg-[#FFFEF9] border border-[#E5E0D3] font-mono text-[11px] text-[#18211F] truncate select-all">
+                {leftUrl}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={handleCopyLeft}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                {copiedLeft ? <Check className="w-3.5 h-3.5 text-[#C9A227]" /> : <Copy className="w-3.5 h-3.5 text-[#C9A227]" />}
+                <span>{copiedLeft ? 'Copied LEFT Link!' : 'Copy LEFT Link'}</span>
+              </button>
+              <button
+                onClick={() => handleShare('Left Leg Referral', leftUrl)}
+                className="p-2.5 rounded-xl border border-[#E5E0D3] bg-[#FFFEF9] hover:bg-[#EFECE2] text-[#18211F] transition-colors cursor-pointer"
+                title="Share Link"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
+              <a
+                href={leftUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="p-2.5 rounded-xl border border-[#E5E0D3] bg-[#FFFEF9] hover:bg-[#EFECE2] text-[#18211F] transition-colors cursor-pointer"
+                title="Open Preview"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+
+          {/* RIGHT LEG CARD */}
+          <div className="p-5 rounded-2xl bg-[#F7F4EC] border border-[#E2C766] flex flex-col justify-between space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#8C6C16]">
+                  <span className="w-2 h-2 rounded-full bg-[#C9A227]" />
+                  <span>RIGHT LEG REFERRAL</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]">
+                  RIGHT LOCKED
+                </span>
+              </div>
+              <p className="text-xs text-[#69736F] mb-3">
+                Places new members on your extreme-right leg automatically.
+              </p>
+              <div className="p-2.5 rounded-xl bg-[#FFFEF9] border border-[#E5E0D3] font-mono text-[11px] text-[#18211F] truncate select-all">
+                {rightUrl}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={handleCopyRight}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                {copiedRight ? <Check className="w-3.5 h-3.5 text-[#C9A227]" /> : <Copy className="w-3.5 h-3.5 text-[#C9A227]" />}
+                <span>{copiedRight ? 'Copied RIGHT Link!' : 'Copy RIGHT Link'}</span>
+              </button>
+              <button
+                onClick={() => handleShare('Right Leg Referral', rightUrl)}
+                className="p-2.5 rounded-xl border border-[#E5E0D3] bg-[#FFFEF9] hover:bg-[#EFECE2] text-[#18211F] transition-colors cursor-pointer"
+                title="Share Link"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
+              <a
+                href={rightUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="p-2.5 rounded-xl border border-[#E5E0D3] bg-[#FFFEF9] hover:bg-[#EFECE2] text-[#18211F] transition-colors cursor-pointer"
+                title="Open Preview"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Referrals Table Card */}

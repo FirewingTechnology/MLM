@@ -45,11 +45,11 @@ export const CommissionDetailModal: React.FC<CommissionDetailModalProps> = ({
 
         <div className="flex items-center gap-2 text-[#063B32] text-xs font-mono font-bold uppercase tracking-wider mb-1.5">
           <HelpCircle className="w-4 h-4 text-[#C9A227]" />
-          <span>Commission Transparency Audit</span>
+          <span>Income Transparency Audit</span>
         </div>
 
         <h2 className="text-xl font-heading font-extrabold text-[#18211F] mb-1 tracking-tight">
-          Why Did I Receive This Commission?
+          Why Did I Receive This Income?
         </h2>
         <div className="text-xs text-[#69736F] font-mono mb-4 font-medium">
           Ref: {commission.commission_code} • {new Date(commission.created_at).toLocaleString()}
@@ -70,9 +70,9 @@ export const CommissionDetailModal: React.FC<CommissionDetailModalProps> = ({
               {isPair 
                 ? 'Binary Pair Bonus (30k/30k)' 
                 : isMatching 
-                ? 'Matching Upline Commission' 
+                ? 'Matching Upline Income' 
                 : isCarry
-                ? 'Carry-Forward Commission'
+                ? 'Carry-Forward Income'
                 : 'Direct Sponsor Bonus'}
             </div>
             <div className={`text-2xl sm:text-3xl font-heading font-black font-mono ${

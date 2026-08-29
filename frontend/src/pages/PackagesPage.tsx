@@ -25,8 +25,8 @@ export const PackagesPage: React.FC = () => {
   });
 
   const pkg = packages?.[0] || {
-    name: 'Premium Business Package',
-    description: 'Virtual Business Ownership Package with 30,000 BV and active distributor rights.',
+    name: 'Premium Sub Franchise Package',
+    description: 'Sub Franchise Business Ownership Package with 30,000 BV and active distributor rights.',
     price: 35000,
     product_value: 30000,
     gst_amount: 5000,
@@ -39,11 +39,11 @@ export const PackagesPage: React.FC = () => {
       <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card">
         <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-[#C9A227] mb-1">
           <PackageCheck className="w-4 h-4 text-[#063B32]" />
-          <span>Virtual Marketplace</span>
+          <span>Sub Franchise Marketplace</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Business Packages</h1>
+        <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Sub Franchise Packages</h1>
         <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-          Activate distributor status and generate Business Volume (BV) across your binary network.
+          Activate distributor status and generate Business Volume (BV) across your matching franchise network.
         </p>
       </div>
 
@@ -57,7 +57,7 @@ export const PackagesPage: React.FC = () => {
               <Sparkles className="w-3 h-3 text-[#C9A227]" />
               <span>Standard Qualifying Tier</span>
             </span>
-            <span className="text-xs font-mono font-bold text-[#69736F]">100% VIRTUAL SIMULATION</span>
+            <span className="text-xs font-mono font-bold text-[#69736F]">SUB FRANCHISE PACKAGE</span>
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] mb-2 tracking-tight">
@@ -74,7 +74,7 @@ export const PackagesPage: React.FC = () => {
               <span className="text-[#18211F] font-bold">₹{pkg.product_value.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-[#69736F]">
-              <span className="font-sans">Simulated GST:</span>
+              <span className="font-sans">Applicable GST:</span>
               <span className="text-[#18211F] font-bold">₹{pkg.gst_amount.toLocaleString()}</span>
             </div>
             <div className="h-px bg-[#E5E0D3]" />
@@ -109,7 +109,7 @@ export const PackagesPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-4 h-4 text-[#063B32] shrink-0" />
-              <span>Activates full Virtual Wallet withdrawal rights in the demo</span>
+              <span>Activates full Income Wallet withdrawal rights</span>
             </div>
           </div>
 
@@ -119,7 +119,7 @@ export const PackagesPage: React.FC = () => {
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/40 font-heading font-black text-sm shadow-wealth-card transition-all transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4 text-[#C9A227]" />
-            <span>ACTIVATE VIRTUAL PACKAGE (₹35,000)</span>
+            <span>ACTIVATE SUB FRANCHISE PACKAGE (₹35,000)</span>
           </button>
         </div>
       </div>

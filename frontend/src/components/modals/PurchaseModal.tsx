@@ -89,14 +89,14 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
           <div>
             <div className="flex items-center gap-2 text-[#063B32] text-xs font-mono font-bold uppercase tracking-wider mb-1.5">
               <Sparkles className="w-4 h-4 text-[#C9A227]" />
-              <span>Demo Package Activation</span>
+              <span>Sub Franchise Activation</span>
             </div>
 
             <h2 className="text-2xl font-heading font-extrabold text-[#18211F] mb-1 tracking-tight">
-              Premium Business Package
+              Premium Sub Franchise Package
             </h2>
             <p className="text-[#69736F] text-xs mb-5">
-              Unlock your virtual MLM distributor status, generate 30,000 personal BV, and activate binary matching commissions.
+              Unlock your distributor status, generate 30,000 personal BV, and activate binary matching commissions.
             </p>
 
             {/* Price breakdown card */}
@@ -106,12 +106,12 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                 <span className="font-semibold text-[#18211F] font-mono">₹30,000</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#69736F] font-medium">GST (18% Fictional)</span>
+                <span className="text-[#69736F] font-medium">GST (18% Applicable)</span>
                 <span className="font-semibold text-[#18211F] font-mono">₹5,000</span>
               </div>
               <div className="h-px bg-[#E5E0D3]" />
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-[#18211F]">Total Virtual Price</span>
+                <span className="text-sm font-bold text-[#18211F]">Total Sub Franchise Price</span>
                 <span className="text-2xl font-heading font-black text-[#063B32] font-mono">₹35,000</span>
               </div>
               <div className="flex items-center justify-between pt-1">
@@ -135,17 +135,17 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                 <Award className="w-4 h-4 text-[#063B32] shrink-0" />
                 <span>30,000 BV propagates up your binary upline tree</span>
               </div>
-              <div className="flex items-center gap-2.5 text-xs text-[#18211F]">
+              <div className="flex items-center gap-2.5 text-xs text-[#C9A227] shrink-0">
                 <Award className="w-4 h-4 text-[#C9A227] shrink-0" />
                 <span>Qualifies for ₹10,000 Binary Pair Bonus per 30k/30k match</span>
               </div>
             </div>
 
-            {/* Virtual Demo Notice */}
+            {/* Package Notice */}
             <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] text-xs mb-6">
               <ShieldAlert className="w-4 h-4 text-[#C88A16] shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold">Virtual Demo Purchase:</span> No credit card, UPI, or real bank account will be charged. This simulates a real package activation instantly in the database.
+                <span className="font-bold">Sub Franchise Purchase:</span> Instant activation with 30,000 personal BV credited to your account.
               </div>
             </div>
 
@@ -167,12 +167,12 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin text-[#C9A227]" />
-                    <span>Processing Demo...</span>
+                    <span>Processing...</span>
                   </>
                 ) : (
                   <>
                     <ShoppingBag className="w-4 h-4 text-[#C9A227]" />
-                    <span>Activate Virtual Package</span>
+                    <span>Activate Sub Franchise Package</span>
                   </>
                 )}
               </button>
@@ -184,9 +184,9 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
               <CheckCircle2 className="w-10 h-10 text-[#063B32]" />
             </div>
 
-            <h3 className="text-2xl font-heading font-extrabold text-[#18211F] mb-1">Package Activated!</h3>
+            <h3 className="text-2xl font-heading font-extrabold text-[#18211F] mb-1">Sub Franchise Activated!</h3>
             <p className="text-[#063B32] font-bold text-sm mb-4">
-              ₹35,000 Virtual Package Successful
+              ₹35,000 Sub Franchise Package Activation Successful
             </p>
 
             <div className="p-4 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] mb-6 text-left space-y-2 text-xs">

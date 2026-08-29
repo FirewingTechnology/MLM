@@ -361,3 +361,27 @@ export interface AdminDashboardData {
   recent_logs: any[];
   recent_purchases?: Purchase[];
 }
+
+export interface ReferralLinkItem {
+  token: string;
+  placement_side: 'LEFT' | 'RIGHT';
+  sponsor_name: string;
+  sponsor_code: string;
+  referral_code: string;
+}
+
+export interface ReferralLinksData {
+  left: ReferralLinkItem;
+  right: ReferralLinkItem;
+}
+
+export interface ReferralValidationData {
+  valid: boolean;
+  sponsor_name: string;
+  sponsor_code: string;
+  referral_code: string;
+  placement_side: 'LEFT' | 'RIGHT' | null;
+  is_locked: boolean;
+  token?: string | null;
+  is_active?: boolean;
+}

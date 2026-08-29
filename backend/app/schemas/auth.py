@@ -7,7 +7,8 @@ class RegisterRequest(BaseModel):
     mobile: str
     password: str
     confirm_password: str
-    referral_code: str
+    referral_code: Optional[str] = None
+    referral_token: Optional[str] = None
     binary_parent_code: Optional[str] = None
     binary_position: Optional[str] = None  # 'LEFT', 'RIGHT', or None (auto)
 

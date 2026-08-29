@@ -46,11 +46,11 @@ def seed_database(db: Session):
         db.flush()
 
     # 2. Package
-    package = db.query(Package).filter(Package.name == "Premium Business Package").first()
+    package = db.query(Package).first()
     if not package:
         package = Package(
-            name="Premium Business Package",
-            description="Virtual Business Ownership Package with 30,000 BV and active distributor rights.",
+            name="Premium Sub Franchise Package",
+            description="Sub Franchise Business Ownership Package with 30,000 BV and active distributor rights.",
             price=35000.0,
             product_value=30000.0,
             gst_amount=5000.0,
@@ -106,6 +106,8 @@ def seed_database(db: Session):
     log_action(db, 'DATABASE_SEEDED', 'System', None, admin.id, {'status': 'Clean baseline initialized (Admin & Root User only)'})
     db.commit()
 
+from app.models.referral_token import ReferralToken
+
 def reset_demo_database(db: Session):
     """Wipes all transactions, commissions, withdrawals, volumes, dummy users, and resets to seed state."""
     db.query(AuditLog).delete()
@@ -118,6 +120,7 @@ def reset_demo_database(db: Session):
     db.query(Purchase).delete()
     db.query(BinaryPeriodVolume).delete()
     db.query(BinaryVolume).delete()
+    db.query(ReferralToken).delete()
     db.query(Wallet).delete()
     db.query(User).delete()
     db.query(Package).delete()

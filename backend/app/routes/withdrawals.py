@@ -29,7 +29,7 @@ def request_withdrawal(current_user):
         db.session.commit()
         return success_response(
             withdrawal.to_dict(),
-            f"Virtual withdrawal request for ₹{amount:,.2f} submitted successfully (Status: PENDING).",
+            f"Withdrawal request for ₹{amount:,.2f} submitted successfully (Status: PENDING).",
             201
         )
     except Exception as e:

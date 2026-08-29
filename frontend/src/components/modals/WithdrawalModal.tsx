@@ -68,7 +68,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
 
       if (res.data?.success) {
         setSubmitted(res.data.data);
-        showToast('Virtual withdrawal request submitted. Awaiting demo admin approval.', 'success');
+        showToast('Withdrawal request submitted successfully.', 'success');
         queryClient.invalidateQueries({ queryKey: ['wallet'] });
         queryClient.invalidateQueries({ queryKey: ['withdrawals'] });
         queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -105,14 +105,14 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
           <form onSubmit={handleSubmit}>
             <div className="flex items-center gap-2 text-[#063B32] text-xs font-mono font-bold uppercase tracking-wider mb-1.5">
               <Wallet className="w-4 h-4 text-[#C9A227]" />
-              <span>Virtual Payout Request</span>
+              <span>Payout Request</span>
             </div>
 
             <h2 className="text-2xl font-heading font-extrabold text-[#18211F] mb-1 tracking-tight">
-              Request Demo Withdrawal
+              Request Withdrawal
             </h2>
             <p className="text-[#69736F] text-xs mb-4">
-              Submit a simulated payout request. Balance is held pending Admin approval in the demo portal.
+              Submit a payout request. Balance is held pending Admin approval in the portal.
             </p>
 
             {/* Current Balance Tag */}
@@ -168,7 +168,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
             {/* Payout method */}
             <div className="mb-4">
               <label className="block text-xs font-semibold text-[#18211F] mb-1.5">
-                Simulated Payout Destination
+                Payout Destination
               </label>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <button
@@ -181,7 +181,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                   }`}
                 >
                   <Smartphone className="w-4 h-4 text-[#063B32]" />
-                  <span>Virtual UPI</span>
+                  <span>UPI Transfer</span>
                 </button>
                 <button
                   type="button"
@@ -193,7 +193,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                   }`}
                 >
                   <Building className="w-4 h-4 text-[#063B32]" />
-                  <span>Virtual Bank</span>
+                  <span>Bank Account</span>
                 </button>
               </div>
 

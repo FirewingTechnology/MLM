@@ -59,6 +59,12 @@ def apply_migrations(target_engine):
             if 'pair_events' not in tables:
                 Base.metadata.tables['pair_events'].create(conn, checkfirst=True)
                 conn.commit()
+
+            # Ensure referral_tokens table exists
+            if 'referral_tokens' not in tables:
+                if 'referral_tokens' in Base.metadata.tables:
+                    Base.metadata.tables['referral_tokens'].create(conn, checkfirst=True)
+                    conn.commit()
     except Exception as e:
         print(f"[Migration Warning] {e}")
 

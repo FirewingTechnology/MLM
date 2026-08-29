@@ -86,7 +86,7 @@ export const AdminDashboardPage: React.FC = () => {
   ].filter(d => d.value > 0);
 
   const financialBarData = [
-    { name: 'Virtual Sales', amount: kpis?.total_virtual_sales || 0 },
+    { name: 'Total Sales', amount: kpis?.total_virtual_sales || 0 },
     { name: 'Total Volume', amount: kpis?.total_bv || 0 },
     { name: 'Commissions', amount: kpis?.total_commissions || 0 },
     { name: 'Withdrawn', amount: kpis?.total_withdrawn || 0 },
@@ -142,7 +142,7 @@ export const AdminDashboardPage: React.FC = () => {
             }`}
           >
             <Coins className="w-3.5 h-3.5 text-[#C9A227]" />
-            <span>Commissions Audit</span>
+            <span>Income Report Audit</span>
           </button>
           <button
             onClick={() => setAdminTab('settlements')}
@@ -190,10 +190,10 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Total Virtual Sales */}
+            {/* Total Sales */}
             <div className="rounded-3xl bg-[#FFFEF9] p-5 border border-[#E5E0D3] shadow-wealth-card">
               <div className="flex items-center justify-between text-[#69736F] mb-2">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider">Virtual Sales</span>
+                <span className="text-xs font-mono font-bold uppercase tracking-wider">Total Sales</span>
                 <ShoppingBag className="w-4 h-4 text-[#063B32]" />
               </div>
               <div className="text-2xl sm:text-3xl font-heading font-black text-[#063B32] font-mono">

@@ -17,6 +17,8 @@ from app.utils.responses import success_response, error_response
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
+from app.services.referral_service import validate_referral_input
+
 @router.post("/register", status_code=201)
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
     if req.password != req.confirm_password:
@@ -28,27 +30,44 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     if db.query(User).filter(User.mobile == req.mobile.strip()).first():
         return error_response("DUPLICATE_MOBILE", "An account with this mobile number already exists.", 400)
 
-    # 1. Resolve Sponsor
-    sponsor = resolve_sponsor_by_code(db, req.referral_code)
+    # 1. Resolve Sponsor & Locked Placement Side
+    # Priority: referral_token > referral_code
+    referral_input = req.referral_token or req.referral_code
+    if not referral_input or not referral_input.strip():
+        return error_response("REFERRAL_REQUIRED", "A valid referral link or code is mandatory for registration.", 400)
+
+    val_res = validate_referral_input(db, referral_input.strip())
+    if not val_res.get('valid'):
+        return error_response("INVALID_SPONSOR", val_res.get('error', "Invalid referral code or token."), 400)
+
+    sponsor = resolve_sponsor_by_code(db, val_res['referral_code']) or \
+              db.query(User).filter(User.user_code == val_res['sponsor_code']).first()
     if not sponsor:
-        return error_response("INVALID_SPONSOR", f"Referral code '{req.referral_code}' is invalid.", 400)
+        return error_response("INVALID_SPONSOR", "Sponsor account could not be found.", 400)
 
-    # 2. Binary Placement Parent & Position (Extreme Left / Extreme Right)
-    requested_position = (req.binary_position or 'LEFT').strip().upper()
-    if requested_position not in ('LEFT', 'RIGHT'):
-        return error_response("VALIDATION_ERROR", "Binary position must be 'LEFT' or 'RIGHT'.", 400)
-
-    if req.binary_parent_code:
-        parent = resolve_sponsor_by_code(db, req.binary_parent_code) or \
-                 db.query(User).filter(User.user_code == req.binary_parent_code.strip().upper()).first()
-        if not parent:
-            return error_response("INVALID_PLACEMENT_PARENT", f"Placement parent code '{req.binary_parent_code}' not found.", 400)
-        target_root_id = parent.id
+    # 2. Determine Placement Side & Target Root
+    # If registered via a locked referral token, the placement side is IMMUTABLE and client position/parent is IGNORED!
+    if val_res.get('is_locked') and val_res.get('placement_side'):
+        locked_position = val_res['placement_side'].strip().upper()
+        target_root_id = sponsor.id  # Locked directly under sponsor's tree
     else:
-        target_root_id = sponsor.id
+        # Legacy/Direct referral code fallback
+        locked_position = (req.binary_position or 'LEFT').strip().upper()
+        if req.binary_parent_code:
+            parent = resolve_sponsor_by_code(db, req.binary_parent_code) or \
+                     db.query(User).filter(User.user_code == req.binary_parent_code.strip().upper()).first()
+            if not parent:
+                return error_response("INVALID_PLACEMENT_PARENT", f"Placement parent code '{req.binary_parent_code}' not found.", 400)
+            target_root_id = parent.id
+        else:
+            target_root_id = sponsor.id
 
+    if locked_position not in ('LEFT', 'RIGHT'):
+        locked_position = 'LEFT'
+
+    # 3. Calculate Extreme Placement Server-Side
     try:
-        parent_id, position = find_extreme_placement(db, target_root_id, requested_position)
+        parent_id, position = find_extreme_placement(db, target_root_id, locked_position)
         validate_binary_placement(db, parent_id, position)
     except Exception as e:
         return error_response("PLACEMENT_FAILED", str(e), 400)
@@ -87,7 +106,8 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     log_action(db, 'USER_REGISTERED', 'User', new_user.id, new_user.id, {
         'sponsor_code': sponsor.referral_code,
         'binary_parent_id': parent_id,
-        'position': position
+        'position': position,
+        'token_used': val_res.get('token')
     })
     db.commit()
 

@@ -21,11 +21,8 @@ def buy_package(current_user):
         )
         return success_response({
             'purchase': purchase.to_dict(),
-            'events': events,
-            'user': current_user.to_dict(),
-            'wallet': current_user.wallet.to_dict() if current_user.wallet else None,
-            'volume': current_user.volume.to_dict() if current_user.volume else None
-        }, f"Virtual package purchase of ₹{purchase.amount:,.0f} completed! +{purchase.bv:,.0f} BV Added.", 201)
+            'events': events
+        }, f"Package purchase of ₹{purchase.amount:,.0f} completed! +{purchase.bv:,.0f} BV Added.", 201)
     except Exception as e:
         return error_response("PURCHASE_FAILED", str(e), 400)
 

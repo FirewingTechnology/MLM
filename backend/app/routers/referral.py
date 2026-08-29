@@ -4,10 +4,27 @@ from app.database import get_db
 from app.models.user import User
 from app.models.purchase import Purchase
 from app.security import get_current_user
-from app.services.mlm_service import resolve_sponsor_by_code
+from app.services.referral_service import get_user_referral_links, validate_referral_input
 from app.utils.responses import success_response, error_response
 
 router = APIRouter(prefix="/api/referral", tags=["referral"])
+
+@router.get("/links")
+def get_my_referral_links(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Returns the authenticated user's permanent, secure LEFT and RIGHT referral links."""
+    links_data = get_user_referral_links(db, current_user)
+    return success_response(links_data)
+
+@router.get("/validate/{code_or_token}")
+def validate_referral(code_or_token: str, db: Session = Depends(get_db)):
+    """Validates a secure referral token or legacy referral code and returns sponsor & placement lock info."""
+    result = validate_referral_input(db, code_or_token)
+    if not result.get('valid'):
+        return error_response("INVALID_REFERRAL", result.get('error', "Referral is invalid."), 404)
+    return success_response(result)
 
 @router.get("/my-referrals")
 def my_referrals(
@@ -53,18 +70,7 @@ def my_referrals(
 
 @router.get("/{code_or_ref}")
 def lookup_referral(code_or_ref: str, db: Session = Depends(get_db)):
-    code_clean = code_or_ref.strip().upper()
-    user = resolve_sponsor_by_code(db, code_clean)
-    if not user:
-        user = db.query(User).filter(User.user_code == code_clean).first()
-        
-    if not user:
-        return error_response("NOT_FOUND", f"Referral code '{code_or_ref}' not found.", 404)
-        
-    return success_response({
-        'valid': True,
-        'sponsor_name': user.full_name,
-        'sponsor_code': user.user_code,
-        'referral_code': user.referral_code,
-        'is_active': user.is_active
-    })
+    result = validate_referral_input(db, code_or_ref)
+    if not result.get('valid'):
+        return error_response("NOT_FOUND", result.get('error', f"Referral code '{code_or_ref}' not found."), 404)
+    return success_response(result)
