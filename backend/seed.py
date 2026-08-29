@@ -1,13 +1,22 @@
-from app import create_app
-from app.extensions import db
-from app.services.seed_service import seed_database
+import sys
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
 
-app = create_app()
+from app.database import engine, Base, SessionLocal, apply_migrations
+from app.services.seed_service import reset_demo_database
 
 if __name__ == '__main__':
-    with app.app_context():
-        print("Creating database tables...")
-        db.create_all()
-        print("Seeding demo database with initial network...")
-        seed_database()
-        print("Seed completed successfully! Demo accounts ready.")
+    print("Ensuring database tables exist...")
+    Base.metadata.create_all(bind=engine)
+    apply_migrations(engine)
+    
+    print("Cleaning and resetting demo database to fresh baseline state...")
+    db = SessionLocal()
+    try:
+        reset_demo_database(db)
+        print("[SUCCESS] Demo database successfully cleaned and seeded with baseline Admin & Amol accounts!")
+    finally:
+        db.close()
