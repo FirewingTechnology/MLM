@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from app.config import settings
 from app.security import hash_password
 from app.models.user import User
 from app.models.package import Package
@@ -36,16 +37,17 @@ def backfill_legacy_slots(db: Session):
             t.slot_id = slot_service.get_slot_id(t.created_at)
     db.flush()
 
-def seed_database(db: Session):
-    """Seeds clean baseline system with Package, Admin, and Root User (Amol) with active Wallets and REAL demo time config."""
-    # 1. Demo Time Configuration (Default: REAL TIME)
+def initialize_production_baseline(db: Session):
+    """Safely bootstraps required persistent baseline configuration (Package, Time Config, Initial Admin if empty).
+    NEVER deletes, overwrites, or modifies existing database records."""
+    # 1. Time Configuration (Default: REAL TIME)
     time_cfg = db.query(DemoTimeConfig).filter(DemoTimeConfig.id == 1).first()
     if not time_cfg:
         time_cfg = DemoTimeConfig(id=1, mode='REAL', virtual_datetime=None)
         db.add(time_cfg)
         db.flush()
 
-    # 2. Package
+    # 2. Default Package (Required for MLM operation)
     package = db.query(Package).first()
     if not package:
         package = Package(
@@ -60,15 +62,12 @@ def seed_database(db: Session):
         db.add(package)
         db.flush()
 
-    # Backfill any legacy records if present
-    backfill_legacy_slots(db)
-
-    # If users already exist in database, skip re-seeding to prevent constraint conflicts
+    # 3. If any users exist in the database, preserve everything and return immediately
     if db.query(User).count() > 0:
         db.commit()
         return
 
-    # 3. Admin User
+    # 4. First-time deployment bootstrap: Create initial Admin & Root User so system is accessible
     admin = User(
         user_code="USR-00001",
         email="admin@demo.com",
@@ -84,7 +83,6 @@ def seed_database(db: Session):
     get_or_create_wallet(db, admin.id)
     get_or_create_binary_volume(db, admin.id)
 
-    # 4. Root User: Amol
     amol = User(
         user_code="USR-00002",
         email="amol@demo.com",
@@ -103,13 +101,32 @@ def seed_database(db: Session):
     get_or_create_wallet(db, amol.id)
     get_or_create_binary_volume(db, amol.id)
 
-    log_action(db, 'DATABASE_SEEDED', 'System', None, admin.id, {'status': 'Clean baseline initialized (Admin & Root User only)'})
+    log_action(db, 'DATABASE_INITIALIZED', 'System', None, admin.id, {'status': 'Production baseline initialized with initial admin'})
     db.commit()
 
-from app.models.referral_token import ReferralToken
+# Alias for backward compatibility
+seed_database = initialize_production_baseline
 
-def reset_demo_database(db: Session):
-    """Wipes all transactions, commissions, withdrawals, volumes, dummy users, and resets to seed state."""
+from app.models.referral_token import ReferralToken
+from app.models.security_pin import SecurityPin
+from app.models.pin_order import SecurityPinOrder
+from app.models.pin_transfer import SecurityPinTransfer
+from app.models.pin_upline_request import SecurityPinUplineRequest
+from app.models.pin_ledger import SecurityPinLedger
+from app.models.activation_request import PackageActivationRequest
+
+def reset_demo_database(db: Session, force: bool = False, confirm_text: str = ""):
+    """Explicit ADMIN ONLY reset function.
+    Strictly blocked in production unless explicit confirm_text is supplied."""
+    if settings.is_production and not force and confirm_text != "CONFIRM_PERMANENT_WIPE":
+        raise PermissionError("Database wipe is strictly prohibited in PRODUCTION environment. To override, confirm_text='CONFIRM_PERMANENT_WIPE' is required.")
+
+    db.query(SecurityPinLedger).delete()
+    db.query(SecurityPinTransfer).delete()
+    db.query(SecurityPinUplineRequest).delete()
+    db.query(SecurityPin).delete()
+    db.query(SecurityPinOrder).delete()
+    db.query(PackageActivationRequest).delete()
     db.query(AuditLog).delete()
     db.query(WalletTransaction).delete()
     db.query(Withdrawal).delete()
@@ -127,8 +144,8 @@ def reset_demo_database(db: Session):
     db.query(DemoTimeConfig).delete()
     db.commit()
 
-    seed_database(db)
+    initialize_production_baseline(db)
     admin = db.query(User).filter(User.email == "admin@demo.com").first()
-    log_action(db, 'DEMO_RESET', 'System', None, admin.id if admin else None, {'action': 'Full demo reset executed'})
+    log_action(db, 'ADMIN_MANUAL_RESET', 'Admin', None, admin.id if admin else None, {'action': 'Explicit manual reset executed'})
     db.commit()
 

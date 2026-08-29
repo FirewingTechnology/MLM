@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base, SessionLocal, apply_migrations
-from app.services.seed_service import seed_database
+from app.services.seed_service import initialize_production_baseline
 from app.routers import (
     auth,
     dashboard,
@@ -15,28 +15,30 @@ from app.routers import (
     commissions,
     withdrawals,
     admin,
-    time
+    time,
+    activation,
+    security_pins
 )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Create tables & migrate schema
+    # 1. Additive table creation & schema migrations
     Base.metadata.create_all(bind=engine)
     apply_migrations(engine)
     
-    # 2. Auto-seed initial demo dataset
+    # 2. Safe baseline initialization (never deletes or overwrites existing records)
     db = SessionLocal()
     try:
-        seed_database(db)
+        initialize_production_baseline(db)
     finally:
         db.close()
     yield
 
 
 app = FastAPI(
-    title="Virtual Binary MLM Demo API",
-    description="High-performance backend for Binary MLM simulation and client demonstrations (DEMO MODE - NO REAL MONEY).",
-    version="2.0.0",
+    title="Binary MLM Enterprise API",
+    description="Production Binary MLM Enterprise Engine with persistent SQLite database, atomic volume propagation, and security PIN activation.",
+    version="3.0.0",
     lifespan=lifespan
 )
 
@@ -70,6 +72,8 @@ app.include_router(commissions.router)
 app.include_router(withdrawals.router)
 app.include_router(admin.router)
 app.include_router(time.router)
+app.include_router(activation.router)
+app.include_router(security_pins.router)
 
 
 @app.get("/api/health")
@@ -77,6 +81,8 @@ def health_check():
     return {
         "status": "healthy",
         "framework": "FastAPI",
-        "version": "2.0.0",
+        "version": "3.0.0",
+        "database": "sqlite_persistent",
+        "environment": settings.APP_ENV,
         "mode": "DEMO MODE - NO REAL MONEY"
     }

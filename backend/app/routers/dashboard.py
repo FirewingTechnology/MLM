@@ -10,7 +10,7 @@ from app.config import settings
 from app.models.volume_ledger import VolumeLedger
 from app.models.slot_settlement import SlotSettlement
 from app.security import get_current_user
-from app.services.mlm_service import get_or_create_binary_volume, count_total_network_members
+from app.services.mlm_service import get_or_create_binary_volume, count_total_network_members, get_leg_subtree_user_ids
 from app.services.wallet_service import get_or_create_wallet
 from app.services.time_service import time_provider
 from app.services.pair_service import pair_service
@@ -93,45 +93,71 @@ def get_dashboard(current_user: User = Depends(get_current_user), db: Session = 
     left_unpaid_bv = max(0.0, left_total_bv - left_paid_bv)
     right_unpaid_bv = max(0.0, right_total_bv - right_paid_bv)
 
+    # Retrieve leg subtree user IDs to calculate exact paid vs unpaid member counts
+    left_subtree_ids = get_leg_subtree_user_ids(db, current_user.id, 'LEFT')
+    right_subtree_ids = get_leg_subtree_user_ids(db, current_user.id, 'RIGHT')
+
+    left_paid_members = db.query(User).filter(User.id.in_(left_subtree_ids), User.is_active == True).count() if left_subtree_ids else 0
+    left_unpaid_members = db.query(User).filter(User.id.in_(left_subtree_ids), User.is_active == False).count() if left_subtree_ids else 0
+
+    right_paid_members = db.query(User).filter(User.id.in_(right_subtree_ids), User.is_active == True).count() if right_subtree_ids else 0
+    right_unpaid_members = db.query(User).filter(User.id.in_(right_subtree_ids), User.is_active == False).count() if right_subtree_ids else 0
+
     # Convert to Authoritative Carry Counts (30,000 BV units)
     pair_unit = float(settings.PAIR_VOLUME) if settings.PAIR_VOLUME > 0 else 30000.0
 
-    left_paid_count = int(left_paid_bv // pair_unit)
-    left_unpaid_count = int(left_unpaid_bv // pair_unit)
-    left_carry_count = left_unpaid_count  # The carry count is the remaining unmatched carry units
-    left_total_count = left_paid_count + left_unpaid_count
+    left_paid_pairs = int(left_paid_bv // pair_unit)
+    left_unpaid_pairs = int(left_unpaid_bv // pair_unit)
+    left_carry_count = left_unpaid_pairs  # The carry count is the remaining unmatched carry units
+    left_total_pairs = left_paid_pairs + left_unpaid_pairs
 
-    right_paid_count = int(right_paid_bv // pair_unit)
-    right_unpaid_count = int(right_unpaid_bv // pair_unit)
-    right_carry_count = right_unpaid_count
-    right_total_count = right_paid_count + right_unpaid_count
+    right_paid_pairs = int(right_paid_bv // pair_unit)
+    right_unpaid_pairs = int(right_unpaid_bv // pair_unit)
+    right_carry_count = right_unpaid_pairs
+    right_total_pairs = right_paid_pairs + right_unpaid_pairs
+
+    # When members are placed in the binary tree legs, display accurate Paid vs Unpaid member counts.
+    # Otherwise fall back to pair counts for direct volume testing.
+    left_paid_count = left_paid_members if left_subtree_ids else left_paid_pairs
+    left_unpaid_count = left_unpaid_members if left_subtree_ids else left_unpaid_pairs
+
+    right_paid_count = right_paid_members if right_subtree_ids else right_paid_pairs
+    right_unpaid_count = right_unpaid_members if right_subtree_ids else right_unpaid_pairs
 
     carry_data = {
         'left': {
             'bv': left_unpaid_bv,
             'count': left_carry_count,
+            'carry_count': left_carry_count,
             'paid_count': left_paid_count,
             'unpaid_count': left_unpaid_count,
+            'paid_members': left_paid_members,
+            'unpaid_members': left_unpaid_members,
+            'total_members': left_paid_members + left_unpaid_members,
             'total': left_total_bv,
             'paid': left_paid_bv,
             'unpaid': left_unpaid_bv,
             'carry': left_unpaid_bv,
-            'total_pairs': left_total_count,
-            'paid_pairs': left_paid_count,
-            'unpaid_pairs': left_unpaid_count
+            'total_pairs': left_total_pairs,
+            'paid_pairs': left_paid_pairs,
+            'unpaid_pairs': left_unpaid_pairs
         },
         'right': {
             'bv': right_unpaid_bv,
             'count': right_carry_count,
+            'carry_count': right_carry_count,
             'paid_count': right_paid_count,
             'unpaid_count': right_unpaid_count,
+            'paid_members': right_paid_members,
+            'unpaid_members': right_unpaid_members,
+            'total_members': right_paid_members + right_unpaid_members,
             'total': right_total_bv,
             'paid': right_paid_bv,
             'unpaid': right_unpaid_bv,
             'carry': right_unpaid_bv,
-            'total_pairs': right_total_count,
-            'paid_pairs': right_paid_count,
-            'unpaid_pairs': right_unpaid_count
+            'total_pairs': right_total_pairs,
+            'paid_pairs': right_paid_pairs,
+            'unpaid_pairs': right_unpaid_pairs
         }
     }
 

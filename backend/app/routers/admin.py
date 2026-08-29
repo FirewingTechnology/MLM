@@ -13,12 +13,21 @@ from app.models.commission import Commission
 from app.models.wallet import Wallet
 from app.models.withdrawal import Withdrawal
 from app.models.audit_log import AuditLog
+from app.models.activation_request import PackageActivationRequest
+from app.models.security_pin import SecurityPin
 from app.schemas.common import AdminApprovalRequest, WalletAdjustmentRequest, UserStatusRequest
 from app.schemas.time_schemas import TimeModeRequest, SetTimeRequest, AdvanceTimeRequest
+from app.schemas.activation import (
+    AdminVerifyPaymentRequest,
+    AdminIssuePinRequest,
+    AdminRejectRequest,
+    AdminRevokePinRequest
+)
 from app.security import get_current_admin
 from app.services.wallet_service import approve_withdrawal, reject_withdrawal, adjust_wallet_balance
 from app.services.seed_service import reset_demo_database
 from app.services.time_service import time_provider, slot_service
+from app.services.pin_service import pin_service, PinSecurityError
 from app.utils.responses import success_response, error_response
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -64,6 +73,19 @@ def admin_dashboard(
         .filter(Commission.slot_id == slot_info.slot_id).scalar() or 0.0
     slot_purchases_count = db.query(Purchase).filter(Purchase.slot_id == slot_info.slot_id).count()
 
+    # Activation request metrics & PIN Inventory metrics
+    from app.models.pin_order import SecurityPinOrder
+    pending_activations_count = db.query(PackageActivationRequest).filter(
+        PackageActivationRequest.status.in_(['PAYMENT_SUBMITTED', 'UNDER_REVIEW'])
+    ).count()
+    verified_activations_count = db.query(PackageActivationRequest).filter(
+        PackageActivationRequest.status == 'PAYMENT_VERIFIED'
+    ).count()
+    issued_pins_count = db.query(SecurityPin).filter(SecurityPin.status.in_(['ISSUED', 'AVAILABLE'])).count()
+    total_activated_count = db.query(SecurityPin).filter(SecurityPin.status == 'USED').count()
+    pending_pin_orders_count = db.query(SecurityPinOrder).filter(SecurityPinOrder.status.in_(['PAYMENT_SUBMITTED', 'UNDER_REVIEW', 'PAYMENT_PENDING'])).count()
+    completed_pin_orders_count = db.query(SecurityPinOrder).filter(SecurityPinOrder.status == 'COMPLETED').count()
+
     data = {
         'kpis': {
             'total_users': total_users,
@@ -79,6 +101,12 @@ def admin_dashboard(
             'total_withdrawn': total_withdrawn,
             'pending_withdrawals_count': pending_count,
             'pending_withdrawals_amount': pending_amount,
+            'pending_activations_count': pending_activations_count,
+            'verified_activations_count': verified_activations_count,
+            'issued_pins_count': issued_pins_count,
+            'total_activated_count': total_activated_count,
+            'pending_pin_orders_count': pending_pin_orders_count,
+            'completed_pin_orders_count': completed_pin_orders_count,
             'current_slot_id': slot_info.slot_id,
             'current_slot_name': slot_info.slot_name,
             'slot_virtual_sales': slot_purchases_sum,
@@ -224,14 +252,62 @@ def admin_reject_withdrawal(
         db.rollback()
         return error_response("REJECTION_FAILED", str(e), 400)
 
-@router.post("/demo/reset")
-def admin_reset_demo(
+from app.services.backup_service import backup_service
+from app.services.integrity_service import integrity_service
+
+@router.get("/system/database")
+def admin_get_database_health(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
+    """Provides safe SQLite database health status, file size, table counts, and PRAGMA settings."""
+    health = integrity_service.get_database_health(db)
+    return success_response(health)
+
+@router.get("/system/integrity")
+def admin_run_integrity_check(
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Runs structural, referential, and financial integrity audits on the persistent SQLite database."""
+    audit_results = integrity_service.run_integrity_audit(db)
+    return success_response(audit_results)
+
+@router.post("/system/backup")
+def admin_create_backup(
+    payload: Optional[dict] = None,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Creates a consistent, point-in-time SQLite online backup without interrupting live transactions."""
+    notes = (payload or {}).get("notes", "Admin manual backup")
     try:
-        reset_demo_database(db)
+        res = backup_service.create_database_backup(current_admin.id, notes=notes)
+        return success_response(res, "Database backup created successfully!")
+    except Exception as e:
+        return error_response("BACKUP_FAILED", str(e), 500)
+
+@router.get("/system/backups")
+def admin_list_backups(
+    current_admin: User = Depends(get_current_admin)
+):
+    """Lists all available persistent SQLite database backups."""
+    backups = backup_service.list_backups()
+    return success_response(backups)
+
+@router.post("/demo/reset")
+def admin_reset_demo(
+    payload: Optional[dict] = None,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Explicit admin reset endpoint. Strictly requires confirm_text='CONFIRM_PERMANENT_WIPE' in production."""
+    confirm_text = (payload or {}).get("confirm_text", "")
+    try:
+        reset_demo_database(db, confirm_text=confirm_text)
         return success_response(None, "Demo environment successfully reset to initial seed state!")
+    except PermissionError as pe:
+        return error_response("RESET_FORBIDDEN", str(pe), 403)
     except Exception as e:
         db.rollback()
         return error_response("RESET_FAILED", str(e), 500)
@@ -481,4 +557,338 @@ def admin_get_commissions(
         'pages': pages,
         'per_page': per_page
     })
+
+# ----------------------------------------------------
+# Security PIN & Package Activation Management Endpoints
+# ----------------------------------------------------
+
+@router.get("/activation-requests")
+def admin_get_activation_requests(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    status_filter: Optional[str] = Query(None, alias="status"),
+    search: Optional[str] = Query(None),
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(PackageActivationRequest)
+
+    if status_filter:
+        sf = status_filter.strip().upper()
+        if sf != 'ALL':
+            query = query.filter(PackageActivationRequest.status == sf)
+
+    if search:
+        s = f"%{search.strip()}%"
+        query = query.join(User, PackageActivationRequest.user_id == User.id)\
+            .filter(
+                (User.full_name.ilike(s)) |
+                (User.user_code.ilike(s)) |
+                (User.email.ilike(s)) |
+                (PackageActivationRequest.request_code.ilike(s)) |
+                (PackageActivationRequest.payment_reference.ilike(s))
+            )
+
+    total = query.count()
+    offset = (page - 1) * per_page
+    items = query.order_by(PackageActivationRequest.id.desc()).offset(offset).limit(per_page).all()
+    pages = (total + per_page - 1) // per_page if total > 0 else 1
+
+    return success_response({
+        'items': [req.to_dict() for req in items],
+        'total': total,
+        'page': page,
+        'pages': pages,
+        'per_page': per_page
+    })
+
+@router.get("/activation-requests/{request_id}")
+def admin_get_activation_request_detail(
+    request_id: int,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    req = db.get(PackageActivationRequest, request_id)
+    if not req:
+        return error_response("NOT_FOUND", "Activation request not found.", 404)
+
+    return success_response(req.to_dict())
+
+@router.post("/activation-requests/{request_id}/verify-payment")
+def admin_verify_activation_payment(
+    request_id: int,
+    req_body: Optional[AdminVerifyPaymentRequest] = None,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    try:
+        notes = req_body.admin_notes if req_body else None
+        req = pin_service.verify_payment(
+            db=db,
+            request_id=request_id,
+            admin_id=current_admin.id,
+            admin_notes=notes
+        )
+        db.commit()
+        return success_response(
+            req.to_dict(),
+            f"Payment for request {req.request_code} verified! You may now issue a Security PIN."
+        )
+    except (PinSecurityError, Exception) as e:
+        db.rollback()
+        return error_response("VERIFICATION_FAILED", str(e), 400)
+
+@router.post("/activation-requests/{request_id}/issue-pin")
+def admin_issue_pin_for_request(
+    request_id: int,
+    req_body: Optional[AdminIssuePinRequest] = None,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    try:
+        expires_in = req_body.expires_in_days if req_body and req_body.expires_in_days else 7
+        pin, raw_pin = pin_service.issue_security_pin(
+            db=db,
+            request_id=request_id,
+            admin_id=current_admin.id,
+            expires_in_days=expires_in
+        )
+        db.commit()
+
+        # Plaintext PIN is returned strictly ONCE in this response for admin to provide to user
+        pin_data = pin.to_dict(include_pin_code=True)
+        pin_data['raw_security_pin'] = raw_pin
+
+        req = db.get(PackageActivationRequest, request_id)
+
+        return success_response({
+            'pin': pin_data,
+            'activation_request': req.to_dict() if req else None,
+            'raw_security_pin': raw_pin
+        }, f"Security PIN generated successfully. Please copy and provide this PIN to the user.")
+    except (PinSecurityError, Exception) as e:
+        db.rollback()
+        return error_response("PIN_ISSUANCE_FAILED", str(e), 400)
+
+@router.post("/activation-requests/{request_id}/reject")
+def admin_reject_activation_request(
+    request_id: int,
+    req_body: AdminRejectRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    try:
+        req = pin_service.reject_request(
+            db=db,
+            request_id=request_id,
+            admin_id=current_admin.id,
+            reason=req_body.reason
+        )
+        db.commit()
+        return success_response(req.to_dict(), f"Activation request {req.request_code} rejected.")
+    except (PinSecurityError, Exception) as e:
+        db.rollback()
+        return error_response("REJECTION_FAILED", str(e), 400)
+
+@router.post("/security-pins/{pin_id}/revoke")
+def admin_revoke_security_pin(
+    pin_id: int,
+    req_body: AdminRevokePinRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    try:
+        pin = pin_service.revoke_pin(
+            db=db,
+            pin_id=pin_id,
+            admin_id=current_admin.id,
+            reason=req_body.reason
+        )
+        db.commit()
+        return success_response(pin.to_dict(include_pin_code=True), f"Security PIN {pin.pin_code} revoked.")
+    except (PinSecurityError, Exception) as e:
+        db.rollback()
+        return error_response("REVOCATION_FAILED", str(e), 400)
+
+@router.get("/security-pins")
+def admin_get_security_pins(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    status_filter: Optional[str] = Query(None, alias="status"),
+    search: Optional[str] = Query(None),
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(SecurityPin)
+    if status_filter and status_filter.strip().upper() != 'ALL':
+        query = query.filter(SecurityPin.status == status_filter.strip().upper())
+    if search:
+        s = f"%{search.strip()}%"
+        query = query.join(User, SecurityPin.user_id == User.id)\
+            .filter((User.full_name.ilike(s)) | (User.user_code.ilike(s)) | (SecurityPin.pin_code.ilike(s)))
+
+    total = query.count()
+    offset = (page - 1) * per_page
+    items = query.order_by(SecurityPin.id.desc()).offset(offset).limit(per_page).all()
+    pages = (total + per_page - 1) // per_page if total > 0 else 1
+
+    return success_response({
+        'items': [p.to_dict(include_pin_code=True) for p in items],
+        'total': total,
+        'page': page,
+        'pages': pages,
+        'per_page': per_page
+    })
+
+# =========================================================================
+# PREPAID BULK PIN ORDERS & INVENTORY MANAGEMENT
+# =========================================================================
+
+@router.get("/pin-orders")
+@router.get("/security-pins/orders")
+def admin_get_pin_orders(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    status_filter: Optional[str] = Query(None, alias="status"),
+    search: Optional[str] = Query(None),
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    from app.models.pin_order import SecurityPinOrder
+    query = db.query(SecurityPinOrder)
+    if status_filter and status_filter.strip().upper() != 'ALL':
+        query = query.filter(SecurityPinOrder.status == status_filter.strip().upper())
+    if search:
+        s = f"%{search.strip()}%"
+        query = query.join(User, SecurityPinOrder.user_id == User.id)\
+            .filter((User.full_name.ilike(s)) | (User.user_code.ilike(s)) | (SecurityPinOrder.order_code.ilike(s)) | (SecurityPinOrder.payment_reference.ilike(s)))
+
+    total = query.count()
+    offset = (page - 1) * per_page
+    items = query.order_by(SecurityPinOrder.id.desc()).offset(offset).limit(per_page).all()
+    pages = (total + per_page - 1) // per_page if total > 0 else 1
+
+    return success_response({
+        'items': [o.to_dict() for o in items],
+        'total': total,
+        'page': page,
+        'pages': pages,
+        'per_page': per_page
+    })
+
+@router.post("/pin-orders/{order_id}/verify")
+@router.post("/security-pins/orders/{order_id}/verify")
+def admin_verify_pin_order_payment(
+    order_id: int,
+    req_body: AdminVerifyPaymentRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    try:
+        order = pin_service.admin_verify_order_payment(
+            db=db,
+            order_id=order_id,
+            admin_id=current_admin.id,
+            admin_notes=req_body.admin_notes
+        )
+        db.commit()
+        return success_response(order.to_dict(), f"Payment for PIN Order {order.order_code} verified successfully.")
+    except Exception as e:
+        db.rollback()
+        return error_response("VERIFICATION_FAILED", str(e), 400)
+
+@router.post("/pin-orders/{order_id}/issue")
+@router.post("/security-pins/orders/{order_id}/issue")
+def admin_issue_pin_order_batch(
+    order_id: int,
+    req_body: AdminIssuePinRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    try:
+        expires_in = req_body.expires_in_days or 30
+        order, generated_pins = pin_service.admin_issue_pin_batch(
+            db=db,
+            order_id=order_id,
+            admin_id=current_admin.id,
+            expires_in_days=expires_in
+        )
+        db.commit()
+        return success_response({
+            'order': order.to_dict(),
+            'generated_pins': generated_pins,
+            'count': len(generated_pins)
+        }, f"Successfully generated and credited {len(generated_pins)} Security PIN(s) to buyer's wallet.")
+    except Exception as e:
+        db.rollback()
+        return error_response("PIN_ISSUANCE_FAILED", str(e), 400)
+
+@router.post("/pin-orders/{order_id}/reject")
+@router.post("/security-pins/orders/{order_id}/reject")
+def admin_reject_pin_order(
+    order_id: int,
+    req_body: AdminRejectRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    try:
+        order = pin_service.admin_reject_order(
+            db=db,
+            order_id=order_id,
+            admin_id=current_admin.id,
+            rejection_reason=req_body.reason
+        )
+        db.commit()
+        return success_response(order.to_dict(), f"PIN Order {order.order_code} rejected.")
+    except Exception as e:
+        db.rollback()
+        return error_response("REJECTION_FAILED", str(e), 400)
+
+@router.get("/pin-transfers")
+@router.get("/security-pins/transfers")
+def admin_get_pin_transfers(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    from app.models.pin_transfer import SecurityPinTransfer
+    query = db.query(SecurityPinTransfer)
+    total = query.count()
+    offset = (page - 1) * per_page
+    items = query.order_by(SecurityPinTransfer.id.desc()).offset(offset).limit(per_page).all()
+    pages = (total + per_page - 1) // per_page if total > 0 else 1
+
+    return success_response({
+        'items': [t.to_dict() for t in items],
+        'total': total,
+        'page': page,
+        'pages': pages,
+        'per_page': per_page
+    })
+
+@router.get("/pin-ledger")
+@router.get("/security-pins/ledger")
+def admin_get_pin_ledger(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(30, ge=1, le=100),
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    from app.models.pin_ledger import SecurityPinLedger
+    query = db.query(SecurityPinLedger)
+    total = query.count()
+    offset = (page - 1) * per_page
+    items = query.order_by(SecurityPinLedger.id.desc()).offset(offset).limit(per_page).all()
+    pages = (total + per_page - 1) // per_page if total > 0 else 1
+
+    return success_response({
+        'items': [l.to_dict() for l in items],
+        'total': total,
+        'page': page,
+        'pages': pages,
+        'per_page': per_page
+    })
+
+
 

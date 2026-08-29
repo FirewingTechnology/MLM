@@ -3,9 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useOutletContext, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
-import { DashboardData, Commission, BinaryTreeNode, ReferralLinksData } from '../types';
+import { DashboardData, Commission, BinaryTreeNode, ReferralLinksData, ActivationStatusResponse, PinWalletData } from '../types';
 import { CommissionDetailModal } from '../components/modals/CommissionDetailModal';
 import { WithdrawalModal } from '../components/modals/WithdrawalModal';
+import { PinWalletModal } from '../components/modals/PinWalletModal';
 import { SlotCard } from '../components/dashboard/SlotCard';
 import { PairSummaryCard } from '../components/dashboard/PairSummaryCard';
 import { 
@@ -20,7 +21,13 @@ import {
   ShoppingBag, 
   PackageCheck,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  KeyRound,
+  Clock,
+  ShieldCheck,
+  DownloadCloud,
+  Send,
+  ArrowRightLeft
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -30,6 +37,17 @@ export const DashboardPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
   const [isWithdrawalModalOpen, setIsWithdrawalModalOpen] = useState(false);
+  const [isPinWalletModalOpen, setIsPinWalletModalOpen] = useState(false);
+  const [pinWalletTab, setPinWalletTab] = useState<'overview' | 'buy' | 'give' | 'request' | 'incoming' | 'history'>('overview');
+
+  const { data: pinWallet, refetch: refetchPinWallet } = useQuery<PinWalletData>({
+    queryKey: ['pinWallet'],
+    queryFn: async () => {
+      const res = await api.get('/security-pins/inventory');
+      return res.data.data;
+    },
+    refetchInterval: 8000,
+  });
 
   const { data, isLoading } = useQuery<DashboardData>({
     queryKey: ['dashboard'],
@@ -58,6 +76,14 @@ export const DashboardPage: React.FC = () => {
     queryKey: ['referralLinks'],
     queryFn: async () => {
       const res = await api.get('/referral/links');
+      return res.data.data;
+    },
+  });
+
+  const { data: activationStatus } = useQuery<ActivationStatusResponse>({
+    queryKey: ['activationStatus'],
+    queryFn: async () => {
+      const res = await api.get('/package/activation-status');
       return res.data.data;
     },
   });
@@ -107,13 +133,13 @@ export const DashboardPage: React.FC = () => {
 
   const carryData = data?.carry || data?.carry_summary || kpis?.carry || kpis?.carry_summary;
 
-  const leftCarryCount = carryData?.left?.count ?? carryData?.left?.unpaid_count ?? (Math.floor((kpis?.carry_left_bv || 0) / 30000));
-  const leftPaidCount = carryData?.left?.paid_count ?? carryData?.left?.paid_pairs ?? (Math.floor((carryData?.left?.paid || 0) / 30000));
-  const leftUnpaidCount = carryData?.left?.unpaid_count ?? carryData?.left?.unpaid_pairs ?? (Math.floor((kpis?.carry_left_bv || 0) / 30000));
+  const leftCarryCount = carryData?.left?.count ?? carryData?.left?.carry_count ?? (Math.floor((kpis?.carry_left_bv || 0) / 30000));
+  const leftPaidCount = carryData?.left?.paid_count ?? carryData?.left?.paid_members ?? carryData?.left?.paid_pairs ?? 0;
+  const leftUnpaidCount = carryData?.left?.unpaid_count ?? carryData?.left?.unpaid_members ?? carryData?.left?.unpaid_pairs ?? 0;
 
-  const rightCarryCount = carryData?.right?.count ?? carryData?.right?.unpaid_count ?? (Math.floor((kpis?.carry_right_bv || 0) / 30000));
-  const rightPaidCount = carryData?.right?.paid_count ?? carryData?.right?.paid_pairs ?? (Math.floor((carryData?.right?.paid || 0) / 30000));
-  const rightUnpaidCount = carryData?.right?.unpaid_count ?? carryData?.right?.unpaid_pairs ?? (Math.floor((kpis?.carry_right_bv || 0) / 30000));
+  const rightCarryCount = carryData?.right?.count ?? carryData?.right?.carry_count ?? (Math.floor((kpis?.carry_right_bv || 0) / 30000));
+  const rightPaidCount = carryData?.right?.paid_count ?? carryData?.right?.paid_members ?? carryData?.right?.paid_pairs ?? 0;
+  const rightUnpaidCount = carryData?.right?.unpaid_count ?? carryData?.right?.unpaid_members ?? carryData?.right?.unpaid_pairs ?? 0;
 
   // Dynamic greeting based on current hour
   const currentHour = new Date().getHours();
@@ -208,6 +234,155 @@ export const DashboardPage: React.FC = () => {
               <ChevronRight className="w-3.5 h-3.5 text-[#C9A227]" />
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* 2a. SECURITY PIN PREPAID WALLET CARD */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E0D3] pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#FAF4DC] border border-[#E2C766] flex items-center justify-center text-[#8C6C16] shadow-2xs">
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-heading font-extrabold text-[#18211F]">
+                  Security PIN Wallet
+                </h2>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#E0F3EE] text-[#063B32] border border-[#8DCFBF] font-mono">
+                  Prepaid Credits
+                </span>
+              </div>
+              <p className="text-xs text-[#69736F]">
+                Transfer single-use activation credits to downline members or order bulk PIN inventory from Admin.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setPinWalletTab('overview');
+                setIsPinWalletModalOpen(true);
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-[#063B32] hover:bg-[#063B32]/90 text-[#FFFEF9] text-xs font-bold shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-[#C9A227]" />
+              <span>Open PIN Wallet</span>
+            </button>
+          </div>
+        </div>
+
+        {/* PIN Inventory Metrics */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div
+            onClick={() => {
+              setPinWalletTab('overview');
+              setIsPinWalletModalOpen(true);
+            }}
+            className="p-3.5 rounded-2xl bg-[#F7F4EC]/70 border border-[#E5E0D3] hover:border-[#063B32] cursor-pointer transition-all"
+          >
+            <div className="text-[10px] text-[#69736F] font-bold uppercase">Available PINs</div>
+            <div className="text-2xl font-heading font-black text-[#063B32] font-mono mt-0.5">
+              {pinWallet?.wallet?.available ?? 0}
+            </div>
+            <div className="text-[10px] text-[#0E9F6E] font-medium mt-0.5 flex items-center gap-1">
+              <span>Ready for activation</span>
+            </div>
+          </div>
+
+          <div
+            onClick={() => {
+              setPinWalletTab('give');
+              setIsPinWalletModalOpen(true);
+            }}
+            className="p-3.5 rounded-2xl bg-[#F7F4EC]/70 border border-[#E5E0D3] hover:border-[#063B32] cursor-pointer transition-all"
+          >
+            <div className="text-[10px] text-[#69736F] font-bold uppercase">Transferred</div>
+            <div className="text-2xl font-heading font-black text-[#8C6C16] font-mono mt-0.5">
+              {pinWallet?.wallet?.transferred ?? 0}
+            </div>
+            <div className="text-[10px] text-[#69736F] font-medium mt-0.5">Given to downlines</div>
+          </div>
+
+          <div
+            onClick={() => {
+              setPinWalletTab('overview');
+              setIsPinWalletModalOpen(true);
+            }}
+            className="p-3.5 rounded-2xl bg-[#F7F4EC]/70 border border-[#E5E0D3] hover:border-[#063B32] cursor-pointer transition-all"
+          >
+            <div className="text-[10px] text-[#69736F] font-bold uppercase">Received / Used</div>
+            <div className="text-2xl font-heading font-black text-[#18211F] font-mono mt-0.5">
+              {pinWallet?.wallet?.received ?? 0} <span className="text-xs text-[#69736F] font-normal">/ {pinWallet?.wallet?.used ?? 0}</span>
+            </div>
+            <div className="text-[10px] text-[#69736F] font-medium mt-0.5">From sponsor / Activated</div>
+          </div>
+
+          <div
+            onClick={() => {
+              setPinWalletTab('buy');
+              setIsPinWalletModalOpen(true);
+            }}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-[#FAF4DC] to-[#F7F4EC] border border-[#E2C766] hover:shadow-xs cursor-pointer transition-all flex flex-col justify-between"
+          >
+            <div>
+              <div className="text-[10px] text-[#8C6C16] font-bold uppercase">Order from Admin</div>
+              <div className="text-xs font-bold text-[#18211F] mt-1">₹35,000 / 30k BV</div>
+            </div>
+            <div className="text-[10px] font-bold text-[#063B32] flex items-center gap-1 mt-2">
+              <span>Buy Bulk PINs</span>
+              <ArrowUpRight className="w-3 h-3" />
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions Row */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <button
+            onClick={() => {
+              setPinWalletTab('buy');
+              setIsPinWalletModalOpen(true);
+            }}
+            className="px-3 py-1.5 rounded-xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#063B32] text-xs font-bold hover:bg-[#E5E0D3] transition-colors cursor-pointer flex items-center gap-1.5"
+          >
+            <DownloadCloud className="w-3.5 h-3.5" />
+            <span>Get PINs (Admin)</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setPinWalletTab('give');
+              setIsPinWalletModalOpen(true);
+            }}
+            className="px-3 py-1.5 rounded-xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#8C6C16] text-xs font-bold hover:bg-[#E5E0D3] transition-colors cursor-pointer flex items-center gap-1.5"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>Give PIN to Downline</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setPinWalletTab('request');
+              setIsPinWalletModalOpen(true);
+            }}
+            className="px-3 py-1.5 rounded-xl bg-[#F7F4EC] border border-[#E5E0D3] text-blue-800 text-xs font-bold hover:bg-[#E5E0D3] transition-colors cursor-pointer flex items-center gap-1.5"
+          >
+            <ArrowRightLeft className="w-3.5 h-3.5" />
+            <span>Request from Sponsor</span>
+          </button>
+
+          {(pinWallet?.wallet?.pending_downline_requests ?? 0) > 0 && (
+            <button
+              onClick={() => {
+                setPinWalletTab('incoming');
+                setIsPinWalletModalOpen(true);
+              }}
+              className="px-3 py-1.5 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold hover:bg-amber-200 transition-colors cursor-pointer flex items-center gap-1.5 animate-pulse"
+            >
+              <span>{pinWallet?.wallet?.pending_downline_requests} Downline Request(s)</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -352,14 +527,72 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Main Action: BUY ₹35,000 SUB FRANCHISE PACKAGE */}
-      <button
-        onClick={openPurchaseModal}
-        className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/40 font-heading font-black text-base shadow-wealth-card transition-all transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-      >
-        <ShoppingBag className="w-5 h-5 text-[#C9A227]" />
-        <span>ACTIVATE ₹35,000 SUB FRANCHISE PACKAGE (30,000 BV)</span>
-      </button>
+      {/* 5. Main Action: Security PIN Package Activation */}
+      {!user?.is_active && (
+        <div className="space-y-3">
+          {activationStatus?.activation_request?.status === 'PIN_ISSUED' ? (
+            <div className="p-4 rounded-3xl bg-[#FAF4DC] border-2 border-[#E2C766] shadow-wealth-gold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#C9A227] text-[#18211F] flex items-center justify-center font-bold shrink-0">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-[#8C6C16] flex items-center gap-1.5 font-mono">
+                    <Sparkles className="w-3.5 h-3.5 text-[#C9A227]" />
+                    <span>Security PIN Issued — Ready for Activation</span>
+                  </div>
+                  <div className="text-xs text-[#18211F] font-semibold mt-0.5">
+                    Your single-use Security PIN is available. Enter PIN to activate ₹35,000 package (+30,000 BV).
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={openPurchaseModal}
+                className="px-5 py-2.5 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/40 text-xs font-heading font-black shadow-wealth-card transition-all transform hover:scale-[1.02] active:scale-[0.98] shrink-0 cursor-pointer flex items-center gap-1.5"
+              >
+                <KeyRound className="w-4 h-4 text-[#C9A227]" />
+                <span>ENTER PIN & ACTIVATE</span>
+              </button>
+            </div>
+          ) : activationStatus?.activation_request?.status === 'PAYMENT_SUBMITTED' ? (
+            <div className="p-4 rounded-3xl bg-[#E0F3EE] border border-[#8DCFBF] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#063B32] text-[#FFFEF9] flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5 text-[#C9A227]" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-[#063B32] font-mono">
+                    Payment Reference Submitted (Under Admin Review)
+                  </div>
+                  <div className="text-xs text-[#69736F] font-medium mt-0.5">
+                    Ref: <code className="bg-white px-1.5 py-0.5 rounded text-[#18211F] font-mono font-bold">{activationStatus.activation_request.payment_reference}</code>. Admin is reviewing to issue your Security PIN.
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={openPurchaseModal}
+                className="px-4 py-2 rounded-2xl bg-white border border-[#8DCFBF] hover:bg-[#EFECE2] text-[#063B32] text-xs font-bold transition-colors shrink-0 cursor-pointer"
+              >
+                View Status
+              </button>
+            </div>
+          ) : null}
+
+          <button
+            onClick={openPurchaseModal}
+            className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/40 font-heading font-black text-base shadow-wealth-card transition-all transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+          >
+            <KeyRound className="w-5 h-5 text-[#C9A227]" />
+            <span>
+              {activationStatus?.activation_request?.status === 'PIN_ISSUED'
+                ? 'ENTER SECURITY PIN TO ACTIVATE (+30,000 BV)'
+                : activationStatus?.activation_request?.status === 'PAYMENT_SUBMITTED'
+                ? 'VIEW ACTIVATION STATUS & SECURITY PIN'
+                : 'REQUEST SECURITY PIN & ACTIVATE PACKAGE (₹35,000)'}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* 6. Referral / Invitation Section */}
       <div className="rounded-3xl bg-[#FFFEF9] p-5 sm:p-6 border border-[#E5E0D3] shadow-wealth-card space-y-3">
@@ -474,6 +707,15 @@ export const DashboardPage: React.FC = () => {
         isOpen={isWithdrawalModalOpen}
         onClose={() => setIsWithdrawalModalOpen(false)}
         availableBalance={kpis?.wallet_balance || 0}
+      />
+
+      <PinWalletModal
+        isOpen={isPinWalletModalOpen}
+        onClose={() => setIsPinWalletModalOpen(false)}
+        initialTab={pinWalletTab}
+        onSuccess={() => {
+          refetchPinWallet();
+        }}
       />
     </div>
   );

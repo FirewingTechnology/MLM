@@ -113,13 +113,19 @@ export const PackagesPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Security Notice */}
+          <div className="p-3.5 rounded-2xl bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] text-xs mb-6 flex items-center gap-2">
+            <span className="font-bold font-mono">SECURE PIN:</span>
+            <span>Package requires an authorized single-use Security PIN to activate and release 30,000 BV.</span>
+          </div>
+
           {/* CTA */}
           <button
             onClick={openPurchaseModal}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/40 font-heading font-black text-sm shadow-wealth-card transition-all transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4 text-[#C9A227]" />
-            <span>ACTIVATE SUB FRANCHISE PACKAGE (₹35,000)</span>
+            <span>REQUEST SECURITY PIN & ACTIVATE (₹35,000)</span>
           </button>
         </div>
       </div>

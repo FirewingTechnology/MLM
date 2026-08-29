@@ -255,8 +255,12 @@ export interface BinaryTreeNode {
 export interface CarryLegSummary {
   bv?: number;
   count?: number;
+  carry_count?: number;
   paid_count?: number;
   unpaid_count?: number;
+  paid_members?: number;
+  unpaid_members?: number;
+  total_members?: number;
   total?: number;
   paid?: number;
   unpaid?: number;
@@ -385,3 +389,212 @@ export interface ReferralValidationData {
   token?: string | null;
   is_active?: boolean;
 }
+
+export type ActivationStatus = 
+  | 'PAYMENT_PENDING'
+  | 'PAYMENT_SUBMITTED'
+  | 'UNDER_REVIEW'
+  | 'PAYMENT_VERIFIED'
+  | 'PIN_ISSUED'
+  | 'ACTIVATED'
+  | 'REJECTED'
+  | 'CANCELLED';
+
+export interface PackageActivationRequest {
+  id: number;
+  request_code: string;
+  user_id: number;
+  user_name?: string;
+  user_code?: string;
+  user_email?: string;
+  sponsor_name?: string;
+  sponsor_code?: string;
+  binary_parent_name?: string;
+  binary_parent_code?: string;
+  binary_position?: 'LEFT' | 'RIGHT' | null;
+  package_id: number;
+  package_name?: string;
+  package_amount: number;
+  package_bv: number;
+  payment_method: string;
+  payment_reference?: string;
+  payment_recipient_id?: number;
+  payment_recipient_name?: string;
+  payment_proof_url?: string;
+  status: ActivationStatus;
+  admin_notes?: string;
+  rejection_reason?: string;
+  requested_at: string;
+  verified_at?: string;
+  verified_by_name?: string;
+  security_pin_id?: number;
+  pin_status?: string;
+  pin_code?: string;
+  activated_at?: string;
+  purchase_id?: number;
+}
+
+export interface SecurityPin {
+  id: number;
+  pin_code?: string;
+  masked_code?: string;
+  user_id: number;
+  owner_user_id?: number;
+  owner_user_name?: string;
+  owner_user_code?: string;
+  owner_name?: string;
+  owner_code?: string;
+  original_owner_user_id?: number;
+  original_owner_name?: string;
+  original_owner_code?: string;
+  order_id?: number;
+  package_id: number;
+  package_name?: string;
+  activation_request_id?: number;
+  amount: number;
+  bv: number;
+  status: 'AVAILABLE' | 'ISSUED' | 'TRANSFERRED' | 'USED' | 'EXPIRED' | 'REVOKED';
+  created_at: string;
+  issued_at?: string;
+  transferred_at?: string;
+  used_at?: string;
+  expires_at?: string;
+  created_by_admin_id?: number;
+  created_by_admin_name?: string;
+  payment_reference?: string;
+  attempt_count: number;
+  max_attempts: number;
+  revocation_reason?: string;
+  raw_security_pin?: string;
+}
+
+export interface SecurityPinOrder {
+  id: number;
+  order_code: string;
+  user_id: number;
+  user_name?: string;
+  user_code?: string;
+  user_email?: string;
+  buyer_name?: string;
+  buyer_code?: string;
+  buyer_email?: string;
+  package_id: number;
+  package_name?: string;
+  quantity: number;
+  price_per_pin: number;
+  unit_price?: number;
+  total_amount: number;
+  bv_per_pin: number;
+  payment_method: string;
+  payment_reference?: string;
+  payment_proof_url?: string;
+  status: 'PAYMENT_PENDING' | 'PAYMENT_SUBMITTED' | 'UNDER_REVIEW' | 'PAYMENT_VERIFIED' | 'COMPLETED' | 'REJECTED' | 'CANCELLED';
+  admin_notes?: string;
+  rejection_reason?: string;
+  created_at: string;
+  verified_at?: string;
+  verified_by_name?: string;
+  completed_at?: string;
+  generated_pins_count?: number;
+}
+
+export interface SecurityPinTransfer {
+  id: number;
+  pin_id: number;
+  pin_code?: string;
+  from_user_id: number;
+  from_user_name?: string;
+  from_user_code?: string;
+  to_user_id: number;
+  to_user_name?: string;
+  to_user_code?: string;
+  transfer_reason?: string;
+  notes?: string;
+  transferred_at: string;
+  status: string;
+}
+
+export interface SecurityPinUplineRequest {
+  id: number;
+  request_code: string;
+  requester_user_id: number;
+  requester_user_name?: string;
+  requester_user_code?: string;
+  upline_user_id: number;
+  upline_user_name?: string;
+  upline_user_code?: string;
+  package_id: number;
+  package_name?: string;
+  quantity: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  notes?: string;
+  rejection_reason?: string;
+  transferred_pin_id?: number;
+  created_at: string;
+  responded_at?: string;
+}
+
+export interface SecurityPinLedgerEntry {
+  id: number;
+  pin_id: number;
+  pin_code?: string;
+  user_id: number;
+  user_name?: string;
+  user_code?: string;
+  action: string;
+  reference_id?: string;
+  from_user_id?: number;
+  from_user_name?: string;
+  to_user_id?: number;
+  to_user_name?: string;
+  actor_id?: number;
+  actor_name?: string;
+  notes?: string;
+  timestamp: string;
+}
+
+export type SecurityPinLedgerItem = SecurityPinLedgerEntry;
+
+export interface PinWalletData {
+  wallet: {
+    available: number;
+    used: number;
+    transferred: number;
+    received: number;
+    expired: number;
+    total_purchased: number;
+    pending_downline_requests: number;
+  };
+  available_pins: SecurityPin[];
+  user: {
+    id: number;
+    user_code: string;
+    full_name: string;
+    is_active: boolean;
+  };
+}
+
+export interface EligibleDownlineUser {
+  id: number;
+  user_code: string;
+  full_name: string;
+  email: string;
+  is_active: boolean;
+  binary_position?: string;
+  sponsor_id?: number;
+}
+
+export interface ActivationStatusResponse {
+  is_active: boolean;
+  package: Package;
+  activation_request: PackageActivationRequest | null;
+  payment_recipient: {
+    id: number | null;
+    full_name: string;
+    user_code: string;
+    role: string;
+    relationship: string;
+  };
+  can_activate_with_pin: boolean;
+}
+

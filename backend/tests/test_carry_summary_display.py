@@ -196,3 +196,85 @@ def test_carry_count_case_7_no_pair_preserves_unmatched_carry(client, db_session
     assert carry["right"]["count"] == 0
     assert carry["right"]["unpaid_count"] == 0
     assert carry["right"]["paid_count"] == 0
+
+def test_paid_and_unpaid_member_counts_in_dashboard(client, db_session):
+    """
+    TEST 8: Verify that when members register under Left/Right without purchase,
+    unpaid_count is incremented properly.
+    When a member activates (purchases package), paid_count is incremented and unpaid_count is decremented.
+    """
+    amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
+
+    # Register an unpaid user on Left leg
+    left_user = User(
+        user_code="USR-TEST-L1",
+        email="unpaid_left@test.com",
+        mobile="9999900001",
+        full_name="Unpaid Left User",
+        password_hash="fakehash",
+        role="USER",
+        referral_code="UNPL01",
+        sponsor_id=amol.id,
+        binary_parent_id=amol.id,
+        binary_position="LEFT",
+        is_active=False
+    )
+    db_session.add(left_user)
+    db_session.commit()
+
+    login_res = client.post("/api/auth/login", json={"identifier": "amol@demo.com", "password": "Demo@123"})
+    token = login_res.json()["data"]["token"]
+
+    res = client.get("/api/dashboard", headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 200
+    carry = res.json()["data"]["carry"]
+
+    # Left leg should show 1 unpaid member, 0 paid members, 0 carry
+    assert carry["left"]["unpaid_count"] == 1
+    assert carry["left"]["paid_count"] == 0
+    assert carry["left"]["count"] == 0
+
+    # Right leg should show 0 unpaid, 0 paid
+    assert carry["right"]["unpaid_count"] == 0
+    assert carry["right"]["paid_count"] == 0
+
+    # Register an unpaid user on Right leg
+    right_user = User(
+        user_code="USR-TEST-R1",
+        email="unpaid_right@test.com",
+        mobile="9999900002",
+        full_name="Unpaid Right User",
+        password_hash="fakehash",
+        role="USER",
+        referral_code="UNPR01",
+        sponsor_id=amol.id,
+        binary_parent_id=amol.id,
+        binary_position="RIGHT",
+        is_active=False
+    )
+    db_session.add(right_user)
+    db_session.commit()
+
+    res = client.get("/api/dashboard", headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 200
+    carry = res.json()["data"]["carry"]
+
+    assert carry["left"]["unpaid_count"] == 1
+    assert carry["left"]["paid_count"] == 0
+    assert carry["right"]["unpaid_count"] == 1
+    assert carry["right"]["paid_count"] == 0
+
+    # Now activate the Left user (they purchased a package)
+    left_user.is_active = True
+    db_session.commit()
+
+    res = client.get("/api/dashboard", headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 200
+    carry = res.json()["data"]["carry"]
+
+    # Left: 1 paid, 0 unpaid
+    assert carry["left"]["paid_count"] == 1
+    assert carry["left"]["unpaid_count"] == 0
+    # Right: 0 paid, 1 unpaid
+    assert carry["right"]["paid_count"] == 0
+    assert carry["right"]["unpaid_count"] == 1

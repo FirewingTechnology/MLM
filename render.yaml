@@ -1,25 +1,32 @@
 # ====================================================================
 # Render Blueprint Specification (render.yaml)
-# Project: Virtual Binary MLM Demo Web Application
+# Project: Binary MLM Enterprise Application (Production Persistent SQLite)
 # Documentation: https://render.com/docs/blueprint-spec
+# NOTE: SQLite persistence on Render requires a Persistent Disk (Starter plan or above).
 # ====================================================================
 
 services:
   # ------------------------------------------------------------------
-  # 1. FastAPI Backend Web Service
+  # 1. FastAPI Backend Web Service with Persistent SQLite Storage
   # ------------------------------------------------------------------
   - type: web
     name: mlm-backend
     runtime: python
     region: oregon
-    plan: free
+    plan: starter  # Starter plan or higher is required for persistent disk mounts
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
     healthCheckPath: /api/health
     autoDeploy: true
+    disk:
+      name: mlm-persistent-data
+      mountPath: /var/data
+      sizeGB: 10
     envVars:
       - key: ENV
+        value: production
+      - key: APP_ENV
         value: production
       - key: SECRET_KEY
         generateValue: true
@@ -27,15 +34,13 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         value: "*"
-      # SQLite is enabled by default (demo environment auto-seeds on startup):
+      # SQLite Database is stored directly on the mounted persistent disk:
+      - key: SQLITE_DB_PATH
+        value: /var/data/mlm.sqlite3
       - key: DATABASE_URL
-        value: sqlite:///./mlm_demo.db
-      # If using Render Managed PostgreSQL below, comment out the SQLite DATABASE_URL above
-      # and uncomment the block below:
-      # - key: DATABASE_URL
-      #   fromDatabase:
-      #     name: mlm-db
-      #     property: connectionString
+        value: sqlite:////var/data/mlm.sqlite3
+      - key: BACKUP_DIR
+        value: /var/data/backups
 
   # ------------------------------------------------------------------
   # 2. React Vite Frontend Static Site
