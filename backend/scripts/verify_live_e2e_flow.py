@@ -1,6 +1,11 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
 
 import json
 from fastapi.testclient import TestClient
@@ -63,13 +68,13 @@ def run_live_e2e_verification():
     res_b_login = client.post("/api/auth/login", json={"identifier": "member_b_live@demo.com", "password": "Demo@123"})
     b_token = res_b_login.json()["data"]["token"]
     res_pur_b = client.post("/api/purchases", json={"package_id": 1}, headers={"Authorization": f"Bearer {b_token}"})
-    print("Member B purchased package -> Status:", res_pur_b.status_code)
+    print("Member B purchased package -> Status:", res_pur_b.status_code, res_pur_b.json())
 
     # Purchase package for C (INR 35,000 / 30,000 BV)
     res_c_login = client.post("/api/auth/login", json={"identifier": "member_c_live@demo.com", "password": "Demo@123"})
     c_token = res_c_login.json()["data"]["token"]
     res_pur_c = client.post("/api/purchases", json={"package_id": 1}, headers={"Authorization": f"Bearer {c_token}"})
-    print("Member C purchased package -> Status:", res_pur_c.status_code)
+    print("Member C purchased package -> Status:", res_pur_c.status_code, res_pur_c.json())
 
     # Verify Amol's Dashboard & Wallet after Slot 1 pair
     res_dash = client.get("/api/dashboard", headers=amol_headers)
@@ -78,7 +83,7 @@ def run_live_e2e_verification():
     wallet_bal = dash_data["kpis"]["wallet_balance"]
     
     print("\n--- Amol Slot 1 Results ---")
-    print(f"Wallet Balance: INR {wallet_bal:,.2f} (Direct Commissions: INR 6,000 + Pair Bonus: INR 15,000 = INR 21,000)")
+    print(f"Wallet Balance: INR {wallet_bal:,.2f} (Direct Commissions: INR 6,000 + Pair Bonus: INR 10,000 = INR 16,000)")
     print(f"Effective Left BV: INR {pair_sum['effective_left_bv']:,}")
     print(f"Effective Right BV: INR {pair_sum['effective_right_bv']:,}")
     print(f"Consumed Left BV: INR {pair_sum['consumed_left_bv']:,}")
@@ -86,7 +91,7 @@ def run_live_e2e_verification():
     print(f"Pair Completed: {pair_sum['pair_completed']}")
     print(f"Pair Bonus Earned: INR {pair_sum['pair_bonus_earned']:,}")
     assert pair_sum['pair_completed'] is True
-    assert pair_sum['pair_bonus_earned'] == 15000.0
+    assert pair_sum['pair_bonus_earned'] == 10000.0
 
     # 2. Advance to Slot 2 using Demo Time
     log(2, "Advancing to SLOT 2 using Demo Time Controls")
@@ -126,7 +131,7 @@ def run_live_e2e_verification():
     client.post("/api/purchases", json={"package_id": 1}, headers={"Authorization": f"Bearer {f_token}"})
     print("D and F packages purchased successfully.")
 
-    # 5. Verify Amol's Slot 2 state (A did nothing personally, but receives INR 15,000 again)
+    # 5. Verify Amol's Slot 2 state (A did nothing personally, but receives INR 10,000 again)
     log(5, "Verifying Amol's Slot 2 Volumes & Independent Pair Payout")
     res_dash_s2 = client.get("/api/dashboard", headers=amol_headers)
     dash_s2 = res_dash_s2.json()["data"]
@@ -134,7 +139,7 @@ def run_live_e2e_verification():
     wallet_bal_s2 = dash_s2["kpis"]["wallet_balance"]
     
     print("\n--- Amol Slot 2 Results ---")
-    print(f"Wallet Balance: INR {wallet_bal_s2:,.2f} (+INR 15,000 Pair Bonus from D/F network activity)")
+    print(f"Wallet Balance: INR {wallet_bal_s2:,.2f} (+INR 10,000 Pair Bonus from D/F network activity)")
     print(f"Slot 2 Effective Left BV: INR {pair_sum_s2['effective_left_bv']:,} (from D)")
     print(f"Slot 2 Effective Right BV: INR {pair_sum_s2['effective_right_bv']:,} (from F)")
     print(f"Slot 2 Consumed Left BV: INR {pair_sum_s2['consumed_left_bv']:,}")
@@ -142,7 +147,7 @@ def run_live_e2e_verification():
     print(f"Slot 2 Pair Completed: {pair_sum_s2['pair_completed']}")
     print(f"Slot 2 Pair Bonus Earned: INR {pair_sum_s2['pair_bonus_earned']:,}")
     assert pair_sum_s2['pair_completed'] is True
-    assert pair_sum_s2['pair_bonus_earned'] == 15000.0
+    assert pair_sum_s2['pair_bonus_earned'] == 10000.0
 
     # 6. Verify B and C do NOT receive false pair bonuses
     log(6, "Verifying B and C Independent Pair Status (1-Sided Volume, NO Pair)")

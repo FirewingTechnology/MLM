@@ -81,12 +81,12 @@ def test_right_only_volume(client, db_session):
     assert summary['ending_carry_left'] == 0.0
     assert summary['ending_carry_right'] == 30000.0
 
-def test_exact_pair_completion(client, db_session):
-    """4. Exact pair: 30k Left, 30k Right -> ₹15,000 pair bonus, 0 carry."""
+def test_exact_pair_left_and_right(client, db_session):
+    """4. Exact pair: 30k Left, 30k Right -> ₹10,000 pair bonus, 0 carry."""
     amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
     slot_info = time_provider.get_current_slot_info(db_session)
 
-    # Register Left and Right
+    # Register Left
     client.post("/api/auth/register", json={
         "full_name": "Left User 4",
         "email": "left4@demo.com",
@@ -97,6 +97,7 @@ def test_exact_pair_completion(client, db_session):
         "binary_parent_code": "AMOL001",
         "binary_position": "LEFT"
     })
+    # Register Right
     client.post("/api/auth/register", json={
         "full_name": "Right User 4",
         "email": "right4@demo.com",
@@ -121,7 +122,7 @@ def test_exact_pair_completion(client, db_session):
     assert summary['effective_left_bv'] == 30000.0
     assert summary['effective_right_bv'] == 30000.0
     assert summary['pair_completed'] is True
-    assert summary['pair_bonus_earned'] == 15000.0
+    assert summary['pair_bonus_earned'] == 10000.0
     assert summary['consumed_left_bv'] == 30000.0
     assert summary['consumed_right_bv'] == 30000.0
     assert summary['ending_carry_left'] == 0.0
@@ -134,10 +135,10 @@ def test_exact_pair_completion(client, db_session):
         Commission.slot_id == slot_info.slot_id
     ).first()
     assert pair_comm is not None
-    assert pair_comm.amount == 15000.0
+    assert pair_comm.amount == 10000.0
 
 def test_unequal_pair_left_surplus(client, db_session):
-    """5. Unequal pair: 60k Left, 30k Right -> ₹15,000 pair bonus, Left 30k carry."""
+    """5. Unequal pair: 60k Left, 30k Right -> ₹10,000 pair bonus, Left 30k carry."""
     amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
     slot_info = time_provider.get_current_slot_info(db_session)
 
@@ -189,14 +190,14 @@ def test_unequal_pair_left_surplus(client, db_session):
     assert summary['effective_left_bv'] == 60000.0
     assert summary['effective_right_bv'] == 30000.0
     assert summary['pair_completed'] is True
-    assert summary['pair_bonus_earned'] == 15000.0
+    assert summary['pair_bonus_earned'] == 10000.0
     assert summary['consumed_left_bv'] == 30000.0
     assert summary['consumed_right_bv'] == 30000.0
     assert summary['ending_carry_left'] == 30000.0
     assert summary['ending_carry_right'] == 0.0
 
 def test_opposite_unequal_pair_right_surplus(client, db_session):
-    """6. Opposite unequal pair: 30k Left, 60k Right -> ₹15,000 pair bonus, Right 30k carry."""
+    """6. Opposite unequal pair: 30k Left, 60k Right -> ₹10,000 pair bonus, Right 30k carry."""
     amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
     slot_info = time_provider.get_current_slot_info(db_session)
 
@@ -248,14 +249,14 @@ def test_opposite_unequal_pair_right_surplus(client, db_session):
     assert summary['effective_left_bv'] == 30000.0
     assert summary['effective_right_bv'] == 60000.0
     assert summary['pair_completed'] is True
-    assert summary['pair_bonus_earned'] == 15000.0
+    assert summary['pair_bonus_earned'] == 10000.0
     assert summary['consumed_left_bv'] == 30000.0
     assert summary['consumed_right_bv'] == 30000.0
     assert summary['ending_carry_left'] == 0.0
     assert summary['ending_carry_right'] == 30000.0
 
 def test_large_volume_capped_at_one_pair(client, db_session):
-    """7. Large volume: 90k Left, 90k Right in same period -> ₹15,000 only (1 pair cap), 60k/60k carry."""
+    """7. Large volume: 90k Left, 90k Right in same period -> ₹10,000 only (1 pair cap), 60k/60k carry."""
     amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
     slot_info = time_provider.get_current_slot_info(db_session)
 
@@ -267,7 +268,7 @@ def test_large_volume_capped_at_one_pair(client, db_session):
     assert summary['effective_left_bv'] == 90000.0
     assert summary['effective_right_bv'] == 90000.0
     assert summary['pair_completed'] is True
-    assert summary['pair_bonus_earned'] == 15000.0  # Max 1 pair
+    assert summary['pair_bonus_earned'] == 10000.0  # Max 1 pair
     assert summary['consumed_left_bv'] == 30000.0
     assert summary['consumed_right_bv'] == 30000.0
     assert summary['ending_carry_left'] == 60000.0
@@ -347,12 +348,12 @@ def test_carry_plus_new_bv_pair_completion(client, db_session):
     assert s2_summary['effective_left_bv'] == 30000.0
     assert s2_summary['effective_right_bv'] == 30000.0
     assert s2_summary['pair_completed'] is True
-    assert s2_summary['pair_bonus_earned'] == 15000.0
+    assert s2_summary['pair_bonus_earned'] == 10000.0
     assert s2_summary['ending_carry_left'] == 0.0
     assert s2_summary['ending_carry_right'] == 0.0
 
 def test_wallet_consistency(client, db_session):
-    """11. Wallet consistency: Exactly ₹15,000 credited to wallet ledger per pair payout."""
+    """11. Wallet consistency: Exactly ₹10,000 credited to wallet ledger per pair payout."""
     amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
     slot_info = time_provider.get_current_slot_info(db_session)
     wallet = db_session.query(Wallet).filter(Wallet.user_id == amol.id).first()
@@ -363,7 +364,7 @@ def test_wallet_consistency(client, db_session):
     db_session.commit()
 
     db_session.refresh(wallet)
-    assert wallet.balance == initial_balance + 15000.0
+    assert wallet.balance == initial_balance + 10000.0
 
     # Verify wallet transaction record
     txn = db_session.query(WalletTransaction).filter(
@@ -372,7 +373,7 @@ def test_wallet_consistency(client, db_session):
         WalletTransaction.slot_id == slot_info.slot_id
     ).first()
     assert txn is not None
-    assert txn.amount == 15000.0
+    assert txn.amount == 10000.0
     assert txn.transaction_type == 'CREDIT'
 
 def test_commission_consistency(client, db_session):
@@ -390,8 +391,8 @@ def test_commission_consistency(client, db_session):
         Commission.slot_id == slot_info.slot_id
     ).first()
     assert comm is not None
-    assert comm.amount == 15000.0
+    assert comm.amount == 10000.0
     assert comm.bv_basis == 30000.0
-    assert comm.percentage == 50.0
+    assert round(comm.percentage, 2) == 33.33
     assert 'effective_left_bv' in comm.calculation_details
     assert 'ending_carry_left' in comm.calculation_details

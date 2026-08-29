@@ -26,8 +26,8 @@ class Settings(BaseSettings):
     # Binary Pair Bonus Engine Configuration
     PAIR_VOLUME: float = 30000.0                   # Qualifying BV threshold per leg (₹30,000)
     PAIR_QUALIFYING_BV: float = 30000.0            # Backward-compatible alias
-    PAIR_BONUS: float = 15000.0                    # Pair Bonus amount per completed pair (₹15,000)
-    PAIR_BONUS_AMOUNT: float = 15000.0             # Backward-compatible alias
+    PAIR_BONUS: float = 10000.0                    # Pair Bonus amount per completed pair (₹10,000)
+    PAIR_BONUS_AMOUNT: float = 10000.0             # Backward-compatible alias
     MAX_PAIRS_PER_SLOT: int = 1                    # Maximum paid pairs per calculation period/slot (1)
     MAX_PAIRS_PER_PERIOD: int = 1                  # Backward-compatible alias
 
@@ -38,7 +38,7 @@ class Settings(BaseSettings):
 
     # Matching / Upline Commission Configuration
     MATCHING_COMMISSION_ENABLED: bool = True       # Enable/disable matching commission on child pairs
-    MATCHING_COMMISSION_RATE: float = 0.10          # Configurable matching rate (10% = ₹1,500 on ₹15,000 Pair Bonus)
+    MATCHING_COMMISSION_RATE: float = 0.10          # Configurable matching rate (10% = ₹1,000 on ₹10,000 Pair Bonus)
     MATCHING_COMMISSION_BASE: str = "PAIR_BONUS"   # "PAIR_BONUS", "MATCHED_BV", "PAIR_VOLUME"
 
     TIMEZONE: str = "Asia/Kolkata"

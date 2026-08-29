@@ -210,8 +210,8 @@ class PairBonusService:
         """
         Evaluates whether a 30k/30k pair is formed for the given user in slot_id.
         If pair forms and has not yet been paid for this slot (max 1 pair/slot),
-        consumes 30k/30k from period and volume ledger, records PAIR_BONUS Commission (₹15,000),
-        awards configured Matching Commission (10% = ₹1,500) to eligible sponsor, and records SlotSettlement.
+        consumes 30k/30k from period and volume ledger, records PAIR_BONUS Commission (₹10,000),
+        awards configured Matching Commission (10% = ₹1,000) to eligible sponsor, and records SlotSettlement.
         """
         period_vol = PairBonusService.get_or_create_period_volume(db, user_id, slot_id)
 
@@ -234,7 +234,7 @@ class PairBonusService:
             return None
 
         qualifying_bv = settings.PAIR_VOLUME  # 30,000
-        bonus_amount = settings.PAIR_BONUS   # 15,000
+        bonus_amount = settings.PAIR_BONUS   # 10,000
 
         eligible_left_pairs = int(period_vol.effective_left_bv // qualifying_bv)
         eligible_right_pairs = int(period_vol.effective_right_bv // qualifying_bv)
@@ -245,7 +245,7 @@ class PairBonusService:
             return None
 
         # CRITICAL MLM QUALIFICATION RULE:
-        # A user ONLY qualifies for a ₹15,000 Pair Bonus if they are active AND Binary Qualified
+        # A user ONLY qualifies for a ₹10,000 Pair Bonus if they are active AND Binary Qualified
         # (personally sponsored at least 1 active member in their LEFT leg AND 1 active member in their RIGHT leg).
         # Placement parents (like Kumar) who merely receive spillover volume do NOT earn Pair Bonuses.
         if not is_binary_qualified(db, user_id):

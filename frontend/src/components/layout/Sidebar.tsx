@@ -166,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="space-y-1 text-[11px] text-[#F7F4EC]/80 font-medium">
               <p>• Package: <span className="text-[#FFFEF9] font-bold">₹35,000</span> (30k BV)</p>
               <p>• Direct Sponsor: <span className="text-[#C9A227] font-bold">10% (₹3,000)</span></p>
-              <p>• Binary Pair Bonus: <span className="text-[#E2C766] font-bold">₹15,000 / pair</span></p>
+              <p>• Binary Pair Bonus: <span className="text-[#E2C766] font-bold">₹10,000 / pair</span></p>
             </div>
           </div>
         </div>

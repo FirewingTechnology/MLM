@@ -246,9 +246,9 @@ export const NetworkPage: React.FC = () => {
               <div className="text-base sm:text-lg font-mono font-black text-[#C9A227] mt-0.5 flex items-center gap-1.5">
                 {viewMode === 'active_slot' ? (
                   treeData.pair_completed ? (
-                    <span className="text-xs bg-[#E0F3EE] text-[#063B32] px-2 py-1 rounded-lg border border-[#8DCFBF] font-sans font-bold flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Paid ₹15,000 Pair
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E0F3EE] text-[#063B32] text-[10px] font-bold border border-[#8DCFBF]">
+                      <CheckCircle2 className="w-3 h-3 text-[#063B32]" />
+                      Paid ₹10,000 Pair
                     </span>
                   ) : (
                     <span className="text-xs bg-[#FAF4DC] text-[#8C6C16] px-2 py-1 rounded-lg border border-[#E2C766] font-sans font-bold">

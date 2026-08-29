@@ -135,13 +135,13 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                   max={availableBalance}
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder="e.g. 15000"
+                  placeholder="e.g. 10000"
                   className="w-full pl-8 pr-4 py-3 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] font-mono text-sm focus:outline-none focus:border-[#063B32] focus:ring-2 focus:ring-[#063B32]/10 transition-all shadow-xs"
                   required
                 />
               </div>
               <div className="flex gap-2 mt-2">
-                {[1000, 5000, 15000].map((quick) => (
+                {[1000, 5000, 10000].map((quick) => (
                   quick <= availableBalance && (
                     <button
                       key={quick}

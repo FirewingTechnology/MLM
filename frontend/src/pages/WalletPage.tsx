@@ -58,7 +58,7 @@ export const WalletPage: React.FC = () => {
   const categories = [
     { label: 'All Transactions', value: '' },
     { label: '🟢 Direct Sponsor', value: 'DIRECT_COMMISSION' },
-    { label: '🟣 Pair Bonus (₹15k)', value: 'PAIR_BONUS' },
+    { label: '🟣 Pair Bonus (₹10k)', value: 'PAIR_BONUS' },
     { label: '🟠 Matching Upline', value: 'MATCHING_COMMISSION' },
     { label: '🔵 Carry Commission', value: 'CARRY_COMMISSION' },
     { label: '💸 Withdrawals', value: 'WITHDRAWAL' },
@@ -247,7 +247,7 @@ export const WalletPage: React.FC = () => {
                           : 'bg-[#F7F4EC] text-[#69736F] border-[#E5E0D3]'
                       }`}>
                         {txn.category === 'PAIR_BONUS'
-                          ? '🟣 Pair Bonus (₹15k)'
+                          ? '🟣 Pair Bonus (₹10k)'
                           : txn.category === 'DIRECT_COMMISSION' || txn.category === 'DIRECT_REFERRAL'
                           ? '🟢 Direct Sponsor'
                           : txn.category === 'MATCHING_COMMISSION' || txn.category === 'BINARY_MATCHING'

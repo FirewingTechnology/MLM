@@ -137,7 +137,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
               </div>
               <div className="flex items-center gap-2.5 text-xs text-[#18211F]">
                 <Award className="w-4 h-4 text-[#C9A227] shrink-0" />
-                <span>Qualifies for ₹15,000 Binary Pair Bonus per 30k/30k match</span>
+                <span>Qualifies for ₹10,000 Binary Pair Bonus per 30k/30k match</span>
               </div>
             </div>
 

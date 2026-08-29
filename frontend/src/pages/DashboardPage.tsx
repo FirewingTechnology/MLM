@@ -103,7 +103,7 @@ export const DashboardPage: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-            Private Wealth Platform • Binary Network Volume • ₹15,000 Pair Rewards
+            Private Wealth Platform • Binary Network Volume • ₹10,000 Pair Rewards
           </p>
         </div>
 
@@ -211,7 +211,7 @@ export const DashboardPage: React.FC = () => {
               ₹{(kpis?.pair_commissions || 0).toLocaleString()}
             </div>
           </div>
-          <div className="text-[10px] text-[#69736F] mt-2 pt-2 border-t border-[#E5E0D3]">₹15k max 1/slot</div>
+          <div className="text-[10px] text-[#69736F] mt-2 pt-2 border-t border-[#E5E0D3]">₹10k max 1/slot</div>
         </div>
 
         {/* Left Carry Card */}

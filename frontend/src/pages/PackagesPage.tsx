@@ -105,7 +105,7 @@ export const PackagesPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-4 h-4 text-[#063B32] shrink-0" />
-              <span>Qualifies for <strong className="text-[#8C6C16]">₹15,000 Binary Pair Bonus</strong> per 30k/30k match</span>
+              <span>Qualifies for <strong className="text-[#8C6C16]">₹10,000 Binary Pair Bonus</strong> per 30k/30k match</span>
             </div>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-4 h-4 text-[#063B32] shrink-0" />

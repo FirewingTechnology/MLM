@@ -148,7 +148,7 @@ def get_leg_subtree_user_ids(db: Session, parent_user_id: int, leg: str) -> set[
 
 def is_binary_qualified(db: Session, user_id: int) -> bool:
     """
-    Checks whether a user is Binary Qualified to earn a ₹15,000 Pair Bonus:
+    Checks whether a user is Binary Qualified to earn a ₹10,000 Pair Bonus:
     1. If the user has descendants in the binary placement tree:
        - User MUST have personally sponsored at least 1 member in their LEFT binary subtree.
        - User MUST have personally sponsored at least 1 member in their RIGHT binary subtree.

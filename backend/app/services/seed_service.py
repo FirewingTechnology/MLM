@@ -12,6 +12,7 @@ from app.models.wallet import Wallet, WalletTransaction
 from app.models.withdrawal import Withdrawal
 from app.models.audit_log import AuditLog
 from app.models.demo_time import DemoTimeConfig
+from app.models.pair_event import PairEvent
 from app.services.mlm_service import get_or_create_binary_volume
 from app.services.wallet_service import get_or_create_wallet
 from app.services.audit_service import log_action
@@ -111,6 +112,7 @@ def reset_demo_database(db: Session):
     db.query(WalletTransaction).delete()
     db.query(Withdrawal).delete()
     db.query(Commission).delete()
+    db.query(PairEvent).delete()
     db.query(SlotSettlement).delete()
     db.query(VolumeLedger).delete()
     db.query(Purchase).delete()
