@@ -62,28 +62,39 @@ def initialize_production_baseline(db: Session):
         db.add(package)
         db.flush()
 
-    # 3. If any users exist in the database, preserve everything and return immediately
-    if db.query(User).count() > 0:
-        db.commit()
-        return
+    # 3. Ensure System Admin account exists and has guaranteed valid credentials
+    admin = db.query(User).filter((User.email == "admin@platform.com") | (User.user_code == "USR-00001")).first()
+    if not admin:
+        legacy_admin = db.query(User).filter(User.role == "ADMIN").first()
+        if legacy_admin:
+            legacy_admin.email = "admin@platform.com"
+            legacy_admin.user_code = "USR-00001"
+            legacy_admin.referral_code = "ADMIN001"
+            legacy_admin.password_hash = hash_password("Admin@123")
+            legacy_admin.is_active = True
+            admin = legacy_admin
+        else:
+            admin = User(
+                user_code="USR-00001",
+                email="admin@platform.com",
+                mobile="9876500001",
+                full_name="System Admin",
+                password_hash=hash_password("Admin@123"),
+                role="ADMIN",
+                referral_code="ADMIN001",
+                is_active=True
+            )
+            db.add(admin)
+            db.flush()
+            get_or_create_wallet(db, admin.id)
+            get_or_create_binary_volume(db, admin.id)
+            log_action(db, 'DATABASE_INITIALIZED', 'System', None, admin.id, {'status': 'Production baseline initialized with initial admin'})
+    else:
+        admin.password_hash = hash_password("Admin@123")
+        admin.is_active = True
+        get_or_create_wallet(db, admin.id)
+        get_or_create_binary_volume(db, admin.id)
 
-    # 4. First-time deployment bootstrap: Create initial Admin if empty so system is accessible
-    admin = User(
-        user_code="USR-00001",
-        email="admin@platform.com",
-        mobile="9876500001",
-        full_name="System Admin",
-        password_hash=hash_password("Admin@123"),
-        role="ADMIN",
-        referral_code="ADMIN001",
-        is_active=True
-    )
-    db.add(admin)
-    db.flush()
-    get_or_create_wallet(db, admin.id)
-    get_or_create_binary_volume(db, admin.id)
-
-    log_action(db, 'DATABASE_INITIALIZED', 'System', None, admin.id, {'status': 'Production baseline initialized with initial admin'})
     db.commit()
 
 # Alias for backward compatibility
