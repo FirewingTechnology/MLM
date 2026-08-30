@@ -50,7 +50,6 @@ services:
   - type: web
     name: mlm-frontend
     runtime: static
-    region: oregon
     plan: free
     branch: dev
     rootDir: frontend
