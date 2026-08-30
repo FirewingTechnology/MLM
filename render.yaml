@@ -1,30 +1,25 @@
 # ====================================================================
-# Render Blueprint Specification (render.yaml)
-# Project: Binary MLM Enterprise Application (Production Persistent SQLite)
+# Render Blueprint Specification (render.yaml) - 100% FREE TIER
+# Project: Binary MLM Enterprise Application
 # Branch: dev
 # Documentation: https://render.com/docs/blueprint-spec
-# NOTE: SQLite persistence on Render requires a Persistent Disk (Starter plan or above).
 # ====================================================================
 
 services:
   # ------------------------------------------------------------------
-  # 1. FastAPI Backend Web Service with Persistent SQLite Storage
+  # 1. FastAPI Backend Web Service (100% Free Plan)
   # ------------------------------------------------------------------
   - type: web
     name: mlm-backend
     runtime: python
     region: oregon
-    plan: starter  # Starter plan or higher is required for persistent disk mounts
+    plan: free
     branch: dev
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
     healthCheckPath: /api/health
     autoDeploy: true
-    disk:
-      name: mlm-persistent-data
-      mountPath: /var/data
-      sizeGB: 10
     envVars:
       - key: ENV
         value: production
@@ -36,16 +31,15 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         value: "*"
-      # SQLite Database is stored directly on the mounted persistent disk:
       - key: SQLITE_DB_PATH
-        value: /var/data/mlm.sqlite3
+        value: ./data/mlm.sqlite3
       - key: DATABASE_URL
-        value: sqlite:////var/data/mlm.sqlite3
+        value: sqlite:///./data/mlm.sqlite3
       - key: BACKUP_DIR
-        value: /var/data/backups
+        value: ./data/backups
 
   # ------------------------------------------------------------------
-  # 2. React Vite Frontend Static Site
+  # 2. React Vite Frontend Static Site (100% Free Plan)
   # ------------------------------------------------------------------
   - type: web
     name: mlm-frontend
@@ -66,14 +60,3 @@ services:
           type: web
           name: mlm-backend
           property: host
-
-# --------------------------------------------------------------------
-# 3. Optional Managed PostgreSQL Database
-# Uncomment this section if you wish to provision a dedicated PostgreSQL DB on Render
-# --------------------------------------------------------------------
-# databases:
-#   - name: mlm-db
-#     plan: free
-#     databaseName: mlm_db
-#     user: mlm_user
-#     region: oregon
