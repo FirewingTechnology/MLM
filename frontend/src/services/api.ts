@@ -4,17 +4,35 @@ const getBaseURL = () => {
   const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
     let formatted = envUrl.trim();
-    if (!formatted.startsWith('http://') && !formatted.startsWith('https://') && !formatted.startsWith('/')) {
-      formatted = `https://${formatted}`;
+    if (formatted.startsWith('/')) {
+      return formatted;
     }
+    
+    let protocol = 'https://';
+    if (formatted.startsWith('http://')) {
+      protocol = 'http://';
+    }
+
+    // Strip protocol
+    formatted = formatted.replace(/^https?:\/\//i, '');
+    
+    // If hostname has no dot (like 'mlm-backend-x11p' injected by Render blueprint), append .onrender.com
+    const parts = formatted.split('/');
+    let hostPart = parts[0];
+    if (!hostPart.includes('.') && !hostPart.startsWith('localhost') && !hostPart.startsWith('127.0.0.1')) {
+      hostPart = `${hostPart}.onrender.com`;
+      parts[0] = hostPart;
+      formatted = parts.join('/');
+    }
+
+    formatted = `${protocol}${formatted}`;
+
     if (!formatted.endsWith('/api') && !formatted.includes('/api/')) {
       formatted = `${formatted.replace(/\/$/, '')}/api`;
     }
     return formatted;
   }
-  return import.meta.env.PROD
-    ? '/api'
-    : '/api';
+  return '/api';
 };
 
 const api = axios.create({
