@@ -345,15 +345,33 @@ export interface AdminDashboardData {
     active_users: number;
     inactive_users: number;
     total_virtual_sales: number;
+    total_packages_activated?: number;
     total_bv: number;
+    total_left_bv?: number;
+    total_right_bv?: number;
+    total_left_carry?: number;
+    total_right_carry?: number;
     total_commissions: number;
     direct_commissions: number;
     matching_commissions: number;
     pair_commissions?: number;
     carry_commissions?: number;
+    total_wallet_balance?: number;
     total_withdrawn: number;
     pending_withdrawals_count: number;
     pending_withdrawals_amount: number;
+    approved_withdrawals_count?: number;
+    rejected_withdrawals_count?: number;
+    pending_activations_count?: number;
+    verified_activations_count?: number;
+    total_pins_count?: number;
+    available_pins_count?: number;
+    used_pins_count?: number;
+    expired_pins_count?: number;
+    issued_pins_count?: number;
+    total_activated_count?: number;
+    pending_pin_orders_count?: number;
+    completed_pin_orders_count?: number;
     current_slot_id?: string;
     current_slot_name?: string;
     slot_virtual_sales?: number;
@@ -364,6 +382,9 @@ export interface AdminDashboardData {
   slot_info?: SlotInfo;
   recent_logs: any[];
   recent_purchases?: Purchase[];
+  recent_users?: any[];
+  recent_activations?: any[];
+  recent_transactions?: any[];
 }
 
 export interface ReferralLinkItem {

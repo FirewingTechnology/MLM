@@ -115,12 +115,17 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     return success_response({
         'token': token,
         'user': new_user.to_dict()
-    }, "Account successfully registered in binary network!", 201)
+    }, "Account successfully registered in partner network!", 201)
 
 @router.post("/login")
 def login(req: LoginRequest, db: Session = Depends(get_db)):
     ident = req.identifier.strip()
-    user = db.query(User).filter((User.email == ident.lower()) | (User.user_code == ident.upper())).first()
+    user = db.query(User).filter(
+        (User.email == ident.lower()) | 
+        (User.user_code == ident.upper()) | 
+        (User.referral_code == ident.upper()) |
+        (User.mobile == ident)
+    ).first()
     
     if not user or not verify_password(req.password, user.password_hash):
         return error_response("INVALID_CREDENTIALS", "Invalid email/user code or password.", 401)

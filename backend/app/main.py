@@ -36,8 +36,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Binary MLM Enterprise API",
-    description="Production Binary MLM Enterprise Engine with persistent SQLite database, atomic volume propagation, and security PIN activation.",
+    title="Partner Network & Rewards API",
+    description="Production Partner Network & Rewards Engine with persistent SQLite database, atomic volume propagation, and security PIN activation.",
     version="3.0.0",
     lifespan=lifespan
 )
@@ -83,6 +83,5 @@ def health_check():
         "framework": "FastAPI",
         "version": "3.0.0",
         "database": "sqlite_persistent",
-        "environment": settings.APP_ENV,
-        "mode": "DEMO MODE - NO REAL MONEY"
+        "environment": settings.APP_ENV
     }

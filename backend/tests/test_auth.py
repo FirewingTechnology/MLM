@@ -3,7 +3,7 @@ def test_health_check(client):
     assert res.status_code == 200
     data = res.json()
     assert data["framework"] == "FastAPI"
-    assert "DEMO MODE" in data["mode"]
+    assert data["status"] == "healthy"
 
 def test_login_success(client):
     res = client.post("/api/auth/login", json={

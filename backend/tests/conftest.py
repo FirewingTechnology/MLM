@@ -32,13 +32,45 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+def seed_test_fixtures(db):
+    seed_database(db)
+    from app.models.user import User
+    from app.security import hash_password
+    from app.services.wallet_service import get_or_create_wallet
+    from app.services.mlm_service import get_or_create_binary_volume
+
+    admin = db.query(User).filter(User.role == "ADMIN").first()
+    if admin and admin.email != "admin@demo.com":
+        admin.email = "admin@demo.com"
+        db.flush()
+
+    if not db.query(User).filter(User.referral_code == "AMOL001").first():
+        amol = User(
+            user_code="USR-00002",
+            email="amol@demo.com",
+            mobile="9876500002",
+            full_name="Amol Sharma",
+            password_hash=hash_password("Demo@123"),
+            role="USER",
+            referral_code="AMOL001",
+            sponsor_id=None,
+            binary_parent_id=None,
+            binary_position=None,
+            is_active=True
+        )
+        db.add(amol)
+        db.flush()
+        get_or_create_wallet(db, amol.id)
+        get_or_create_binary_volume(db, amol.id)
+    db.commit()
+
 @pytest.fixture(scope="function")
 def db_session():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
-        seed_database(db)
+        seed_test_fixtures(db)
         yield db
     finally:
         db.close()

@@ -24,7 +24,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenPurchaseModal, onToggleSidebar, isSidebarOpen }) => {
   const { user, logout } = useAuth();
-  const { slotInfo, currentDisplayTime, isDemoMode } = useTime();
+  const { slotInfo, currentDisplayTime } = useTime();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -55,13 +55,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPurchaseModal, onToggleSid
       <div className="flex items-center gap-3">
         {/* Live Slot Status Indicator */}
         {slotInfo && (
-          <div className={`hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono border ${
-            isDemoMode
-              ? 'bg-[#FAF4DC] border-[#E2C766] text-[#8C6C16]'
-              : 'bg-[#E0F3EE] border-[#8DCFBF] text-[#063B32]'
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${isDemoMode ? 'bg-[#C88A16] animate-pulse' : 'bg-[#0E9F6E] animate-ping'}`} />
-            <span className="font-bold">{isDemoMode ? 'DEMO TIME' : 'LIVE IST'}</span>
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono border bg-[#E0F3EE] border-[#8DCFBF] text-[#063B32]">
+            <span className="w-2 h-2 rounded-full bg-[#0E9F6E] animate-ping" />
+            <span className="font-bold">LIVE IST</span>
             <span className="opacity-40">•</span>
             <span className="font-medium text-[11px]">{currentDisplayTime}</span>
           </div>

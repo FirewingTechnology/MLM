@@ -65,7 +65,7 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({ node, onClose,
           </div>
         </div>
 
-        {/* MLM Placement & Sponsor Info */}
+        {/* Placement & Sponsor Info */}
         <div className="grid grid-cols-2 gap-2.5 mb-4">
           <div className="p-3.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-xs">
             <div className="text-[#69736F] text-[10px] uppercase font-bold flex items-center gap-1 mb-1">

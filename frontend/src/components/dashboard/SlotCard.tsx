@@ -8,7 +8,7 @@ interface SlotCardProps {
 }
 
 export const SlotCard: React.FC<SlotCardProps> = ({ slotEarnings = 0, slotCommissionsCount = 0 }) => {
-  const { slotInfo, currentDisplayTime, remainingFormatted, remainingSeconds, isDemoMode } = useTime();
+  const { slotInfo, currentDisplayTime, remainingFormatted, remainingSeconds } = useTime();
 
   if (!slotInfo) {
     return (
@@ -26,26 +26,15 @@ export const SlotCard: React.FC<SlotCardProps> = ({ slotEarnings = 0, slotCommis
   const isSlot1 = slotInfo.slot_number === 1;
 
   return (
-    <div className={`rounded-3xl bg-[#FFFEF9] p-4 sm:p-5 border transition-all duration-200 shadow-wealth-card ${
-      isDemoMode 
-        ? 'border-[#E2C766]/70' 
-        : 'border-[#E5E0D3]'
-    }`}>
+    <div className="rounded-3xl bg-[#FFFEF9] p-4 sm:p-5 border border-[#E5E0D3] transition-all duration-200 shadow-wealth-card">
       {/* Top Header Row */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           {/* Mode Pill Badge */}
-          {isDemoMode ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] text-[10px] font-extrabold tracking-wider uppercase">
-              <span className="w-2 h-2 rounded-full bg-[#C88A16] animate-pulse" />
-              <span>DEMO TIME</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E0F3EE] border border-[#8DCFBF] text-[#063B32] text-[10px] font-extrabold tracking-wider uppercase">
-              <span className="w-2 h-2 rounded-full bg-[#0E9F6E] animate-ping" />
-              <span>LIVE INDIA TIME</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E0F3EE] border border-[#8DCFBF] text-[#063B32] text-[10px] font-extrabold tracking-wider uppercase">
+            <span className="w-2 h-2 rounded-full bg-[#0E9F6E] animate-ping" />
+            <span>LIVE INDIA TIME</span>
+          </div>
 
           <div className="flex items-center gap-1 text-[11px] font-mono text-[#18211F] font-semibold px-2 py-0.5 rounded-md bg-[#F7F4EC] border border-[#E5E0D3]">
             <Clock className="w-3.5 h-3.5 text-[#69736F]" />

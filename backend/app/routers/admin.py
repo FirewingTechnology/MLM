@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from app.config import settings
 from app.database import get_db
 from app.models.user import User
 from app.models.purchase import Purchase
@@ -42,7 +43,13 @@ def admin_dashboard(
     inactive_users = total_users - active_users
     
     total_sales = db.query(func.coalesce(func.sum(Purchase.amount), 0.0)).scalar() or 0.0
+    total_packages_activated = db.query(Purchase).filter(Purchase.status == 'COMPLETED').count()
     total_bv = db.query(func.coalesce(func.sum(BinaryVolume.personal_bv), 0.0)).scalar() or 0.0
+    total_left_bv = db.query(func.coalesce(func.sum(BinaryVolume.accumulated_left_bv), 0.0)).scalar() or 0.0
+    total_right_bv = db.query(func.coalesce(func.sum(BinaryVolume.accumulated_right_bv), 0.0)).scalar() or 0.0
+    total_left_carry = db.query(func.coalesce(func.sum(BinaryVolume.carry_left_bv), 0.0)).scalar() or 0.0
+    total_right_carry = db.query(func.coalesce(func.sum(BinaryVolume.carry_right_bv), 0.0)).scalar() or 0.0
+    total_matching_volume = db.query(func.coalesce(func.sum(BinaryVolume.matched_bv), 0.0)).scalar() or 0.0
     
     total_commissions = db.query(func.coalesce(func.sum(Commission.amount), 0.0)).scalar() or 0.0
     direct_comm = db.query(func.coalesce(func.sum(Commission.amount), 0.0))\
@@ -54,12 +61,15 @@ def admin_dashboard(
     carry_comm = db.query(func.coalesce(func.sum(Commission.amount), 0.0))\
         .filter(Commission.commission_type == 'CARRY_COMMISSION').scalar() or 0.0
         
+    total_wallet_balance = db.query(func.coalesce(func.sum(Wallet.balance), 0.0)).scalar() or 0.0
     total_withdrawn = db.query(func.coalesce(func.sum(Wallet.total_withdrawn), 0.0)).scalar() or 0.0
     
     pending_withdrawals_query = db.query(Withdrawal).filter(Withdrawal.status == 'PENDING')
     pending_count = pending_withdrawals_query.count()
     pending_amount = db.query(func.coalesce(func.sum(Withdrawal.amount), 0.0))\
         .filter(Withdrawal.status == 'PENDING').scalar() or 0.0
+    approved_withdrawals_count = db.query(Withdrawal).filter(Withdrawal.status == 'APPROVED').count()
+    rejected_withdrawals_count = db.query(Withdrawal).filter(Withdrawal.status == 'REJECTED').count()
         
     recent_logs = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(8).all()
     
@@ -73,18 +83,28 @@ def admin_dashboard(
         .filter(Commission.slot_id == slot_info.slot_id).scalar() or 0.0
     slot_purchases_count = db.query(Purchase).filter(Purchase.slot_id == slot_info.slot_id).count()
 
-    # Activation request metrics & PIN Inventory metrics
+    # PIN & Activation Metrics
     from app.models.pin_order import SecurityPinOrder
+    from app.models.wallet import WalletTransaction
     pending_activations_count = db.query(PackageActivationRequest).filter(
         PackageActivationRequest.status.in_(['PAYMENT_SUBMITTED', 'UNDER_REVIEW'])
     ).count()
     verified_activations_count = db.query(PackageActivationRequest).filter(
         PackageActivationRequest.status == 'PAYMENT_VERIFIED'
     ).count()
-    issued_pins_count = db.query(SecurityPin).filter(SecurityPin.status.in_(['ISSUED', 'AVAILABLE'])).count()
-    total_activated_count = db.query(SecurityPin).filter(SecurityPin.status == 'USED').count()
+    
+    total_pins_count = db.query(SecurityPin).count()
+    available_pins_count = db.query(SecurityPin).filter(SecurityPin.status.in_(['AVAILABLE', 'ISSUED'])).count()
+    used_pins_count = db.query(SecurityPin).filter(SecurityPin.status == 'USED').count()
+    expired_pins_count = db.query(SecurityPin).filter(SecurityPin.status == 'EXPIRED').count()
+    
     pending_pin_orders_count = db.query(SecurityPinOrder).filter(SecurityPinOrder.status.in_(['PAYMENT_SUBMITTED', 'UNDER_REVIEW', 'PAYMENT_PENDING'])).count()
     completed_pin_orders_count = db.query(SecurityPinOrder).filter(SecurityPinOrder.status == 'COMPLETED').count()
+
+    # Recent live feeds
+    recent_users = db.query(User).filter(User.role != 'ADMIN').order_by(User.id.desc()).limit(6).all()
+    recent_activations = db.query(Purchase).order_by(Purchase.id.desc()).limit(6).all()
+    recent_transactions = db.query(WalletTransaction).order_by(WalletTransaction.id.desc()).limit(8).all()
 
     data = {
         'kpis': {
@@ -92,19 +112,32 @@ def admin_dashboard(
             'active_users': active_users,
             'inactive_users': inactive_users,
             'total_virtual_sales': total_sales,
+            'total_packages_activated': total_packages_activated,
             'total_bv': total_bv,
+            'total_left_bv': total_left_bv,
+            'total_right_bv': total_right_bv,
+            'total_left_carry': total_left_carry,
+            'total_right_carry': total_right_carry,
+            'total_matching_volume': total_matching_volume,
             'total_commissions': total_commissions,
             'direct_commissions': direct_comm,
             'matching_commissions': matching_comm,
             'pair_commissions': pair_comm,
             'carry_commissions': carry_comm,
+            'total_wallet_balance': total_wallet_balance,
             'total_withdrawn': total_withdrawn,
             'pending_withdrawals_count': pending_count,
             'pending_withdrawals_amount': pending_amount,
+            'approved_withdrawals_count': approved_withdrawals_count,
+            'rejected_withdrawals_count': rejected_withdrawals_count,
             'pending_activations_count': pending_activations_count,
             'verified_activations_count': verified_activations_count,
-            'issued_pins_count': issued_pins_count,
-            'total_activated_count': total_activated_count,
+            'total_pins_count': total_pins_count,
+            'available_pins_count': available_pins_count,
+            'used_pins_count': used_pins_count,
+            'expired_pins_count': expired_pins_count,
+            'issued_pins_count': available_pins_count,
+            'total_activated_count': used_pins_count,
             'pending_pin_orders_count': pending_pin_orders_count,
             'completed_pin_orders_count': completed_pin_orders_count,
             'current_slot_id': slot_info.slot_id,
@@ -115,7 +148,10 @@ def admin_dashboard(
             'slot_purchases_count': slot_purchases_count
         },
         'slot_info': slot_info.to_dict(),
-        'recent_logs': [l.to_dict() for l in recent_logs]
+        'recent_logs': [l.to_dict() for l in recent_logs],
+        'recent_users': [u.to_dict() for u in recent_users],
+        'recent_activations': [a.to_dict() for a in recent_activations],
+        'recent_transactions': [t.to_dict() for t in recent_transactions]
     }
     return success_response(data)
 
@@ -301,11 +337,13 @@ def admin_reset_demo(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
-    """Explicit admin reset endpoint. Strictly requires confirm_text='CONFIRM_PERMANENT_WIPE' in production."""
+    """Admin reset endpoint. Strictly disabled in production environment."""
+    if settings.is_production:
+        return error_response("RESET_FORBIDDEN", "Database wipe is permanently disabled in PRODUCTION environment.", 403)
     confirm_text = (payload or {}).get("confirm_text", "")
     try:
         reset_demo_database(db, confirm_text=confirm_text)
-        return success_response(None, "Demo environment successfully reset to initial seed state!")
+        return success_response(None, "Environment successfully reset to initial seed state!")
     except PermissionError as pe:
         return error_response("RESET_FORBIDDEN", str(pe), 403)
     except Exception as e:
@@ -313,7 +351,7 @@ def admin_reset_demo(
         return error_response("RESET_FAILED", str(e), 500)
 
 # ==========================================
-# DEMO TIME CONTROL ENDPOINTS
+# TIME CONTROL & SLOT CONFIGURATION
 # ==========================================
 
 def _parse_custom_datetime(dt_str: str) -> datetime:
@@ -351,6 +389,8 @@ def admin_set_time_mode(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
+    if settings.is_production:
+        return error_response("FORBIDDEN", "Time simulation is disabled in PRODUCTION environment. Server IST clock is authoritative.", 403)
     mode = req.mode.strip().upper()
     if mode not in ('REAL', 'DEMO'):
         return error_response("INVALID_MODE", "Mode must be either 'REAL' or 'DEMO'.", 400)
@@ -362,7 +402,7 @@ def admin_set_time_mode(
         # Default demo time to current time if entering DEMO mode
         curr_dt = time_provider.get_current_ist_time(db)
         slot_info = time_provider.set_demo_time(db, curr_dt, current_admin.id)
-        msg = "Time mode switched to VIRTUAL DEMO TIME."
+        msg = "Time mode switched to VIRTUAL TIME."
 
     return success_response(slot_info.to_dict(), msg)
 
@@ -372,12 +412,14 @@ def admin_set_exact_time(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
+    if settings.is_production:
+        return error_response("FORBIDDEN", "Time simulation is disabled in PRODUCTION environment. Server IST clock is authoritative.", 403)
     try:
         parsed_dt = _parse_custom_datetime(req.datetime)
         slot_info = time_provider.set_demo_time(db, parsed_dt, current_admin.id)
         return success_response(
             slot_info.to_dict(),
-            f"Demo time set to {slot_info.date_str} {slot_info.time_formatted} ({slot_info.slot_name})."
+            f"Time set to {slot_info.date_str} {slot_info.time_formatted} ({slot_info.slot_name})."
         )
     except Exception as e:
         return error_response("SET_TIME_FAILED", str(e), 400)
@@ -388,11 +430,13 @@ def admin_advance_time(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
+    if settings.is_production:
+        return error_response("FORBIDDEN", "Time simulation is disabled in PRODUCTION environment. Server IST clock is authoritative.", 403)
     try:
         slot_info = time_provider.advance_demo_time(db, req.minutes, current_admin.id)
         return success_response(
             slot_info.to_dict(),
-            f"Demo clock advanced by {req.minutes} min -> {slot_info.time_formatted} ({slot_info.slot_name})."
+            f"Clock advanced by {req.minutes} min -> {slot_info.time_formatted} ({slot_info.slot_name})."
         )
     except Exception as e:
         return error_response("ADVANCE_TIME_FAILED", str(e), 400)
@@ -402,6 +446,8 @@ def admin_jump_next_slot(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
+    if settings.is_production:
+        return error_response("FORBIDDEN", "Time simulation is disabled in PRODUCTION environment. Server IST clock is authoritative.", 403)
     try:
         slot_info = time_provider.next_slot(db, current_admin.id)
         return success_response(
@@ -416,6 +462,8 @@ def admin_jump_previous_slot(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
+    if settings.is_production:
+        return error_response("FORBIDDEN", "Time simulation is disabled in PRODUCTION environment. Server IST clock is authoritative.", 403)
     try:
         slot_info = time_provider.previous_slot(db, current_admin.id)
         return success_response(
@@ -434,7 +482,7 @@ def admin_reset_time_to_real(
         slot_info = time_provider.reset_to_real_time(db, current_admin.id)
         return success_response(
             slot_info.to_dict(),
-            "Demo time reset. System is now running on LIVE INDIA STANDARD TIME."
+            "System clock reset to authoritative India Standard Time."
         )
     except Exception as e:
         return error_response("RESET_TIME_FAILED", str(e), 400)
@@ -817,6 +865,8 @@ def admin_issue_pin_order_batch(
         return success_response({
             'order': order.to_dict(),
             'generated_pins': generated_pins,
+            'pins': generated_pins,
+            'raw_security_pins': [p.get('raw_pin') for p in generated_pins],
             'count': len(generated_pins)
         }, f"Successfully generated and credited {len(generated_pins)} Security PIN(s) to buyer's wallet.")
     except Exception as e:

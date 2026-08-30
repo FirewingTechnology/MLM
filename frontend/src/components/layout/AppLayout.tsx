@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { DemoBanner } from './DemoBanner';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
@@ -17,7 +16,7 @@ export const AppLayout: React.FC = () => {
       <div className="min-h-screen bg-[#F7F4EC] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 rounded-full border-2 border-[#063B32] border-t-[#C9A227] animate-spin" />
-          <div className="text-xs text-[#69736F] font-semibold tracking-wider uppercase">Loading Wealth Portal...</div>
+          <div className="text-xs text-[#69736F] font-semibold tracking-wider uppercase">Loading Portal...</div>
         </div>
       </div>
     );
@@ -29,7 +28,6 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F4EC] text-[#18211F] flex flex-col">
-      <DemoBanner />
       <Navbar
         onOpenPurchaseModal={() => setIsPurchaseModalOpen(true)}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}

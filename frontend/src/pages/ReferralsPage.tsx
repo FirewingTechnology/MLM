@@ -67,7 +67,7 @@ export const ReferralsPage: React.FC = () => {
       try {
         await navigator.share({
           title,
-          text: `Join my MLM network via this locked placement link:`,
+          text: `Join my partner network via this invitation link:`,
           url,
         });
       } catch {

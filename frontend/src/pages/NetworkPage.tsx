@@ -93,11 +93,11 @@ export const NetworkPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#C9A227] mb-1">
             <GitFork className="w-3.5 h-3.5" />
-            <span>Matching Franchise Network & Engine</span>
+            <span>Binary Network Engine</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">MATCHING FRANCHISE TREE</h1>
+          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">NETWORK TREE</h1>
           <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-            Matching Franchise Structure • Active 12-Hour Slot Matching • Carry Forward Audit
+            Binary Network Structure • Active 12-Hour Slot Matching • Carry Forward Volume
           </p>
         </div>
 

@@ -57,8 +57,8 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
     setLoading(true);
     try {
       const payoutDetails = method === 'VIRTUAL_UPI' 
-        ? { upi_id: upiId || 'wealth.demo@okhdfcbank' }
-        : { account_number: accountNumber || '987654321098', ifsc: ifsc || 'HDFC0001234' };
+        ? { upi_id: upiId }
+        : { account_number: accountNumber, ifsc: ifsc };
 
       const res = await api.post('/withdrawals', {
         amount: numAmount,
@@ -202,7 +202,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                   type="text"
                   value={upiId}
                   onChange={(e) => setUpiId(e.target.value)}
-                  placeholder="demo-id@okhdfcbank"
+                  placeholder="user@okhdfcbank"
                   className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] font-mono text-xs focus:outline-none focus:border-[#063B32] shadow-xs"
                 />
               ) : (
@@ -211,24 +211,24 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                     type="text"
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value)}
-                    placeholder="Account: 987654321098"
+                    placeholder="Account Number"
                     className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] font-mono text-xs focus:outline-none focus:border-[#063B32] shadow-xs"
                   />
                   <input
                     type="text"
                     value={ifsc}
                     onChange={(e) => setIfsc(e.target.value)}
-                    placeholder="IFSC: HDFC0001234"
+                    placeholder="IFSC Code (e.g. HDFC0001234)"
                     className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] font-mono text-xs focus:outline-none focus:border-[#063B32] shadow-xs"
                   />
                 </div>
               )}
             </div>
 
-            {/* Demo Notice */}
+            {/* Payout Processing Notice */}
             <div className="flex items-start gap-2 p-3 rounded-2xl bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] text-[11px] mb-5">
               <ShieldAlert className="w-4 h-4 text-[#C88A16] shrink-0 mt-0.5" />
-              <span>Simulated withdrawal. No real funds are transferred. Payout will be approved via Admin suite.</span>
+              <span>Payout requests are processed following administrative verification.</span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -285,7 +285,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
             </div>
 
             <p className="text-[11px] text-[#69736F] mb-4">
-              To test the approval flow, login as Admin (<code className="text-[#063B32] font-bold font-mono">admin@demo.com</code>) and approve this payout in the Admin Suite.
+              Your payout request has been queued for administrative processing and settlement.
             </p>
 
             <button

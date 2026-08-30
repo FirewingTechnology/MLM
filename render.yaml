@@ -1,6 +1,7 @@
 # ====================================================================
 # Render Blueprint Specification (render.yaml)
 # Project: Binary MLM Enterprise Application (Production Persistent SQLite)
+# Branch: dev
 # Documentation: https://render.com/docs/blueprint-spec
 # NOTE: SQLite persistence on Render requires a Persistent Disk (Starter plan or above).
 # ====================================================================
@@ -14,6 +15,7 @@ services:
     runtime: python
     region: oregon
     plan: starter  # Starter plan or higher is required for persistent disk mounts
+    branch: dev
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
@@ -50,6 +52,7 @@ services:
     runtime: static
     region: oregon
     plan: free
+    branch: dev
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist

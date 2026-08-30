@@ -3,10 +3,10 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    APP_NAME: str = "Virtual Binary MLM API"
+    APP_NAME: str = "Partner Network Rewards API"
     ENV: str = os.getenv("ENV", "development")
     APP_ENV: str = os.getenv("APP_ENV", os.getenv("ENV", "development"))
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "virtual-binary-mlm-super-secret-key-2026")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "partner-network-rewards-super-secret-key-2026")
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 

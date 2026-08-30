@@ -50,10 +50,6 @@ export const RegisterPage: React.FC = () => {
     if (refParam) {
       setReferralCode(refParam);
       verifyReferral(refParam);
-    } else {
-      // Default to Amol's code for smooth demo testing if no ref provided
-      setReferralCode('AMOL001');
-      verifyReferral('AMOL001');
     }
   }, [searchParams]);
 
@@ -164,7 +160,7 @@ export const RegisterPage: React.FC = () => {
           <MyStatusLogo variant="full" size="md" />
         </div>
         <p className="text-xs text-[#69736F] font-medium mt-1">
-          Create a new simulated distributor account in the binary network
+          Create a new partner account in the network
         </p>
       </div>
 
@@ -343,7 +339,7 @@ export const RegisterPage: React.FC = () => {
                       type="text"
                       value={referralCode}
                       onChange={handleReferralChange}
-                      placeholder="AMOL001"
+                      placeholder="e.g. SPONSOR001"
                       required
                       className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs font-mono uppercase focus:outline-none focus:border-[#063B32] shadow-xs"
                     />
@@ -389,7 +385,7 @@ export const RegisterPage: React.FC = () => {
                     type="text"
                     value={binaryParentCode}
                     onChange={(e) => setBinaryParentCode(e.target.value.toUpperCase())}
-                    placeholder="e.g. USR-00003 or RAHUL001 (Optional)"
+                    placeholder="e.g. USR-00003 or SPONSOR001 (Optional)"
                     className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs font-mono uppercase focus:outline-none focus:border-[#063B32] shadow-xs"
                   />
                 </div>
@@ -418,7 +414,7 @@ export const RegisterPage: React.FC = () => {
           <div className="mt-5 text-center text-xs text-[#69736F]">
             Already have an account?{' '}
             <Link to="/login" className="text-[#063B32] hover:text-[#042C26] font-bold">
-              Sign In to Wealth Portal
+              Sign In to Partner Portal
             </Link>
           </div>
         </div>

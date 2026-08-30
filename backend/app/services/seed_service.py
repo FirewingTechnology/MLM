@@ -67,10 +67,10 @@ def initialize_production_baseline(db: Session):
         db.commit()
         return
 
-    # 4. First-time deployment bootstrap: Create initial Admin & Root User so system is accessible
+    # 4. First-time deployment bootstrap: Create initial Admin if empty so system is accessible
     admin = User(
         user_code="USR-00001",
-        email="admin@demo.com",
+        email="admin@platform.com",
         mobile="9876500001",
         full_name="System Admin",
         password_hash=hash_password("Admin@123"),
@@ -82,24 +82,6 @@ def initialize_production_baseline(db: Session):
     db.flush()
     get_or_create_wallet(db, admin.id)
     get_or_create_binary_volume(db, admin.id)
-
-    amol = User(
-        user_code="USR-00002",
-        email="amol@demo.com",
-        mobile="9876500002",
-        full_name="Amol Sharma",
-        password_hash=hash_password("Demo@123"),
-        role="USER",
-        referral_code="AMOL001",
-        sponsor_id=None,
-        binary_parent_id=None,
-        binary_position=None,
-        is_active=True
-    )
-    db.add(amol)
-    db.flush()
-    get_or_create_wallet(db, amol.id)
-    get_or_create_binary_volume(db, amol.id)
 
     log_action(db, 'DATABASE_INITIALIZED', 'System', None, admin.id, {'status': 'Production baseline initialized with initial admin'})
     db.commit()
@@ -145,7 +127,7 @@ def reset_demo_database(db: Session, force: bool = False, confirm_text: str = ""
     db.commit()
 
     initialize_production_baseline(db)
-    admin = db.query(User).filter(User.email == "admin@demo.com").first()
+    admin = db.query(User).filter(User.role == 'ADMIN').first()
     log_action(db, 'ADMIN_MANUAL_RESET', 'Admin', None, admin.id if admin else None, {'action': 'Explicit manual reset executed'})
     db.commit()
 

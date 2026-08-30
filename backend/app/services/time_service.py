@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 from typing import Optional, Tuple
 from sqlalchemy.orm import Session
 from app.models.demo_time import DemoTimeConfig
+from app.config import settings
 
 try:
     IST = ZoneInfo("Asia/Kolkata")
@@ -184,6 +185,8 @@ class TimeProvider:
 
     @staticmethod
     def get_mode(db: Optional[Session] = None) -> str:
+        if settings.is_production:
+            return 'REAL'
         cfg = TimeProvider._get_config(db)
         if cfg and cfg.mode == 'DEMO':
             return 'DEMO'
@@ -192,10 +195,12 @@ class TimeProvider:
     @staticmethod
     def get_current_ist_time(db: Optional[Session] = None) -> datetime:
         """
-        Returns the application's current effective IST datetime.
-        If mode is 'REAL', returns actual current IST time.
-        If mode is 'DEMO', returns the configured virtual IST time.
+        Returns the application's current authoritative IST datetime.
+        In production, strictly returns the actual real-time server IST clock.
+        In non-production test/development, virtual test time is supported for slot boundary test fixtures.
         """
+        if settings.is_production:
+            return datetime.now(IST)
         cfg = TimeProvider._get_config(db)
         if cfg and cfg.mode == 'DEMO' and cfg.virtual_datetime is not None:
             return SlotService.ensure_ist(cfg.virtual_datetime)
@@ -210,7 +215,9 @@ class TimeProvider:
 
     @staticmethod
     def set_demo_time(db: Session, target_dt: datetime, user_id: Optional[int] = None) -> SlotInfo:
-        """Sets the application clock into DEMO mode with the specified virtual datetime."""
+        """Sets the application clock into simulated mode with the specified virtual datetime (development/testing only)."""
+        if settings.is_production:
+            raise PermissionError("Manual time simulation is strictly disabled in PRODUCTION environment. Server IST clock is authoritative.")
         ist_dt = SlotService.ensure_ist(target_dt)
         cfg = db.query(DemoTimeConfig).filter(DemoTimeConfig.id == 1).first()
         if not cfg:
@@ -226,21 +233,27 @@ class TimeProvider:
 
     @staticmethod
     def advance_demo_time(db: Session, minutes: int, user_id: Optional[int] = None) -> SlotInfo:
-        """Advances demo clock by given minutes. If in REAL mode, sets demo mode starting from now + minutes."""
+        """Advances demo clock by given minutes (development/testing only)."""
+        if settings.is_production:
+            raise PermissionError("Manual time simulation is strictly disabled in PRODUCTION environment. Server IST clock is authoritative.")
         current_dt = TimeProvider.get_current_ist_time(db)
         new_dt = current_dt + timedelta(minutes=minutes)
         return TimeProvider.set_demo_time(db, new_dt, user_id)
 
     @staticmethod
     def next_slot(db: Session, user_id: Optional[int] = None) -> SlotInfo:
-        """Jumps demo clock to the beginning of the next slot."""
+        """Jumps demo clock to the beginning of the next slot (development/testing only)."""
+        if settings.is_production:
+            raise PermissionError("Manual time simulation is strictly disabled in PRODUCTION environment. Server IST clock is authoritative.")
         current_dt = TimeProvider.get_current_ist_time(db)
         next_start = SlotService.get_next_slot_start(current_dt)
         return TimeProvider.set_demo_time(db, next_start, user_id)
 
     @staticmethod
     def previous_slot(db: Session, user_id: Optional[int] = None) -> SlotInfo:
-        """Jumps demo clock to the beginning of the previous slot."""
+        """Jumps demo clock to the beginning of the previous slot (development/testing only)."""
+        if settings.is_production:
+            raise PermissionError("Manual time simulation is strictly disabled in PRODUCTION environment. Server IST clock is authoritative.")
         current_dt = TimeProvider.get_current_ist_time(db)
         prev_start = SlotService.get_previous_slot_start(current_dt)
         return TimeProvider.set_demo_time(db, prev_start, user_id)

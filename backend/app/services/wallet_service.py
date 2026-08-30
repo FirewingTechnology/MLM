@@ -169,7 +169,7 @@ def approve_withdrawal(db: Session, withdrawal_id: int, admin_id: int, notes: st
         user_id=withdrawal.user_id,
         amount=withdrawal.amount,
         category='WITHDRAWAL',
-        description=f"Demo Payout for Request {withdrawal.withdrawal_code}",
+        description=f"Payout for Request {withdrawal.withdrawal_code}",
         reference_id=withdrawal.withdrawal_code
     )
     

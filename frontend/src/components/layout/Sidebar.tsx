@@ -26,8 +26,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/network', label: 'Matching Franchise Tree', icon: GitFork },
-    { to: '/packages', label: 'Sub Franchise Packages', icon: PackageCheck },
+    { to: '/network', label: 'Network Tree', icon: GitFork },
+    { to: '/packages', label: 'Packages', icon: PackageCheck },
     { to: '/wallet', label: 'Income Wallet & Ledger', icon: Wallet },
     { to: '/commissions', label: 'Income Report', icon: Coins },
     { to: '/referrals', label: 'Direct Referrals', icon: Users },
@@ -156,15 +156,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           )}
         </div>
 
-        {/* Bottom Referral / Demo Info Card */}
+        {/* Bottom Rule Summary Card */}
         <div className="p-4 border-t border-[#0B5145]/60">
           <div className="p-3.5 rounded-2xl bg-[#042C26] border border-[#C9A227]/25 text-xs text-[#F7F4EC]">
             <div className="flex items-center gap-2 text-[#C9A227] font-bold mb-1.5">
               <HelpCircle className="w-4 h-4" />
-              <span>Wealth Rule Summary</span>
+              <span>Platform Rule Summary</span>
             </div>
             <div className="space-y-1 text-[11px] text-[#F7F4EC]/80 font-medium">
-              <p>• Sub Franchise: <span className="text-[#FFFEF9] font-bold">₹35,000</span> (30k BV)</p>
+              <p>• Qualifying Package: <span className="text-[#FFFEF9] font-bold">₹35,000</span> (30k BV)</p>
               <p>• Direct Sponsor: <span className="text-[#C9A227] font-bold">10% (₹3,000)</span></p>
               <p>• Binary Pair Bonus: <span className="text-[#E2C766] font-bold">₹10,000 / pair</span></p>
             </div>

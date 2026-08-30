@@ -20,8 +20,8 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [identifier, setIdentifier] = useState('amol@demo.com');
-  const [password, setPassword] = useState('Demo@123');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +38,7 @@ export const LoginPage: React.FC = () => {
           navigate('/dashboard');
         }
       } else {
-        showToast(res.data?.error?.message || 'Login failed. Backend API URL is not connected or returned invalid data. Check VITE_API_URL in Render.', 'error');
+        showToast(res.data?.error?.message || 'Login failed. Please check your credentials.', 'error');
       }
     } catch (err: any) {
       showToast(err.response?.data?.error?.message || 'Login failed. Check your credentials or backend connection.', 'error');
@@ -47,23 +47,15 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickLogin = (email: string, pass: string) => {
-    setIdentifier(email);
-    setPassword(pass);
-  };
-
   return (
     <div className="min-h-screen bg-[#F7F4EC] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Top Demo Banner */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] text-xs font-mono font-bold uppercase tracking-wider mb-4">
-          <AlertTriangle className="w-3.5 h-3.5 text-[#C88A16]" />
-          <span>Demo Sandbox</span>
-        </div>
-
         <div className="flex justify-center mb-2">
           <MyStatusLogo variant="full" size="lg" />
         </div>
+        <p className="text-xs text-[#69736F] font-medium mt-1">
+          Sign in to access your partner dashboard
+        </p>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">
@@ -81,7 +73,7 @@ export const LoginPage: React.FC = () => {
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="amol@demo.com or AMOL001"
+                  placeholder="name@example.com or User Code"
                   required
                   className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-sm focus:outline-none focus:border-[#063B32] focus:ring-2 focus:ring-[#063B32]/10 transition-all font-mono shadow-xs"
                 />
@@ -119,44 +111,18 @@ export const LoginPage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <span>Access Wealth Dashboard</span>
+                  <span>Sign In to Dashboard</span>
                   <ArrowRight className="w-4 h-4 text-[#C9A227]" />
                 </>
               )}
             </button>
           </form>
 
-          {/* 1-Click Quick Demo Accounts */}
-          <div className="mt-6 pt-5 border-t border-[#E5E0D3]">
-            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#69736F] mb-2.5 text-center">
-              Quick 1-Click Demo Accounts
-            </div>
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('amol@demo.com', 'Demo@123')}
-                className="p-3 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] hover:border-[#C9A227] hover:bg-[#FAF4DC] text-left transition-all group cursor-pointer"
-              >
-                <div className="text-xs font-heading font-bold text-[#18211F] group-hover:text-[#063B32] truncate">Amol Sharma</div>
-                <div className="text-[10px] text-[#69736F] font-mono">Root Node (AMOL001)</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin@demo.com', 'Admin@123')}
-                className="p-3 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] hover:border-[#E2C766] hover:bg-[#FAF4DC] text-left transition-all group cursor-pointer"
-              >
-                <div className="text-xs font-heading font-bold text-[#8C6C16] truncate">System Admin</div>
-                <div className="text-[10px] text-[#69736F] font-mono">admin@demo.com</div>
-              </button>
-            </div>
-          </div>
-
           {/* Registration link */}
-          <div className="mt-5 text-center text-xs text-[#69736F]">
-            New to the wealth network?{' '}
+          <div className="mt-6 pt-5 border-t border-[#E5E0D3] text-center text-xs text-[#69736F]">
+            New partner?{' '}
             <Link to="/register" className="text-[#063B32] hover:text-[#042C26] font-bold">
-              Register with an invitation code
+              Register with an invitation link
             </Link>
           </div>
         </div>

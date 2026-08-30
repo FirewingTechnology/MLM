@@ -105,7 +105,7 @@ def register():
     return success_response({
         'token': token,
         'user': new_user.to_dict()
-    }, "Registration successful! Welcome to the Demo Binary MLM platform.", 201)
+    }, "Registration successful! Welcome to the partner platform.", 201)
 
 @auth_bp.route('/login', methods=['POST'])
 def login():

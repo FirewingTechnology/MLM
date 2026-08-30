@@ -151,7 +151,7 @@ export const AdminWithdrawalsPage: React.FC = () => {
                     <td className="py-3 px-4 text-[#18211F]">
                       <div className="font-semibold text-[#18211F]">{w.payout_method}</div>
                       <div className="text-[10px] text-[#69736F] font-mono">
-                        {w.payout_details?.upi_id || w.payout_details?.account_number || 'Demo Account'}
+                        {w.payout_details?.upi_id || w.payout_details?.account_number || 'Standard Payout Account'}
                       </div>
                     </td>
                     <td className="py-3 px-4 text-center">

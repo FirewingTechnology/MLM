@@ -13,7 +13,7 @@ import {
   SecurityPinTransfer,
   SecurityPinLedgerItem
 } from '../../types';
-import { DemoTimeControl } from '../../components/admin/DemoTimeControl';
+import { LiveSystemClock } from '../../components/admin/LiveSystemClock';
 import { CommissionDetailModal } from '../../components/modals/CommissionDetailModal';
 import { 
   ShieldAlert, 
@@ -236,12 +236,17 @@ export const AdminDashboardPage: React.FC = () => {
       });
       if (res.data?.success) {
         const batchData = res.data.data;
+        const pinsList: any[] = batchData.pins || batchData.generated_pins || [];
+        const rawPinsList: string[] = batchData.raw_security_pins || pinsList.map((p: any) => p.raw_pin || p.raw_security_pin || '');
+        const updatedOrder = batchData.order || order;
+        
         setBatchGeneratedPinsModal({
-          order,
-          pins: batchData.pins || [],
-          raw_pins: batchData.raw_security_pins || []
+          order: updatedOrder,
+          pins: pinsList,
+          raw_pins: rawPinsList
         });
-        showToast(`Successfully generated ${order.quantity} Security PINs for ${order.buyer_name || order.buyer_code}!`, 'success');
+        const displayName = updatedOrder.user_name || updatedOrder.buyer_name || updatedOrder.user_code || updatedOrder.buyer_code || 'Member';
+        showToast(`Successfully generated ${pinsList.length || order.quantity} Security PINs for ${displayName}!`, 'success');
         queryClient.invalidateQueries({ queryKey: ['adminPinOrders'] });
         queryClient.invalidateQueries({ queryKey: ['adminMasterPins'] });
         queryClient.invalidateQueries({ queryKey: ['adminDashboard'] });
@@ -413,7 +418,7 @@ export const AdminDashboardPage: React.FC = () => {
             Financial & Network Command Center
           </h1>
           <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-            Monitor real-time MLM commissions, verify member package payments, and issue single-use Security PINs.
+            Monitor real-time network commissions, verify member package payments, and issue single-use Security PINs.
           </p>
         </div>
 
@@ -480,13 +485,13 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 0. Demo Time Control Center */}
-      <DemoTimeControl />
+      {/* Live System Clock & 12-Hour Cycle Status */}
+      <LiveSystemClock onBackupCreated={() => queryClient.invalidateQueries({ queryKey: ['adminDashboard'] })} />
 
       {/* TAB: OVERVIEW */}
       {adminTab === 'analytics' && (
         <>
-          {/* KPI Cards Grid */}
+          {/* Primary KPI Cards Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Users */}
             <div className="rounded-3xl bg-[#FFFEF9] p-5 border border-[#E5E0D3] shadow-wealth-card">
@@ -502,16 +507,18 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Total Virtual Sales */}
+            {/* Total Package Revenue */}
             <div className="rounded-3xl bg-[#FFFEF9] p-5 border border-[#E5E0D3] shadow-wealth-card">
               <div className="flex items-center justify-between text-[#69736F] mb-2">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider">Package Sales</span>
+                <span className="text-xs font-mono font-bold uppercase tracking-wider">Package Revenue</span>
                 <ShoppingBag className="w-4 h-4 text-[#0E9F6E]" />
               </div>
               <div className="text-2xl sm:text-3xl font-heading font-black text-[#063B32] font-mono">
                 ₹{kpis?.total_virtual_sales?.toLocaleString() || 0}
               </div>
-              <div className="text-[11px] text-[#69736F] mt-1">Total revenue generated</div>
+              <div className="text-[11px] text-[#69736F] mt-1 font-medium">
+                {kpis?.total_packages_activated || 0} packages activated
+              </div>
             </div>
 
             {/* Total Volume */}
@@ -521,9 +528,11 @@ export const AdminDashboardPage: React.FC = () => {
                 <Coins className="w-4 h-4 text-[#C9A227]" />
               </div>
               <div className="text-2xl sm:text-3xl font-heading font-black text-[#C9A227] font-mono">
-                ₹{kpis?.total_bv?.toLocaleString() || 0} <span className="text-xs font-normal">BV</span>
+                {(kpis?.total_bv || 0).toLocaleString()} <span className="text-xs font-normal">BV</span>
               </div>
-              <div className="text-[11px] text-[#69736F] mt-1">Package Business Value</div>
+              <div className="text-[11px] text-[#69736F] mt-1 font-medium">
+                L: {(kpis?.total_left_bv || 0).toLocaleString()} • R: {(kpis?.total_right_bv || 0).toLocaleString()}
+              </div>
             </div>
 
             {/* Total Commissions */}
@@ -536,7 +545,64 @@ export const AdminDashboardPage: React.FC = () => {
                 ₹{kpis?.total_commissions?.toLocaleString() || 0}
               </div>
               <div className="text-[11px] text-[#063B32] mt-1 font-semibold">
-                Direct: ₹{kpis?.direct_commissions?.toLocaleString() || 0} • Pair: ₹{(kpis?.pair_commissions || kpis?.matching_commissions || 0).toLocaleString()}
+                Direct: ₹{kpis?.direct_commissions?.toLocaleString() || 0} • Pair: ₹{(kpis?.pair_commissions || 0).toLocaleString()}
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary Production KPI Cards Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Wallet Liabilities */}
+            <div className="rounded-3xl bg-[#FFFEF9] p-5 border border-[#E5E0D3] shadow-wealth-card">
+              <div className="flex items-center justify-between text-[#69736F] mb-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider">Active Wallet Balance</span>
+                <Wallet className="w-4 h-4 text-[#C9A227]" />
+              </div>
+              <div className="text-xl sm:text-2xl font-heading font-black text-[#8C6C16] font-mono">
+                ₹{(kpis?.total_wallet_balance || 0).toLocaleString()}
+              </div>
+              <div className="text-[11px] text-[#69736F] mt-1">Total member ledger balances</div>
+            </div>
+
+            {/* Total Withdrawn & Payouts */}
+            <div className="rounded-3xl bg-[#FFFEF9] p-5 border border-[#E5E0D3] shadow-wealth-card">
+              <div className="flex items-center justify-between text-[#69736F] mb-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider">Settled Payouts</span>
+                <CheckCircle2 className="w-4 h-4 text-[#0E9F6E]" />
+              </div>
+              <div className="text-xl sm:text-2xl font-heading font-black text-[#063B32] font-mono">
+                ₹{(kpis?.total_withdrawn || 0).toLocaleString()}
+              </div>
+              <div className="text-[11px] text-[#EA580C] font-semibold mt-1">
+                Pending Requests: {kpis?.pending_withdrawals_count || 0} (₹{(kpis?.pending_withdrawals_amount || 0).toLocaleString()})
+              </div>
+            </div>
+
+            {/* Security PIN Inventory */}
+            <div className="rounded-3xl bg-[#FFFEF9] p-5 border border-[#E5E0D3] shadow-wealth-card">
+              <div className="flex items-center justify-between text-[#69736F] mb-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider">Security PINs</span>
+                <ShieldAlert className="w-4 h-4 text-[#063B32]" />
+              </div>
+              <div className="text-xl sm:text-2xl font-heading font-black text-[#18211F] font-mono">
+                {kpis?.total_pins_count || 0} <span className="text-xs text-[#69736F] font-normal">Total</span>
+              </div>
+              <div className="text-[11px] text-[#063B32] font-semibold mt-1">
+                Available: {kpis?.available_pins_count || 0} • Used: {kpis?.used_pins_count || 0}
+              </div>
+            </div>
+
+            {/* Carry Volume */}
+            <div className="rounded-3xl bg-[#FFFEF9] p-5 border border-[#E5E0D3] shadow-wealth-card">
+              <div className="flex items-center justify-between text-[#69736F] mb-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider">Active Carry Volume</span>
+                <GitFork className="w-4 h-4 text-[#C9A227]" />
+              </div>
+              <div className="text-xl sm:text-2xl font-heading font-black text-[#18211F] font-mono">
+                {((kpis?.total_left_carry || 0) + (kpis?.total_right_carry || 0)).toLocaleString()} <span className="text-xs font-normal">BV</span>
+              </div>
+              <div className="text-[11px] text-[#69736F] font-medium mt-1">
+                Left Carry: {(kpis?.total_left_carry || 0).toLocaleString()} • Right Carry: {(kpis?.total_right_carry || 0).toLocaleString()}
               </div>
             </div>
           </div>
@@ -1659,13 +1725,14 @@ export const AdminDashboardPage: React.FC = () => {
               {batchGeneratedPinsModal.pins.length} Security PINs Generated
             </h3>
             <p className="text-xs text-[#69736F] mb-4">
-              Issued for <strong className="text-[#063B32]">{batchGeneratedPinsModal.order.buyer_name || 'Member'}</strong> ({batchGeneratedPinsModal.order.buyer_code}) under Order <code className="font-mono">{batchGeneratedPinsModal.order.order_code}</code>.
+              Issued for <strong className="text-[#063B32]">{batchGeneratedPinsModal.order.user_name || batchGeneratedPinsModal.order.buyer_name || 'Member'}</strong> ({batchGeneratedPinsModal.order.user_code || batchGeneratedPinsModal.order.buyer_code || `User #${batchGeneratedPinsModal.order.user_id}`}) under Order <code className="font-mono">{batchGeneratedPinsModal.order.order_code}</code>.
             </p>
 
             {/* List of Generated PINs */}
             <div className="flex-1 overflow-y-auto space-y-2 p-3 rounded-2xl bg-[#063B32] mb-4">
-              {batchGeneratedPinsModal.pins.map((pinItem, idx) => {
-                const rawPin = batchGeneratedPinsModal.raw_pins[idx] || 'N/A';
+              {batchGeneratedPinsModal.pins.map((pinItem: any, idx: number) => {
+                const rawPin = batchGeneratedPinsModal.raw_pins[idx] || pinItem.raw_pin || pinItem.raw_security_pin || 'N/A';
+                const pinRef = pinItem.pin_code || pinItem.pin?.pin_code || `PIN-${idx + 1}`;
                 return (
                   <div
                     key={pinItem.id || idx}
@@ -1678,7 +1745,7 @@ export const AdminDashboardPage: React.FC = () => {
                       </span>
                     </div>
                     <div className="text-[10px] text-[#F7F4EC]/60 font-mono">
-                      Ref: {pinItem.pin_code}
+                      Ref: {pinRef}
                     </div>
                   </div>
                 );

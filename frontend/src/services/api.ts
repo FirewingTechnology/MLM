@@ -25,7 +25,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('mlm_demo_token');
+  const token = localStorage.getItem('auth_token') || localStorage.getItem('mlm_demo_token');
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -37,6 +37,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
         localStorage.removeItem('mlm_demo_token');
         localStorage.removeItem('mlm_demo_user');
         window.location.href = '/login?expired=true';
