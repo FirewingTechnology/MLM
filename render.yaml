@@ -39,12 +39,11 @@ services:
         value: ./data/backups
 
   # ------------------------------------------------------------------
-  # 2. React Vite Frontend Static Site (100% Free Plan)
+  # 2. React Vite Frontend Static Site (Free by default on Render CDN)
   # ------------------------------------------------------------------
   - type: web
     name: mlm-frontend
     runtime: static
-    plan: free
     branch: dev
     rootDir: frontend
     buildCommand: npm install && npm run build
