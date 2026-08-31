@@ -15,3 +15,8 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     identifier: str  # email or user_code
     password: str
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+    confirm_new_password: str

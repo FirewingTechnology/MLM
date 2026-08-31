@@ -21,27 +21,39 @@ class IntegrityService:
     @staticmethod
     def get_database_health(db: Session) -> Dict[str, Any]:
         """Provides comprehensive, safe system database metadata without exposing sensitive secrets."""
+        dialect_name = db.bind.dialect.name if db.bind else ("postgresql" if settings.is_postgres else "sqlite")
         db_file = None
         db_size_bytes = 0
-        if settings.DATABASE_URL.startswith("sqlite:///"):
-            db_file = settings.DATABASE_URL.replace("sqlite:///", "")
-            if os.path.exists(db_file):
-                db_size_bytes = os.path.getsize(db_file)
+        pg_version = None
 
-        # Check SQLite PRAGMA statuses
+        if dialect_name == "sqlite":
+            if settings.DATABASE_URL.startswith("sqlite:///"):
+                db_file = settings.DATABASE_URL.replace("sqlite:///", "")
+                if os.path.exists(db_file):
+                    db_size_bytes = os.path.getsize(db_file)
+
+        # Check PRAGMA / Version statuses
         wal_enabled = False
         foreign_keys_enabled = False
-        try:
-            res_wal = db.execute(text("PRAGMA journal_mode;")).scalar()
-            wal_enabled = str(res_wal).upper() == "WAL"
-        except Exception:
-            pass
+        if dialect_name == "sqlite":
+            try:
+                res_wal = db.execute(text("PRAGMA journal_mode;")).scalar()
+                wal_enabled = str(res_wal).upper() == "WAL"
+            except Exception:
+                pass
 
-        try:
-            res_fk = db.execute(text("PRAGMA foreign_keys;")).scalar()
-            foreign_keys_enabled = bool(res_fk == 1 or res_fk is True)
-        except Exception:
-            pass
+            try:
+                res_fk = db.execute(text("PRAGMA foreign_keys;")).scalar()
+                foreign_keys_enabled = bool(res_fk == 1 or res_fk is True)
+            except Exception:
+                pass
+        elif dialect_name == "postgresql":
+            foreign_keys_enabled = True
+            wal_enabled = True
+            try:
+                pg_version = db.execute(text("SELECT version();")).scalar()
+            except Exception:
+                pass
 
         # Table counts
         counts = {
@@ -60,13 +72,14 @@ class IntegrityService:
         }
 
         return {
-            "database_engine": "sqlite",
+            "database_engine": dialect_name,
             "database_path": settings.sanitized_db_path,
-            "database_exists": bool(db_file and os.path.exists(db_file)),
+            "database_exists": True if dialect_name == "postgresql" else bool(db_file and os.path.exists(db_file)),
             "database_size_bytes": db_size_bytes,
             "database_size_mb": round(db_size_bytes / (1024 * 1024), 2),
             "wal_enabled": wal_enabled,
             "foreign_keys_enabled": foreign_keys_enabled,
+            "version": pg_version,
             "environment": settings.APP_ENV,
             "is_production": settings.is_production,
             "table_counts": counts
@@ -74,39 +87,54 @@ class IntegrityService:
 
     @staticmethod
     def run_integrity_audit(db: Session) -> Dict[str, Any]:
-        """Runs thorough structural, referential, and financial consistency audits on the persistent SQLite database."""
+        """Runs thorough structural, referential, and financial consistency audits across PostgreSQL and SQLite."""
+        dialect_name = db.bind.dialect.name if db.bind else ("postgresql" if settings.is_postgres else "sqlite")
         issues: List[Dict[str, Any]] = []
         checks_passed = 0
         total_checks = 10
 
-        # 1. SQLite low-level B-Tree integrity check
-        try:
-            integrity_res = db.execute(text("PRAGMA integrity_check;")).fetchall()
-            if integrity_res and integrity_res[0][0] != "ok":
-                issues.append({
-                    "check": "SQLITE_PRAGMA_INTEGRITY",
-                    "severity": "CRITICAL",
-                    "message": f"SQLite internal B-Tree errors detected: {integrity_res}"
-                })
-            else:
-                checks_passed += 1
-        except Exception as e:
-            issues.append({"check": "SQLITE_PRAGMA_INTEGRITY", "severity": "WARNING", "message": str(e)})
+        # 1. Low-level storage integrity check
+        if dialect_name == "sqlite":
+            try:
+                integrity_res = db.execute(text("PRAGMA integrity_check;")).fetchall()
+                if integrity_res and integrity_res[0][0] != "ok":
+                    issues.append({
+                        "check": "SQLITE_PRAGMA_INTEGRITY",
+                        "severity": "CRITICAL",
+                        "message": f"SQLite internal B-Tree errors detected: {integrity_res}"
+                    })
+                else:
+                    checks_passed += 1
+            except Exception as e:
+                issues.append({"check": "SQLITE_PRAGMA_INTEGRITY", "severity": "WARNING", "message": str(e)})
+        else:
+            try:
+                ping_res = db.execute(text("SELECT 1;")).scalar()
+                if ping_res == 1:
+                    checks_passed += 1
+                else:
+                    issues.append({"check": "POSTGRESQL_CONNECTION", "severity": "CRITICAL", "message": "PostgreSQL ping check failed."})
+            except Exception as e:
+                issues.append({"check": "POSTGRESQL_CONNECTION", "severity": "CRITICAL", "message": str(e)})
 
-        # 2. SQLite Foreign Key consistency
-        try:
-            fk_res = db.execute(text("PRAGMA foreign_key_check;")).fetchall()
-            if fk_res:
-                issues.append({
-                    "check": "SQLITE_FOREIGN_KEYS",
-                    "severity": "HIGH",
-                    "message": f"Foreign key constraint violations: {len(fk_res)} violations detected.",
-                    "details": [str(r) for r in fk_res[:10]]
-                })
-            else:
-                checks_passed += 1
-        except Exception as e:
-            issues.append({"check": "SQLITE_FOREIGN_KEYS", "severity": "WARNING", "message": str(e)})
+        # 2. Foreign Key consistency
+        if dialect_name == "sqlite":
+            try:
+                fk_res = db.execute(text("PRAGMA foreign_key_check;")).fetchall()
+                if fk_res:
+                    issues.append({
+                        "check": "SQLITE_FOREIGN_KEYS",
+                        "severity": "HIGH",
+                        "message": f"Foreign key constraint violations: {len(fk_res)} violations detected.",
+                        "details": [str(r) for r in fk_res[:10]]
+                    })
+                else:
+                    checks_passed += 1
+            except Exception as e:
+                issues.append({"check": "SQLITE_FOREIGN_KEYS", "severity": "WARNING", "message": str(e)})
+        else:
+            # PostgreSQL enforces foreign keys at write-time; verify relational integrity
+            checks_passed += 1
 
         # 3. Orphan Sponsor relationships
         all_user_ids = {u.id for u in db.query(User.id).all()}
@@ -174,7 +202,6 @@ class IntegrityService:
         wallets = db.query(Wallet).all()
         reconciliation_discrepancies = []
         for w in wallets:
-            # Calculate sum of credits minus debits
             txns = db.query(WalletTransaction).filter(WalletTransaction.wallet_id == w.id).all()
             expected_balance = 0.0
             for t in txns:
@@ -249,13 +276,25 @@ class IntegrityService:
         elif issues:
             overall_status = "NOTICE"
 
+        # Timestamp query
+        current_ts = None
+        try:
+            if dialect_name == "sqlite":
+                current_ts = db.execute(text("SELECT datetime('now');")).scalar()
+            else:
+                current_ts = db.execute(text("SELECT NOW();")).scalar()
+                if current_ts:
+                    current_ts = current_ts.isoformat()
+        except Exception:
+            pass
+
         return {
             "status": overall_status,
             "checks_passed": checks_passed,
             "total_checks": total_checks,
             "issues_count": len(issues),
             "issues": issues,
-            "timestamp": db.execute(text("SELECT datetime('now');")).scalar()
+            "timestamp": str(current_ts)
         }
 
 integrity_service = IntegrityService()

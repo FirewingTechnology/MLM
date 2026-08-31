@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
-from app.schemas.auth import RegisterRequest, LoginRequest
+from app.schemas.auth import RegisterRequest, LoginRequest, ChangePasswordRequest
 from app.security import hash_password, verify_password, create_access_token, get_current_user
 from app.services.mlm_service import (
     resolve_sponsor_by_code,
@@ -142,3 +142,26 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
 @router.get("/me")
 def get_me(current_user: User = Depends(get_current_user)):
     return success_response(current_user.to_dict())
+
+@router.post("/change-password")
+def change_password(
+    req: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Safely updates password for the authenticated user or administrator."""
+    if not verify_password(req.current_password, current_user.password_hash):
+        return error_response("INVALID_PASSWORD", "Current password is incorrect.", 400)
+    if req.new_password != req.confirm_new_password:
+        return error_response("VALIDATION_ERROR", "New passwords do not match.", 400)
+    if len(req.new_password) < 8:
+        return error_response("VALIDATION_ERROR", "New password must be at least 8 characters long.", 400)
+
+    current_user.password_hash = hash_password(req.new_password)
+    log_action(db, 'PASSWORD_CHANGED', 'User', current_user.id, current_user.id, {
+        'role': current_user.role,
+        'user_code': current_user.user_code
+    })
+    db.commit()
+    return success_response(None, "Password updated successfully.")
+

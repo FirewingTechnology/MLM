@@ -17,6 +17,7 @@ from app.models.pin_order import SecurityPinOrder
 from app.models.pin_transfer import SecurityPinTransfer
 from app.models.pin_upline_request import SecurityPinUplineRequest
 from app.models.pin_ledger import SecurityPinLedger
+from app.models.referral_token import ReferralToken
 
 __all__ = [
     'User',
@@ -38,5 +39,6 @@ __all__ = [
     'SecurityPinOrder',
     'SecurityPinTransfer',
     'SecurityPinUplineRequest',
-    'SecurityPinLedger'
+    'SecurityPinLedger',
+    'ReferralToken'
 ]

@@ -18,18 +18,24 @@ import app.models.demo_time
 import app.models.referral_token
 
 
+import os
 from app.database import Base, get_db
 from app.main import app
 from app.services.seed_service import seed_database
 
-# Use in-memory SQLite with StaticPool so all connections share the same in-memory DB
-TEST_DATABASE_URL = "sqlite:///:memory:"
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
 
-engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool
-)
+if TEST_DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        TEST_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool
+    )
+else:
+    engine = create_engine(
+        TEST_DATABASE_URL,
+        pool_pre_ping=True
+    )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def seed_test_fixtures(db):

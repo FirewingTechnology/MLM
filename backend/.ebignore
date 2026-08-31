@@ -1,0 +1,43 @@
+# Virtual Environments
+venv/
+.venv/
+ENV/
+env/
+.Python
+
+# Testing & Caches
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*$py.class
+.coverage
+htmlcov/
+tests/
+
+# Local SQLite databases & backups
+data/
+*.sqlite
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+*.db.bak
+backups/
+
+# Local secrets & Environment overrides
+.env
+.env.*
+!.env.example
+
+# Logs & temporary files
+*.log
+logs/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Frontend / node artifacts (if present in build context)
+node_modules/
+dist/
+build/

@@ -64,29 +64,73 @@ class Settings(BaseSettings):
 
     # Frontend URL for CORS
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "")  # Comma-separated extra allowed origins
+
+    # Initial Production Administrator Provisioning
+    INITIAL_ADMIN_BOOTSTRAP: bool = os.getenv("INITIAL_ADMIN_BOOTSTRAP", "false").lower() in ("true", "1", "yes")
+    INITIAL_ADMIN_EMAIL: str = os.getenv("INITIAL_ADMIN_EMAIL", "")
+    INITIAL_ADMIN_PASSWORD: str = os.getenv("INITIAL_ADMIN_PASSWORD", "")
+    INITIAL_ADMIN_MOBILE: str = os.getenv("INITIAL_ADMIN_MOBILE", "9876500001")
+    INITIAL_ADMIN_NAME: str = os.getenv("INITIAL_ADMIN_NAME", "System Admin")
 
     @property
     def is_production(self) -> bool:
         return self.APP_ENV.lower() in ("production", "prod") or self.ENV.lower() in ("production", "prod")
 
     @property
+    def is_postgres(self) -> bool:
+        db_u = self.DATABASE_URL.lower()
+        return db_u.startswith("postgresql") or db_u.startswith("postgres")
+
+    @property
+    def is_sqlite(self) -> bool:
+        return self.DATABASE_URL.lower().startswith("sqlite")
+
+    @property
+    def normalized_database_url(self) -> str:
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+psycopg://", 1)
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+            url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+        return url
+
+    @property
     def sanitized_db_path(self) -> str:
-        if self.DATABASE_URL.startswith("sqlite"):
+        if self.is_sqlite:
             raw_path = self.DATABASE_URL.replace("sqlite:///", "")
             return Path(raw_path).as_posix()
+        elif self.is_postgres:
+            # Mask user credentials in logs/UI
+            try:
+                from urllib.parse import urlparse
+                parsed = urlparse(self.DATABASE_URL)
+                masked_netloc = f"***:***@{parsed.hostname}:{parsed.port or 5432}" if parsed.hostname else "postgresql-host"
+                return f"postgresql://{masked_netloc}{parsed.path}"
+            except Exception:
+                return "postgresql-rds"
         return "non-sqlite"
+
+    def validate_production_configuration(self):
+        if self.is_production:
+            if not self.is_postgres:
+                raise RuntimeError(
+                    "CRITICAL: Production environment requires a PostgreSQL DATABASE_URL. "
+                    "SQLite fallback is strictly prohibited in production."
+                )
 
     class Config:
         case_sensitive = True
 
 settings = Settings()
+settings.validate_production_configuration()
 
-# Ensure SQLite database directory & backup directory exist
-if settings.DATABASE_URL.startswith("sqlite"):
+# Ensure SQLite database directory & backup directory exist when running with SQLite
+if settings.is_sqlite:
     db_file = settings.DATABASE_URL.replace("sqlite:///", "")
     db_dir = os.path.dirname(os.path.abspath(db_file))
     if db_dir:
         os.makedirs(db_dir, exist_ok=True)
-    if settings.BACKUP_DIR:
-        os.makedirs(os.path.abspath(settings.BACKUP_DIR), exist_ok=True)
+if settings.BACKUP_DIR:
+    os.makedirs(os.path.abspath(settings.BACKUP_DIR), exist_ok=True)
 
