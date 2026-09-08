@@ -7,7 +7,7 @@
 | **Source Database** | SQLite (`backend/data/mlm.sqlite3`, 565,248 bytes) |
 | **Target Database** | AWS RDS PostgreSQL (`mystatus-postgres`, region: `ap-south-1`, port: `5432`) |
 | **Pre-Migration Backup** | `backend/data/backups/mlm_sqlite_pre_postgres_20260831_135249.sqlite3` |
-| **Driver / Adapter** | `psycopg` (psycopg 3.3.4) & `psycopg2-binary` (2.9.9) |
+| **Driver / Adapter** | `psycopg` (psycopg 3.3.4) & `psycopg2-Matching` (2.9.9) |
 | **Business Logic Regressions** | **0** (Freeze strictly enforced) |
 | **Backend Test Suite** | **161 passed** (0 failures, 100% pass rate) |
 | **Frontend Build** | **Passed** (0 errors) |

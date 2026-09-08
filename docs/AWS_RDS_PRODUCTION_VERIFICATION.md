@@ -1,7 +1,7 @@
 # AWS RDS PostgreSQL Production Database Verification Report
 
 **Verification Target**: `AWS RDS PostgreSQL (mystatus-postgres.ap-south-1.rds.amazonaws.com:5432)`  
-**Driver**: `psycopg` (psycopg 3.3.4) & `psycopg2-binary` (2.9.9)  
+**Driver**: `psycopg` (psycopg 3.3.4) & `psycopg2-Matching` (2.9.9)  
 **Source Database Backup**: `backend/data/backups/mlm_sqlite_pre_postgres_20260831_135249.sqlite3`  
 **Application State**: 100% Verified Production Ready (0 MLM Business Logic Alterations)
 
@@ -17,7 +17,7 @@
 | 4 | **Real Data Verification** | **PASS** | Real persistent data transferred. 0 dummy users, 0 demo wallets, 0 fake transactions generated. |
 | 5 | **Row Reconciliation** | **PASS** | SQLite source backup vs PostgreSQL target table counts match with **0 difference**. |
 | 6 | **Financial Reconciliation** | **PASS** | Wallet balances, ledger entries, purchases, commissions, BV, and PIN inventories match source exactly. |
-| 7 | **Relational Integrity** | **PASS** | 0 orphan records, 0 broken sponsor/parent IDs, 0 binary leg collisions, 0 negative wallet balances. |
+| 7 | **Relational Integrity** | **PASS** | 0 orphan records, 0 broken sponsor/parent IDs, 0 Binary leg collisions, 0 negative wallet balances. |
 | 8 | **Sequence Synchronization** | **PASS** | All PostgreSQL SERIAL sequences synchronized via `setval(..., MAX(id))` to prevent primary key collisions. |
 | 9 | **Application Safe Write Test** | **PASS** | Atomic Create -> Read -> Update -> Rollback transaction verified without leaving test records in database. |
 | 10 | **Production Startup & Fail-Safe** | **PASS** | Startup validation prevents silent SQLite fallback. Fail-fast error raised if PostgreSQL is unavailable. |
@@ -86,7 +86,7 @@
 | **Orphan Purchases** | 0 | **PASSED** |
 | **Orphan Wallets** | 0 | **PASSED** |
 | **Orphan Sponsor IDs** | 0 | **PASSED** |
-| **Orphan Binary Parent IDs** | 0 | **PASSED** |
+| **Orphan Matching Parent IDs** | 0 | **PASSED** |
 | **Binary Leg Collisions (`uq_binary_parent_position`)** | 0 | **PASSED** |
 | **Orphan VolumeLedger Sources** | 0 | **PASSED** |
 | **Orphan VolumeLedger Ancestors** | 0 | **PASSED** |

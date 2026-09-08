@@ -1,21 +1,21 @@
 import React from 'react';
-import { BinaryTreeNode } from '../../types';
-import { 
-  X, 
-  User as UserIcon, 
-  GitFork, 
-  Award, 
-  CheckCircle2, 
-  Clock, 
-  TrendingUp, 
-  Package, 
+import { MatchingTreeNode } from '../../types';
+import {
+  X,
+  User as UserIcon,
+  GitFork,
+  Award,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  Package,
   Link2,
   Sparkles,
   RotateCcw
 } from 'lucide-react';
 
 interface NodeDetailModalProps {
-  node: BinaryTreeNode | null;
+  node: MatchingTreeNode | null;
   onClose: () => void;
   onFocusNode?: (nodeId: number) => void;
 }
@@ -25,7 +25,7 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({ node, onClose,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-      <div 
+      <div
         className="w-full max-w-md rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 relative overflow-hidden text-[#18211F]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -40,11 +40,10 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({ node, onClose,
         {/* Header */}
         <div className="flex items-center gap-3.5 mb-5">
           <div
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-heading font-extrabold text-base uppercase text-[#FFFEF9] shadow-sm ${
-              node.is_active
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-heading font-extrabold text-base uppercase text-[#FFFEF9] shadow-sm ${node.is_active
                 ? 'bg-[#063B32] border border-[#C9A227]/40 text-[#E2C766]'
                 : 'bg-[#69736F]'
-            }`}
+              }`}
           >
             {node.full_name?.substring(0, 2) || 'US'}
           </div>
@@ -52,11 +51,10 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({ node, onClose,
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-heading font-extrabold text-[#18211F] tracking-tight">{node.full_name}</h3>
               <span
-                className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                  node.is_active
+                className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${node.is_active
                     ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
                     : 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
-                }`}
+                  }`}
               >
                 {node.is_active ? 'Active' : 'Inactive'}
               </span>
@@ -110,7 +108,31 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({ node, onClose,
           </div>
         </div>
 
-        {/* Binary Volume Detailed Matrix */}
+        {/* Registration & Activation Timestamps */}
+        <div className="p-3.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] mb-4 text-xs font-mono space-y-1.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-[#69736F] font-sans font-medium text-[11px]">
+              <Clock className="w-3.5 h-3.5 text-[#063B32]" />
+              <span>Added / Joined On:</span>
+            </div>
+            <span className="font-bold text-[#18211F] text-[11px]">
+              {node.created_at ? new Date(node.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+            </span>
+          </div>
+          {node.is_active && (
+            <div className="flex items-center justify-between pt-1 border-t border-[#E5E0D3]/60">
+              <div className="flex items-center gap-1.5 text-[#69736F] font-sans font-medium text-[11px]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#0E9F6E]" />
+                <span>Package Activated:</span>
+              </div>
+              <span className="font-bold text-[#063B32] text-[11px]">
+                {node.activated_at ? new Date(node.activated_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Active'}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Matching Volume Detailed Matrix */}
         <div className="p-4 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] mb-5">
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#69736F] mb-3 flex items-center justify-between">
             <span>Binary Tree Volumes</span>

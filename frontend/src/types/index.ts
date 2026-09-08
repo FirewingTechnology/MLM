@@ -14,6 +14,7 @@ export interface User {
   binary_parent_code: string | null;
   binary_position: 'LEFT' | 'RIGHT' | null;
   is_active: boolean;
+  current_rank?: string;
   created_at: string;
   wallet_balance?: number;
   total_earned?: number;
@@ -202,7 +203,7 @@ export interface Withdrawal {
 
 export type NetworkViewMode = 'network' | 'active_slot' | 'history';
 
-export interface BinaryTreeNode {
+export interface MatchingTreeNode {
   id: number;
   user_code: string;
   full_name: string;
@@ -232,7 +233,10 @@ export interface BinaryTreeNode {
   active_package_name?: string | null;
   active_package_price?: number;
   created_at?: string;
-  
+  activated_at?: string;
+  current_rank?: string;
+  earning_status?: string;
+
   // Active Slot metrics
   slot_id?: string;
   view_mode?: string;
@@ -248,8 +252,8 @@ export interface BinaryTreeNode {
   pair_bonus?: number;
   has_active_slot_volume?: boolean;
 
-  left?: BinaryTreeNode | null;
-  right?: BinaryTreeNode | null;
+  left?: MatchingTreeNode | null;
+  right?: MatchingTreeNode | null;
 }
 
 export interface CarryLegSummary {
@@ -411,7 +415,7 @@ export interface ReferralValidationData {
   is_active?: boolean;
 }
 
-export type ActivationStatus = 
+export type ActivationStatus =
   | 'PAYMENT_PENDING'
   | 'PAYMENT_SUBMITTED'
   | 'UNDER_REVIEW'
@@ -618,4 +622,136 @@ export interface ActivationStatusResponse {
   };
   can_activate_with_pin: boolean;
 }
+
+export interface RankConfig {
+  id: number;
+  rank_name: 'STAR' | 'SUPER_STAR' | 'VIP';
+  display_name: string;
+  level: number;
+  required_directs: number;
+  qualification_days: number;
+  reward_type: 'CASH' | 'EV_SCOOTER';
+  reward_amount: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface RankAchievement {
+  id: number;
+  user_id: number;
+  user_name?: string;
+  user_code?: string;
+  rank_name: 'STAR' | 'SUPER_STAR' | 'VIP';
+  status: 'IN_PROGRESS' | 'ACHIEVED' | 'EXPIRED';
+  qualification_started_at: string;
+  qualification_deadline: string;
+  achieved_at?: string | null;
+  reward_type: 'CASH' | 'EV_SCOOTER';
+  reward_amount: number;
+  reward_status: 'PENDING' | 'CREDITED' | 'PENDING_FULFILLMENT' | 'FULFILLED' | 'REJECTED' | 'EXPIRED';
+  reward_transaction_id?: number | null;
+  qualifying_direct_ids?: string | null;
+  admin_notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface QualifyingMember {
+  id: number;
+  full_name: string;
+  user_code: string;
+  current_rank?: string;
+  created_at?: string;
+}
+
+export interface RankTierProgress {
+  rank_name: 'STAR' | 'SUPER_STAR' | 'VIP';
+  display_name: string;
+  level: number;
+  required_directs: number;
+  qualification_days: number;
+  reward_type: 'CASH' | 'EV_SCOOTER';
+  reward_amount: number;
+  status: 'ACHIEVED' | 'IN_PROGRESS' | 'LOCKED' | 'EXPIRED';
+  current_count: number;
+  progress_percentage: number;
+  qualification_started_at: string | null;
+  qualification_deadline: string | null;
+  achieved_at: string | null;
+  remaining_seconds: number;
+  is_expired: boolean;
+  reward_status: 'PENDING' | 'CREDITED' | 'PENDING_FULFILLMENT' | 'FULFILLED' | 'REJECTED' | 'EXPIRED';
+  qualifying_members: QualifyingMember[];
+}
+
+export interface RankOverviewResponse {
+  user_id: number;
+  full_name: string;
+  user_code: string;
+  current_rank: string;
+  server_time: string;
+  tiers: RankTierProgress[];
+}
+
+export interface EarningCycle {
+  id: number;
+  user_id: number;
+  user_name?: string | null;
+  user_code?: string | null;
+  package_id?: number | null;
+  package_name?: string | null;
+  cycle_number: number;
+  direct_income: number;
+  pairing_income: number;
+  total_eligible_income: number;
+  earning_cap: number;
+  remaining_capacity: number;
+  progress_percentage: number;
+  status: 'ACTIVE' | 'RETOPUP_REQUIRED' | 'COMPLETED';
+  started_at: string | null;
+  capped_at?: string | null;
+  reset_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface EarningCapOverviewResponse {
+  user_id: number;
+  user_name: string | null;
+  user_code: string | null;
+  earning_status: 'ACTIVE' | 'RETOPUP_REQUIRED';
+  current_cycle: EarningCycle;
+  cycle_number: number;
+  direct_income: number;
+  pairing_income: number;
+  total_eligible_income: number;
+  earning_cap: number;
+  remaining_capacity: number;
+  progress_percentage: number;
+  status: 'ACTIVE' | 'RETOPUP_REQUIRED' | 'COMPLETED';
+  is_retopup_required: boolean;
+  started_at: string | null;
+  capped_at: string | null;
+  lifetime_eligible_income: number;
+  lifetime_blocked_amount: number;
+  completed_cycles_count: number;
+  retopup_message?: string | null;
+}
+
+export interface AdminEarningCapSummary {
+  total_active_cycles: number;
+  total_retopup_required: number;
+  total_near_cap: number;
+  cap_limit: number;
+}
+
+export interface AdminEarningCapListResponse {
+  items: EarningCycle[];
+  total: number;
+  limit: number;
+  offset: number;
+  summary: AdminEarningCapSummary;
+}
+
 

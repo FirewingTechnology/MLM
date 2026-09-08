@@ -344,11 +344,10 @@ export const PinWalletModal: React.FC<PinWalletModalProps> = ({
                   setError(null);
                   setSuccessMsg(null);
                 }}
-                className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold whitespace-nowrap border-b-2 transition-all cursor-pointer ${
-                  isActive
+                className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold whitespace-nowrap border-b-2 transition-all cursor-pointer ${isActive
                     ? 'border-[#063B32] text-[#063B32] bg-[#F7F4EC]/80 rounded-t-xl'
                     : 'border-transparent text-[#69736F] hover:text-[#18211F]'
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
@@ -535,11 +534,10 @@ export const PinWalletModal: React.FC<PinWalletModalProps> = ({
                           setBuyQuantity(qty);
                           setCustomQuantity('');
                         }}
-                        className={`py-2 rounded-2xl text-xs font-mono font-bold transition-all cursor-pointer ${
-                          buyQuantity === qty && !customQuantity
+                        className={`py-2 rounded-2xl text-xs font-mono font-bold transition-all cursor-pointer ${buyQuantity === qty && !customQuantity
                             ? 'bg-[#063B32] text-[#FFFEF9] shadow-sm'
                             : 'bg-[#FFFEF9] text-[#18211F] border border-[#E5E0D3]'
-                        }`}
+                          }`}
                       >
                         {qty} {qty === 1 ? 'PIN' : 'PINs'}
                       </button>
@@ -619,7 +617,7 @@ export const PinWalletModal: React.FC<PinWalletModalProps> = ({
               <div className="p-4 rounded-3xl bg-[#FAF4DC]/60 border border-[#E2C766] flex items-center gap-3">
                 <ShieldCheck className="w-5 h-5 text-[#8C6C16] flex-shrink-0" />
                 <div className="text-xs text-[#8C6C16]">
-                  <strong>Downline Eligibility Rule:</strong> You can only give PINs to members in your own registered downline binary or sponsor tree.
+                  <strong>Downline Eligibility Rule:</strong> You can only give PINs to members in your own registered downline Matching or sponsor tree.
                 </div>
               </div>
 
@@ -800,9 +798,8 @@ export const PinWalletModal: React.FC<PinWalletModalProps> = ({
                             </button>
                           </>
                         ) : (
-                          <span className={`px-2.5 py-1 rounded-xl text-xs font-bold ${
-                            req.status === 'APPROVED' ? 'bg-[#E0F3EE] text-[#063B32]' : 'bg-red-50 text-red-700'
-                          }`}>
+                          <span className={`px-2.5 py-1 rounded-xl text-xs font-bold ${req.status === 'APPROVED' ? 'bg-[#E0F3EE] text-[#063B32]' : 'bg-red-50 text-red-700'
+                            }`}>
                             {req.status}
                           </span>
                         )}
@@ -858,11 +855,10 @@ export const PinWalletModal: React.FC<PinWalletModalProps> = ({
                     {historyData.ledger.map((l) => (
                       <div key={l.id} className="py-2 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            l.action.includes('PURCHASE') || l.action.includes('ISSUED') ? 'bg-emerald-100 text-emerald-800' :
-                            l.action.includes('TRANSFERRED') ? 'bg-amber-100 text-amber-800' :
-                            l.action.includes('USED') ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${l.action.includes('PURCHASE') || l.action.includes('ISSUED') ? 'bg-emerald-100 text-emerald-800' :
+                              l.action.includes('TRANSFERRED') ? 'bg-amber-100 text-amber-800' :
+                                l.action.includes('USED') ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                            }`}>
                             {l.action}
                           </span>
                           <span className="text-[#18211F]">{l.notes || l.reference_id}</span>

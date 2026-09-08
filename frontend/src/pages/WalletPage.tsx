@@ -3,15 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { Wallet, WalletTransaction, Withdrawal } from '../types';
 import { WithdrawalModal } from '../components/modals/WithdrawalModal';
-import { 
-  Wallet as WalletIcon, 
-  TrendingUp, 
-  ArrowUpRight, 
-  Filter, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  ChevronLeft, 
+import {
+  Wallet as WalletIcon,
+  TrendingUp,
+  ArrowUpRight,
+  Filter,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  ChevronLeft,
   ChevronRight,
   ShieldCheck,
   Sparkles
@@ -58,9 +58,7 @@ export const WalletPage: React.FC = () => {
   const categories = [
     { label: 'All Transactions', value: '' },
     { label: '🟢 Direct Sponsor', value: 'DIRECT_COMMISSION' },
-    { label: '🟣 Pair Bonus (₹10k)', value: 'PAIR_BONUS' },
-    { label: '🟠 Matching Upline', value: 'MATCHING_COMMISSION' },
-    { label: '🔵 Carry Commission', value: 'CARRY_COMMISSION' },
+    { label: '🟣 Pair Bonus (₹15k)', value: 'PAIR_BONUS' },
     { label: '💸 Withdrawals', value: 'WITHDRAWAL' },
     { label: '⚙️ Admin Adjustments', value: 'ADMIN_ADJUSTMENT' },
   ];
@@ -158,13 +156,12 @@ export const WalletPage: React.FC = () => {
                 <div className="text-right">
                   <div className="font-heading font-black text-[#18211F] font-mono">₹{w.amount.toLocaleString()}</div>
                   <span
-                    className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full mt-1 border ${
-                      w.status === 'APPROVED'
+                    className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full mt-1 border ${w.status === 'APPROVED'
                         ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
                         : w.status === 'PENDING'
-                        ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
-                        : 'bg-[#FDE8E8] text-[#C94B4B] border-[#F8B4B4]'
-                    }`}
+                          ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
+                          : 'bg-[#FDE8E8] text-[#C94B4B] border-[#F8B4B4]'
+                      }`}
                   >
                     {w.status === 'APPROVED' && <CheckCircle2 className="w-3 h-3 text-[#063B32]" />}
                     {w.status === 'PENDING' && <Clock className="w-3 h-3 text-[#8C6C16]" />}
@@ -194,11 +191,10 @@ export const WalletPage: React.FC = () => {
                   setSelectedCategory(cat.value);
                   setPage(1);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                  selectedCategory === cat.value
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${selectedCategory === cat.value
                     ? 'bg-[#063B32] text-[#FFFEF9] font-bold shadow-xs'
                     : 'text-[#69736F] hover:text-[#18211F] hover:bg-[#F7F4EC]'
-                }`}
+                  }`}
               >
                 {cat.label}
               </button>
@@ -233,28 +229,27 @@ export const WalletPage: React.FC = () => {
                       {txn.transaction_code}
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`text-[10px] px-2.5 py-0.5 rounded-md font-sans font-bold border ${
-                        txn.category === 'PAIR_BONUS'
+                      <span className={`text-[10px] px-2.5 py-0.5 rounded-md font-sans font-bold border ${txn.category === 'PAIR_BONUS'
                           ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
                           : txn.category === 'DIRECT_COMMISSION' || txn.category === 'DIRECT_REFERRAL'
-                          ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
-                          : txn.category === 'MATCHING_COMMISSION' || txn.category === 'BINARY_MATCHING'
-                          ? 'bg-[#FFEDD5] text-[#C2410C] border-[#FDBA74]'
-                          : txn.category === 'CARRY_COMMISSION'
-                          ? 'bg-[#DBEAFE] text-[#1D4ED8] border-[#93C5FD]'
-                          : txn.category === 'WITHDRAWAL'
-                          ? 'bg-[#FDE8E8] text-[#C94B4B] border-[#F8B4B4]'
-                          : 'bg-[#F7F4EC] text-[#69736F] border-[#E5E0D3]'
-                      }`}>
+                            ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
+                            : txn.category === 'MATCHING_COMMISSION' || txn.category === 'BINARY_MATCHING'
+                              ? 'bg-[#FFEDD5] text-[#C2410C] border-[#FDBA74]'
+                              : txn.category === 'CARRY_COMMISSION'
+                                ? 'bg-[#DBEAFE] text-[#1D4ED8] border-[#93C5FD]'
+                                : txn.category === 'WITHDRAWAL'
+                                  ? 'bg-[#FDE8E8] text-[#C94B4B] border-[#F8B4B4]'
+                                  : 'bg-[#F7F4EC] text-[#69736F] border-[#E5E0D3]'
+                        }`}>
                         {txn.category === 'PAIR_BONUS'
-                          ? '🟣 Pair Bonus (₹10k)'
+                          ? '🟣 Pair Bonus (₹15k)'
                           : txn.category === 'DIRECT_COMMISSION' || txn.category === 'DIRECT_REFERRAL'
-                          ? '🟢 Direct Sponsor'
-                          : txn.category === 'MATCHING_COMMISSION' || txn.category === 'BINARY_MATCHING'
-                          ? '🟠 Matching Upline'
-                          : txn.category === 'CARRY_COMMISSION'
-                          ? '🔵 Carry Commission'
-                          : txn.category}
+                            ? '🟢 Direct Sponsor'
+                            : txn.category === 'MATCHING_COMMISSION' || txn.category === 'BINARY_MATCHING'
+                              ? '🟠 Matching Upline'
+                              : txn.category === 'CARRY_COMMISSION'
+                                ? '🔵 Carry Commission'
+                                : txn.category}
                       </span>
                     </td>
                     <td className="py-3 px-4 font-sans text-[#18211F] font-medium">

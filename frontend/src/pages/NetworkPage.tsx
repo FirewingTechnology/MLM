@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
-import { BinaryTreeCanvas } from '../components/tree/BinaryTreeCanvas';
-import { BinaryTreeNode, SlotSettlement, NetworkViewMode } from '../types';
-import { 
-  GitFork, 
-  Search, 
-  Users, 
-  Coins, 
-  HelpCircle, 
+import { MatchingTreeCanvas } from '../components/tree/BinaryTreeCanvas';
+import { MatchingTreeNode, SlotSettlement, NetworkViewMode } from '../types';
+import {
+  GitFork,
+  Search,
+  Users,
+  Coins,
+  HelpCircle,
   Sparkles,
   ArrowRight,
   ChevronLeft,
@@ -30,11 +30,11 @@ export const NetworkPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<NetworkViewMode>('network');
 
-  const { data: treeData, isLoading } = useQuery<BinaryTreeNode>({
+  const { data: treeData, isLoading } = useQuery<MatchingTreeNode>({
     queryKey: ['network', rootId, depth, viewMode],
     queryFn: async () => {
-      const url = rootId 
-        ? `/network/${rootId}?depth=${depth}&view=${viewMode}` 
+      const url = rootId
+        ? `/network/${rootId}?depth=${depth}&view=${viewMode}`
         : `/network?depth=${depth}&view=${viewMode}`;
       const res = await api.get(url);
       return res.data.data;
@@ -93,11 +93,11 @@ export const NetworkPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#C9A227] mb-1">
             <GitFork className="w-3.5 h-3.5" />
-            <span>Binary Network Engine</span>
+            <span>Matching Network Engine</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">NETWORK TREE</h1>
+          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Franchise Partner</h1>
           <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-            Binary Network Structure • Active 12-Hour Slot Matching • Carry Forward Volume
+            Matching Network Structure • Active 12-Hour Slot Matching • Carry Forward Volume
           </p>
         </div>
 
@@ -105,11 +105,10 @@ export const NetworkPage: React.FC = () => {
         <div className="flex items-center gap-1.5 p-1.5 bg-[#F7F4EC] rounded-2xl border border-[#E5E0D3] self-start md:self-auto shadow-2xs">
           <button
             onClick={() => setViewMode('network')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'network'
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewMode === 'network'
                 ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                 : 'text-[#69736F] hover:text-[#18211F] hover:bg-[#EFECE2]'
-            }`}
+              }`}
           >
             <GitFork className="w-3.5 h-3.5" />
             <span>Franchise Tree</span>
@@ -117,11 +116,10 @@ export const NetworkPage: React.FC = () => {
 
           <button
             onClick={() => setViewMode('active_slot')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'active_slot'
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewMode === 'active_slot'
                 ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                 : 'text-[#69736F] hover:text-[#18211F] hover:bg-[#EFECE2]'
-            }`}
+              }`}
           >
             <Zap className="w-3.5 h-3.5 text-[#C9A227]" />
             <span>Active Slot View</span>
@@ -129,11 +127,10 @@ export const NetworkPage: React.FC = () => {
 
           <button
             onClick={() => setViewMode('history')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'history'
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewMode === 'history'
                 ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                 : 'text-[#69736F] hover:text-[#18211F] hover:bg-[#EFECE2]'
-            }`}
+              }`}
           >
             <History className="w-3.5 h-3.5" />
             <span>Slot History</span>
@@ -189,7 +186,7 @@ export const NetworkPage: React.FC = () => {
           <div className="text-xs font-mono text-[#69736F] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#063B32] animate-pulse" />
             <span className="font-sans font-medium">
-              Mode: <strong className="text-[#18211F]">{viewMode === 'active_slot' ? 'Active 12h Slot Volume' : 'Permanent Binary Network'}</strong>
+              Mode: <strong className="text-[#18211F]">{viewMode === 'active_slot' ? 'Active 12h Slot Volume' : 'Permanent Matching Network'}</strong>
             </span>
           </div>
         </div>
@@ -248,7 +245,7 @@ export const NetworkPage: React.FC = () => {
                   treeData.pair_completed ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E0F3EE] text-[#063B32] text-[10px] font-bold border border-[#8DCFBF]">
                       <CheckCircle2 className="w-3 h-3 text-[#063B32]" />
-                      Paid ₹10,000 Pair
+                      Paid ₹15,000 Pair
                     </span>
                   ) : (
                     <span className="text-xs bg-[#FAF4DC] text-[#8C6C16] px-2 py-1 rounded-lg border border-[#E2C766] font-sans font-bold">
@@ -363,11 +360,10 @@ export const NetworkPage: React.FC = () => {
                   onClick={handlePrevUser}
                   disabled={!prevUser}
                   title={prevUser ? `Previous: ${prevUser.full_name} (${prevUser.user_code})` : 'No previous member'}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs transition-all ${
-                    prevUser
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs transition-all ${prevUser
                       ? 'bg-[#F7F4EC] hover:bg-[#063B32] hover:text-[#FFFEF9] text-[#18211F] shadow-2xs cursor-pointer border border-[#E5E0D3]'
                       : 'bg-[#FDFBF7] text-[#C9C4B7] border border-[#E5E0D3] cursor-not-allowed opacity-60'
-                  }`}
+                    }`}
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span>Previous User</span>
@@ -405,11 +401,10 @@ export const NetworkPage: React.FC = () => {
                 onClick={handleNextUser}
                 disabled={!nextUser}
                 title={nextUser ? `Next: ${nextUser.full_name} (${nextUser.user_code})` : 'No next member'}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs transition-all ${
-                  nextUser
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs transition-all ${nextUser
                     ? 'bg-[#F7F4EC] hover:bg-[#063B32] hover:text-[#FFFEF9] text-[#18211F] shadow-2xs cursor-pointer border border-[#E5E0D3]'
                     : 'bg-[#FDFBF7] text-[#C9C4B7] border border-[#E5E0D3] cursor-not-allowed opacity-60'
-                }`}
+                  }`}
               >
                 {nextUser && (
                   <span className="hidden md:inline text-[11px] font-mono font-medium opacity-80">
@@ -423,11 +418,11 @@ export const NetworkPage: React.FC = () => {
           )}
 
           {/* Tree Canvas */}
-          <BinaryTreeCanvas
+          <MatchingTreeCanvas
             rootNode={treeData || null}
-            onSelectRootId={(id) => setRootId(id)}
+            onSelectRootId={(id: number | null) => setRootId(id)}
             depth={depth}
-            onDepthChange={(d) => setDepth(d)}
+            onDepthChange={(d: number) => setDepth(d)}
             isLoading={isLoading}
             onPrevUser={handlePrevUser}
             onNextUser={handleNextUser}

@@ -49,7 +49,7 @@ def get_default_package(db: Session):
             price=35000.0,
             bv=30000.0,
             direct_commission_rate=0.10,
-            pair_bonus_amount=10000.0,
+            pair_bonus_amount=15000.0,
             is_active=True
         )
         db.add(pkg)
@@ -115,8 +115,8 @@ def test_3_multiple_direct_purchases_pay_each_time(db_session: Session):
     process_package_purchase(db_session, c2.id, pkg.id, slot_id="SLOT-T3")
 
     root_wallet = get_or_create_wallet(db_session, root.id)
-    # Direct commission from c1 (3000) + from c2 (3000) + Pair bonus from pairing c1 & c2 (10000) = 16000
-    assert root_wallet.balance == 16000.0
+    # Direct commission from c1 (3000) + from c2 (3000) + Pair bonus (15000) + Star rank reward (2100) = 23100
+    assert root_wallet.balance == 23100.0
     direct_comms = db_session.query(Commission).filter(
         Commission.beneficiary_id == root.id,
         Commission.commission_type.in_(['DIRECT_REFERRAL', 'DIRECT_COMMISSION'])
@@ -126,9 +126,9 @@ def test_3_multiple_direct_purchases_pay_each_time(db_session: Session):
 
 
 # =========================================================================
-# TEST 4: Own First Pair Pays ₹10,000 Pair Bonus (30k L / 30k R)
+# TEST 4: Own First Pair Pays ₹15,000 Pair Bonus (30k L / 30k R)
 # =========================================================================
-def test_4_own_first_pair_pays_10000(db_session: Session):
+def test_4_own_first_pair_pays_15000(db_session: Session):
     root = create_user_helper(db_session, "t4_root@mlm.local", "T4 Root")
     left_child = create_user_helper(db_session, "t4_left@mlm.local", "T4 Left", sponsor_id=root.id, binary_parent_id=root.id, binary_position="LEFT")
     right_child = create_user_helper(db_session, "t4_right@mlm.local", "T4 Right", sponsor_id=root.id, binary_parent_id=root.id, binary_position="RIGHT")
@@ -142,11 +142,11 @@ def test_4_own_first_pair_pays_10000(db_session: Session):
         Commission.commission_type == 'PAIR_BONUS'
     ).first()
     assert pair_bonus is not None
-    assert pair_bonus.amount == 10000.0
+    assert pair_bonus.amount == 15000.0
 
     root_wallet = get_or_create_wallet(db_session, root.id)
-    # 3000 + 3000 direct + 10000 pair bonus = 16000
-    assert root_wallet.balance == 16000.0
+    # 3000 + 3000 direct + 15000 pair bonus + 2100 Star rank reward = 23100
+    assert root_wallet.balance == 23100.0
 
 
 # =========================================================================
@@ -173,7 +173,7 @@ def test_5_second_pair_in_same_slot_capped(db_session: Session):
     ).all()
     # Exactly 1 Pair Bonus paid in this slot
     assert len(pair_bonuses) == 1
-    assert pair_bonuses[0].amount == 10000.0
+    assert pair_bonuses[0].amount == 15000.0
 
     # Check that excess BV is carried forward
     summary = pair_service.get_user_pair_summary(db_session, root.id, slot_id="SLOT-T5-1")
@@ -201,7 +201,7 @@ def test_6_next_slot_pair_evaluation(db_session: Session):
     # Slot 2 rollover: evaluate pairs in Slot 2
     res = pair_service.evaluate_and_award_pair(db_session, root.id, slot_id="SLOT-T6-2")
     assert res is not None
-    assert res['amount'] == 10000.0
+    assert res['amount'] == 15000.0
     assert res['slot_id'] == "SLOT-T6-2"
 
     pair_bonuses = db_session.query(Commission).filter(
@@ -232,24 +232,21 @@ def test_7_sponsor_gets_matching_commission_when_child_pairs(db_session: Session
         Commission.commission_type == 'PAIR_BONUS'
     ).first()
     assert a_pair is not None
-    assert a_pair.amount == 10000.0
+    assert a_pair.amount == 15000.0
 
-    # Root gets Matching Commission of ₹1,000 (10% of A's ₹10,000 Pair Bonus)
+    # Root gets ZERO Matching Commission (no upline commission per final client rule)
     root_matching = db_session.query(Commission).filter(
         Commission.beneficiary_id == root.id,
         Commission.commission_type.in_(['MATCHING_COMMISSION', 'BINARY_MATCHING'])
-    ).first()
-    assert root_matching is not None
-    assert root_matching.amount == 1000.0
-    assert root_matching.source_user_id == child_a.id
+    ).all()
+    assert len(root_matching) == 0
 
-    # Check Root wallet includes the ₹1,000 matching commission
+    # Check Root wallet has ZERO matching commission
     root_txn = db_session.query(WalletTransaction).filter(
         WalletTransaction.user_id == root.id,
         WalletTransaction.category.in_(['MATCHING_COMMISSION', 'BINARY_MATCHING'])
-    ).first()
-    assert root_txn is not None
-    assert root_txn.amount == 1000.0
+    ).all()
+    assert len(root_txn) == 0
 
 
 # =========================================================================
@@ -307,20 +304,20 @@ def test_9_both_parent_and_child_pair_in_same_slot(db_session: Session):
     process_package_purchase(db_session, a2.id, pkg.id, slot_id="SLOT-T9")
     process_package_purchase(db_session, child_b.id, pkg.id, slot_id="SLOT-T9")
 
-    # A gets ₹10,000 Pair Bonus
+    # A gets ₹15,000 Pair Bonus
     a_pair = db_session.query(Commission).filter(Commission.beneficiary_id == child_a.id, Commission.commission_type == 'PAIR_BONUS').first()
-    assert a_pair is not None and a_pair.amount == 10000.0
+    assert a_pair is not None and a_pair.amount == 15000.0
 
-    # Root gets ₹10,000 Pair Bonus (from Left 60k / Right 30k -> 30k matched)
+    # Root gets ₹15,000 Pair Bonus (from Left 60k / Right 30k -> 30k matched)
     root_pair = db_session.query(Commission).filter(Commission.beneficiary_id == root.id, Commission.commission_type == 'PAIR_BONUS').first()
-    assert root_pair is not None and root_pair.amount == 10000.0
+    assert root_pair is not None and root_pair.amount == 15000.0
 
-    # Root also gets ₹1,000 Matching Commission for A's pair
+    # Root gets NO Matching Commission for A's pair (no upline commission)
     root_matching = db_session.query(Commission).filter(
         Commission.beneficiary_id == root.id,
         Commission.commission_type.in_(['MATCHING_COMMISSION', 'BINARY_MATCHING'])
-    ).first()
-    assert root_matching is not None and root_matching.amount == 1000.0
+    ).all()
+    assert len(root_matching) == 0
 
 
 # =========================================================================
@@ -338,13 +335,13 @@ def test_10_multi_level_sponsoring_lineage(db_session: Session):
     process_package_purchase(db_session, b1.id, pkg.id, slot_id="SLOT-T10")
     process_package_purchase(db_session, b2.id, pkg.id, slot_id="SLOT-T10")
 
-    # B paired -> gets ₹10,000
+    # B paired -> gets ₹15,000
     b_pair = db_session.query(Commission).filter(Commission.beneficiary_id == user_b.id, Commission.commission_type == 'PAIR_BONUS').first()
-    assert b_pair is not None and b_pair.amount == 10000.0
+    assert b_pair is not None and b_pair.amount == 15000.0
 
-    # A is direct sponsor of B -> A gets ₹1,000 Matching Commission
-    a_match = db_session.query(Commission).filter(Commission.beneficiary_id == user_a.id, Commission.commission_type.in_(['MATCHING_COMMISSION', 'BINARY_MATCHING'])).first()
-    assert a_match is not None and a_match.amount == 1000.0
+    # A is direct sponsor of B -> A gets NO Matching Commission (no upline commission)
+    a_match = db_session.query(Commission).filter(Commission.beneficiary_id == user_a.id, Commission.commission_type.in_(['MATCHING_COMMISSION', 'BINARY_MATCHING'])).all()
+    assert len(a_match) == 0
 
     # Root is NOT direct sponsor of B -> Root gets NO Matching Commission for B's pair
     root_match_for_b = db_session.query(Commission).filter(
@@ -448,11 +445,11 @@ def test_14_side_specific_carry_forward(db_session: Session):
     process_package_purchase(db_session, l2.id, pkg.id, slot_id="SLOT-T14")
     process_package_purchase(db_session, r1.id, pkg.id, slot_id="SLOT-T14")
 
-    # Matched 30k L / 30k R -> 1 Pair Bonus (10k)
+    # Matched 30k L / 30k R -> 1 Pair Bonus (15k)
     # Ending Carry: 30k L / 0k R
     summary = pair_service.get_user_pair_summary(db_session, root.id, slot_id="SLOT-T14")
     assert summary['pair_completed'] is True
-    assert summary['pair_bonus_earned'] == 10000.0
+    assert summary['pair_bonus_earned'] == 15000.0
     assert summary['ending_carry_left'] == 30000.0
     assert summary['ending_carry_right'] == 0.0
 
@@ -477,25 +474,23 @@ def test_15_cross_slot_permanent_network(db_session: Session):
     s2_sum = pair_service.get_user_pair_summary(db_session, root.id, slot_id="SLOT-T15-2")
     # Combined with 30k carried from slot 1, root completes pair in Slot 2!
     assert s2_sum['pair_completed'] is True
-    assert s2_sum['pair_bonus_earned'] == 10000.0
+    assert s2_sum['pair_bonus_earned'] == 15000.0
 
 
 # =========================================================================
 # FINAL ACCEPTANCE SCENARIO: Complete Multi-Level 4-Tier Simulation
 # =========================================================================
 def test_final_acceptance_multi_tier_scenario(db_session: Session):
-    """
-    Simulates complete hierarchical tree:
-    Root -> sponsors A (Left), B (Right)
-    A -> sponsors A1 (Left), A2 (Right)
-    B -> sponsors B1 (Left)
-    All purchase ₹35,000 Package (30,000 BV).
-    Verify all 4 tiers:
-    1. Direct Commissions (10% to respective sponsors)
-    2. Pair Bonuses (₹10,000 each for qualified nodes)
-    3. Matching Commissions (10% = ₹1,000 to sponsors of pairing nodes)
-    4. Carry Forward BV balances & VolumeLedger lineage
-    """
+    # Simulates complete hierarchical tree:
+    # Root -> sponsors A (Left), B (Right)
+    # A -> sponsors A1 (Left), A2 (Right)
+    # B -> sponsors B1 (Left)
+    # All purchase ₹35,000 Package (30,000 BV).
+    # Verify all 4 tiers:
+    # 1. Direct Commissions (10% to respective sponsors)
+    # 2. Pair Bonuses (₹15,000 each for qualified nodes)
+    # 3. Matching Commissions: ZERO (no upline commission per final client rule)
+    # 4. Carry Forward BV balances & VolumeLedger lineage
     root = create_user_helper(db_session, "fa_root@mlm.local", "FA Root")
     a = create_user_helper(db_session, "fa_a@mlm.local", "FA A", sponsor_id=root.id, binary_parent_id=root.id, binary_position="LEFT")
     b = create_user_helper(db_session, "fa_b@mlm.local", "FA B", sponsor_id=root.id, binary_parent_id=root.id, binary_position="RIGHT")
@@ -513,10 +508,11 @@ def test_final_acceptance_multi_tier_scenario(db_session: Session):
 
     # 2. Check A:
     # A received direct commission on A1 (3,000) + A2 (3,000) = 6,000
-    # A received Pair Bonus (10,000) from A1 & A2
-    # Total A wallet = 16,000
+    # A received Pair Bonus (15,000) from A1 & A2
+    # A achieved Star Rank Reward (2,100)
+    # Total A wallet = 23,100
     w_a = get_or_create_wallet(db_session, a.id)
-    assert w_a.balance == 16000.0
+    assert w_a.balance == 23100.0
 
     # 3. Check B:
     # B received direct commission on B1 (3,000)
@@ -529,11 +525,12 @@ def test_final_acceptance_multi_tier_scenario(db_session: Session):
     # Direct commission on A (3,000) + on B (3,000) = 6,000
     # Root Pair Bonus: Left has A (30k) + A1 (30k) + A2 (30k) = 90k BV.
     # Right has B (30k) + B1 (30k) = 60k BV.
-    # Root matches 30k/30k in Slot 1 -> ₹10,000 Pair Bonus.
-    # Root gets Matching Commission on A's pair (10% of A's 10,000 = 1,000).
-    # Total Root wallet = 6,000 (direct) + 10,000 (pair) + 1,000 (matching) = 17,000.
+    # Root matches 30k/30k in Slot 1 -> ₹15,000 Pair Bonus.
+    # Root gets NO Matching Commission on A's pair (no upline commission per final client rule).
+    # Root achieved Star Rank Reward (2,100).
+    # Total Root wallet = 6,000 (direct) + 15,000 (pair) + 0 (matching) + 2,100 (star reward) = 23,100.
     w_root = get_or_create_wallet(db_session, root.id)
-    assert w_root.balance == 17000.0
+    assert w_root.balance == 23100.0
 
     # Check Root carry forward: 90k L - 30k matched = 60k L; 60k R - 30k matched = 30k R.
     root_summary = pair_service.get_user_pair_summary(db_session, root.id, slot_id="SLOT-FA-1")

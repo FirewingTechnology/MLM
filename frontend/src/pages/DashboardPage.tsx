@@ -3,22 +3,22 @@ import { useQuery } from '@tanstack/react-query';
 import { useOutletContext, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
-import { DashboardData, Commission, BinaryTreeNode, ReferralLinksData, ActivationStatusResponse, PinWalletData } from '../types';
+import { DashboardData, Commission, MatchingTreeNode, ReferralLinksData, ActivationStatusResponse, PinWalletData, EarningCapOverviewResponse } from '../types';
 import { CommissionDetailModal } from '../components/modals/CommissionDetailModal';
 import { WithdrawalModal } from '../components/modals/WithdrawalModal';
 import { PinWalletModal } from '../components/modals/PinWalletModal';
 import { SlotCard } from '../components/dashboard/SlotCard';
 import { PairSummaryCard } from '../components/dashboard/PairSummaryCard';
-import { 
-  Wallet, 
-  TrendingUp, 
-  Coins, 
-  Users, 
-  GitFork, 
-  Copy, 
-  Check, 
-  ArrowUpRight, 
-  ShoppingBag, 
+import {
+  Wallet,
+  TrendingUp,
+  Coins,
+  Users,
+  GitFork,
+  Copy,
+  Check,
+  ArrowUpRight,
+  ShoppingBag,
   PackageCheck,
   ChevronRight,
   Sparkles,
@@ -27,7 +27,13 @@ import {
   ShieldCheck,
   DownloadCloud,
   Send,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Award,
+  Crown,
+  Star,
+  AlertTriangle,
+  RefreshCw,
+  Zap
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -58,7 +64,7 @@ export const DashboardPage: React.FC = () => {
     refetchInterval: 10000,
   });
 
-  const { data: treeData } = useQuery<BinaryTreeNode>({
+  const { data: treeData } = useQuery<MatchingTreeNode>({
     queryKey: ['networkMiniTree'],
     queryFn: async () => {
       const res = await api.get('/network?depth=2');
@@ -88,17 +94,26 @@ export const DashboardPage: React.FC = () => {
     },
   });
 
+  const { data: earningCap } = useQuery<EarningCapOverviewResponse>({
+    queryKey: ['earningCapOverview'],
+    queryFn: async () => {
+      const res = await api.get('/earning-cap/overview');
+      return res.data;
+    },
+    refetchInterval: 10000,
+  });
+
   const leftUrl = linksData?.left?.token
     ? `${window.location.origin}/register?ref=${linksData.left.token}`
     : user?.referral_code
-    ? `${window.location.origin}/register?ref=${user.referral_code}`
-    : '';
+      ? `${window.location.origin}/register?ref=${user.referral_code}`
+      : '';
 
   const rightUrl = linksData?.right?.token
     ? `${window.location.origin}/register?ref=${linksData.right.token}`
     : user?.referral_code
-    ? `${window.location.origin}/register?ref=${user.referral_code}`
-    : '';
+      ? `${window.location.origin}/register?ref=${user.referral_code}`
+      : '';
 
   const handleCopyLeft = () => {
     if (!leftUrl) return;
@@ -156,17 +171,16 @@ export const DashboardPage: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-            Private Wealth Platform • Binary Network Volume • ₹10,000 Pair Rewards
+            Private Wealth Platform • Matching Network Volume • ₹15,000 Pair Rewards
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
-              user?.is_active
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${user?.is_active
                 ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
                 : 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
-            }`}
+              }`}
           >
             <span className={`w-2 h-2 rounded-full ${user?.is_active ? 'bg-[#0E9F6E]' : 'bg-[#C88A16]'}`} />
             <span>{user?.is_active ? 'Active Wealth Member' : 'Inactive Account'}</span>
@@ -175,9 +189,9 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* 1. Live India Time & 12-Hour Slot Card */}
-      <SlotCard 
-        slotEarnings={kpis?.slot_earnings} 
-        slotCommissionsCount={kpis?.slot_commissions_count} 
+      <SlotCard
+        slotEarnings={kpis?.slot_earnings}
+        slotCommissionsCount={kpis?.slot_commissions_count}
       />
 
       {/* 2. Main Wealth Card (Visual Centerpiece in Deep Emerald) */}
@@ -235,6 +249,136 @@ export const DashboardPage: React.FC = () => {
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* 1b. ₹3,00,000 EARNING LIMIT / RETOPUP CARD */}
+      {earningCap && (
+        <div className={`p-5 sm:p-6 rounded-3xl border shadow-wealth-card transition-all ${earningCap.is_retopup_required
+            ? 'bg-gradient-to-br from-[#FFF5F5] via-[#FFF8F8] to-[#FFEBEB] border-[#E53E3E]'
+            : earningCap.progress_percentage >= 80
+              ? 'bg-gradient-to-br from-[#FFFDF5] via-[#FFFEF9] to-[#FFF9E6] border-[#D69E2E]'
+              : 'bg-[#FFFEF9] border-[#E5E0D3]'
+          }`}>
+          {earningCap.is_retopup_required ? (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-[#C53030] text-white flex items-center justify-center shrink-0 shadow-sm animate-pulse">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#C53030] text-white">
+                        RETOPUP REQUIRED
+                      </span>
+                      <span className="text-xs font-mono font-bold text-[#742A2A]">
+                        Cycle #{earningCap.cycle_number} Limit Reached
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-heading font-extrabold text-[#9B2C2C] mt-0.5">
+                      ₹{earningCap.total_eligible_income?.toLocaleString()} / ₹{earningCap.earning_cap?.toLocaleString()}
+                    </h3>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => openPurchaseModal()}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] text-sm font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer border border-[#C9A227]/40 shrink-0"
+                >
+                  <RefreshCw className="w-4 h-4 text-[#E2C766]" />
+                  <span>RE-PURCHASE / TOP UP</span>
+                </button>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-white/90 border border-[#FEB2B2] text-xs font-medium text-[#742A2A] flex items-start gap-2.5">
+                <Zap className="w-4 h-4 text-[#E53E3E] shrink-0 mt-0.5" />
+                <div>
+                  Your current earning cycle has reached the ₹3,00,000 limit. Please purchase/renew the qualifying package to activate your next earning cycle and resume receiving Direct and Pairing bonuses.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#063B32] text-[#E2C766] flex items-center justify-center shrink-0">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase font-bold tracking-widest text-[#69736F] font-mono">
+                        Active Earning Window (Cycle #{earningCap.cycle_number})
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E0F3EE] text-[#063B32] border border-[#8DCFBF]">
+                        {earningCap.status}
+                      </span>
+                    </div>
+                    <div className="text-base font-heading font-extrabold text-[#18211F]">
+                      ₹{earningCap.total_eligible_income?.toLocaleString()} <span className="text-xs font-medium text-[#69736F]">/ ₹{earningCap.earning_cap?.toLocaleString()} Cap</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-[10px] uppercase font-bold text-[#69736F]">Remaining Capacity</div>
+                  <div className="text-sm font-extrabold text-[#063B32] font-mono">
+                    ₹{earningCap.remaining_capacity?.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-1.5">
+                <div className="w-full h-2.5 rounded-full bg-[#E5E0D3] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${earningCap.progress_percentage >= 80
+                        ? 'bg-gradient-to-r from-[#D69E2E] to-[#C53030]'
+                        : 'bg-gradient-to-r from-[#063B32] to-[#C9A227]'
+                      }`}
+                    style={{ width: `${Math.min(100, earningCap.progress_percentage)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[11px] text-[#69736F] font-medium">
+                  <span>Direct: ₹{earningCap.direct_income?.toLocaleString()} + Pairing: ₹{earningCap.pairing_income?.toLocaleString()}</span>
+                  <span className="font-bold text-[#18211F]">{earningCap.progress_percentage}% Utilized</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 2. RANK & REWARDS MILESTONE BANNER */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#FAF4DC] via-[#FFFEF9] to-[#FAF4DC] border border-[#E2C766] shadow-wealth-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-[#063B32] border border-[#C9A227]/40 flex items-center justify-center text-[#E2C766] shadow-sm shrink-0">
+            <Award className="w-6 h-6 text-[#E2C766]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#8C6C16] font-mono">
+                Leadership Milestone
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#063B32] text-[#FFFEF9] border border-[#C9A227]/30">
+                {user?.current_rank || 'DISTRIBUTOR'}
+              </span>
+            </div>
+            <div className="text-sm sm:text-base font-heading font-extrabold text-[#18211F]">
+              Rank & Rewards Sprint Program
+            </div>
+            <div className="text-xs text-[#69736F] font-medium">
+              Earn ₹2,100 Star, ₹5,100 Super Star, and ₹51,000 Cash or EV Scooter VIP awards.
+            </div>
+          </div>
+        </div>
+
+        <Link
+          to="/ranks"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/40 text-xs font-bold transition-all shadow-sm shrink-0 cursor-pointer"
+        >
+          <span>View Rank Progress</span>
+          <ArrowUpRight className="w-4 h-4 text-[#C9A227]" />
+        </Link>
       </div>
 
       {/* 2a. SECURITY PIN PREPAID WALLET CARD */}
@@ -413,7 +557,7 @@ export const DashboardPage: React.FC = () => {
               ₹{(kpis?.pair_commissions || 0).toLocaleString()}
             </div>
           </div>
-          <div className="text-[10px] text-[#69736F] mt-2 pt-2 border-t border-[#E5E0D3]">₹10k max 1/slot</div>
+          <div className="text-[10px] text-[#69736F] mt-2 pt-2 border-t border-[#E5E0D3]">₹15k max 1/slot</div>
         </div>
 
         {/* Left Carry Card */}
@@ -493,7 +637,7 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Binary Pair Bonus & Carry Forward Engine Card */}
+      {/* 3. Matching Pair Bonus & Carry Forward Engine Card */}
       <PairSummaryCard pairSummary={data?.pair_summary || kpis?.pair_summary} />
 
       {/* 4. Two Volume Cards: Left BV & Right BV */}
@@ -587,8 +731,8 @@ export const DashboardPage: React.FC = () => {
               {activationStatus?.activation_request?.status === 'PIN_ISSUED'
                 ? 'ENTER SECURITY PIN TO ACTIVATE (+30,000 BV)'
                 : activationStatus?.activation_request?.status === 'PAYMENT_SUBMITTED'
-                ? 'VIEW ACTIVATION STATUS & SECURITY PIN'
-                : 'REQUEST SECURITY PIN & ACTIVATE PACKAGE (₹35,000)'}
+                  ? 'VIEW ACTIVATION STATUS & SECURITY PIN'
+                  : 'REQUEST SECURITY PIN & ACTIVATE PACKAGE (₹35,000)'}
             </span>
           </button>
         </div>
@@ -649,12 +793,12 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 7. Binary Network Preview */}
+      {/* 7. Matching Network Preview */}
       <div className="rounded-3xl bg-[#FFFEF9] p-5 sm:p-6 border border-[#E5E0D3] shadow-wealth-card space-y-4">
         <div className="flex items-center justify-between">
           <div className="text-xs font-bold uppercase tracking-wider text-[#18211F] flex items-center gap-1.5">
             <GitFork className="w-4 h-4 text-[#063B32]" />
-            <span>Binary Network Preview</span>
+            <span>Matching Network Preview</span>
           </div>
           <Link
             to="/network"

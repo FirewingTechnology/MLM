@@ -110,21 +110,20 @@ def test_2_child_pairs_pays_child_pair_bonus_and_upline_matching_only(db_session
     process_package_purchase(db_session, c.id, pkg.id, slot_id="SLOT-T2")
     process_package_purchase(db_session, d.id, pkg.id, slot_id="SLOT-T2")
 
-    # 1. Child B earned ₹10,000 Pair Bonus
+    # 1. Child B earned ₹15,000 Pair Bonus
     b_pair_comm = db_session.query(Commission).filter(
         Commission.beneficiary_id == child_b.id,
         Commission.commission_type == 'PAIR_BONUS'
     ).first()
     assert b_pair_comm is not None
-    assert b_pair_comm.amount == 10000.0
+    assert b_pair_comm.amount == 15000.0
 
-    # 2. Upline Root earned Matching Commission of ₹1,000 (10% on ₹10k), NOT ₹10,000 Pair Bonus
+    # 2. Upline Root earned ₹0 Matching Commission (no upline commission per final rule)
     root_matching = db_session.query(Commission).filter(
         Commission.beneficiary_id == root.id,
         Commission.commission_type.in_(['MATCHING_COMMISSION', 'BINARY_MATCHING'])
-    ).first()
-    assert root_matching is not None
-    assert root_matching.amount == 1000.0
+    ).all()
+    assert len(root_matching) == 0
 
     root_pair_comm = db_session.query(Commission).filter(
         Commission.beneficiary_id == root.id,
@@ -187,7 +186,7 @@ def test_5_one_pair_per_user_per_slot_max_limit(db_session: Session):
         Commission.slot_id == "SLOT-T5"
     ).all()
     assert len(pair_bonuses) == 1
-    assert pair_bonuses[0].amount == 10000.0
+    assert pair_bonuses[0].amount == 15000.0
 
     summary = pair_service.get_user_pair_summary(db_session, root.id, slot_id="SLOT-T5")
     assert summary['ending_carry_left'] == 30000.0
@@ -216,7 +215,7 @@ def test_6_carry_volume_only_and_next_slot_pair(db_session: Session):
     process_package_purchase(db_session, r1.id, pkg.id, slot_id="SLOT-T6-2")
     summary2 = pair_service.get_user_pair_summary(db_session, root.id, slot_id="SLOT-T6-2")
     assert summary2['pair_completed'] is True
-    assert summary2['pair_bonus_earned'] == 10000.0
+    assert summary2['pair_bonus_earned'] == 15000.0
     assert summary2['ending_carry_left'] == 0.0
     assert summary2['ending_carry_right'] == 0.0
 
@@ -241,12 +240,12 @@ def test_7_parent_and_child_independent_pair_limits(db_session: Session):
     # B completed its pair
     b_summary = pair_service.get_user_pair_summary(db_session, b.id, slot_id="SLOT-T7")
     assert b_summary['pair_completed'] is True
-    assert b_summary['pair_bonus_earned'] == 10000.0
+    assert b_summary['pair_bonus_earned'] == 15000.0
 
     # Root also completed its own pair (Left from B's subtree + Right from r_root)
     root_summary = pair_service.get_user_pair_summary(db_session, root.id, slot_id="SLOT-T7")
     assert root_summary['pair_completed'] is True
-    assert root_summary['pair_bonus_earned'] == 10000.0
+    assert root_summary['pair_bonus_earned'] == 15000.0
 
 
 # =========================================================================
@@ -262,9 +261,9 @@ def test_8_sponsor_and_placement_separation(db_session: Session):
 
     process_package_purchase(db_session, b.id, pkg.id, slot_id="SLOT-T8")
 
-    # Root gets ₹3,000 direct commission
+    # Root gets ₹3,000 direct commission + ₹2,100 Star Rank Reward
     root_wallet = get_or_create_wallet(db_session, root.id)
-    assert root_wallet.balance == 3000.0
+    assert root_wallet.balance == 5100.0
 
     # Kumar gets ₹0 direct commission
     kumar_wallet = get_or_create_wallet(db_session, kumar.id)
@@ -273,7 +272,7 @@ def test_8_sponsor_and_placement_separation(db_session: Session):
 
 
 # =========================================================================
-# TEST 9: Exact Screenshot Bug Reproduction (Aditi & Praju under Kumar)
+# TEST 9: Exact Screenshot Bug Reproduction Scenario
 # =========================================================================
 def test_9_exact_screenshot_bug_reproduction(db_session: Session):
     """
@@ -298,7 +297,8 @@ def test_9_exact_screenshot_bug_reproduction(db_session: Session):
 
     Amol:
     Direct Commission = ₹6,000 (2 x ₹3,000)
-    Pair Bonus = ₹0
+    Star Rank Reward = ₹2,100 (2 Directs)
+    Total Wallet = ₹8,100
     """
     amol = create_test_user(db_session, "t9_amol@demo.com", "Amol Sharma", "AMOL009")
     kumar = create_test_user(db_session, "t9_kumar@demo.com", "Kumar", "KUMAR009", sponsor_id=amol.id, binary_parent_id=amol.id, binary_position="LEFT")
@@ -334,10 +334,10 @@ def test_9_exact_screenshot_bug_reproduction(db_session: Session):
     ).all()
     assert len(kumar_direct_comms) == 0
 
-    # 2. Verify Amol's direct commission (₹6,000)
+    # 2. Verify Amol's direct commission (₹6,000) + Star Rank Reward (₹2,100) = ₹8,100
     amol_wallet = get_or_create_wallet(db_session, amol.id)
-    assert amol_wallet.balance == 6000.0
-    assert amol_wallet.total_earned == 6000.0
+    assert amol_wallet.balance == 8100.0
+    assert amol_wallet.total_earned == 8100.0
 
 
 # =========================================================================
@@ -354,8 +354,8 @@ def test_10_deep_network_actual_child_pair_event(db_session: Session):
   Aditi sponsors D (LEFT, 30k) and E (RIGHT, 30k).
   Aditi completes pair.
   Expected:
-  - Aditi = ₹10,000 Pair Bonus
-  - Amol (Aditi's sponsor) = ₹1,000 Matching Commission
+  - Aditi = ₹15,000 Pair Bonus
+  - Amol (Aditi's sponsor) = ₹0 Matching Commission (no upline commission per final rule)
   - Kumar = ₹0 Pair Bonus
   """
     amol = create_test_user(db_session, "t10_amol@demo.com", "Amol", "AMOL010")
@@ -371,21 +371,20 @@ def test_10_deep_network_actual_child_pair_event(db_session: Session):
     process_package_purchase(db_session, d.id, pkg.id, slot_id="SLOT-T10")
     process_package_purchase(db_session, e.id, pkg.id, slot_id="SLOT-T10")
 
-    # Aditi earned ₹10,000 Pair Bonus + ₹6,000 Direct (total ₹16,000)
+    # Aditi earned ₹15,000 Pair Bonus + ₹6,000 Direct (total ₹21,000)
     aditi_pair = db_session.query(Commission).filter(
         Commission.beneficiary_id == aditi.id,
         Commission.commission_type == 'PAIR_BONUS'
     ).first()
     assert aditi_pair is not None
-    assert aditi_pair.amount == 10000.0
+    assert aditi_pair.amount == 15000.0
 
-    # Amol (Aditi's direct sponsor) earned ₹1,000 Matching Commission
+    # Amol (Aditi's direct sponsor) earned ₹0 Matching Commission (no upline commission)
     amol_matching = db_session.query(Commission).filter(
         Commission.beneficiary_id == amol.id,
         Commission.commission_type.in_(['MATCHING_COMMISSION', 'BINARY_MATCHING'])
-    ).first()
-    assert amol_matching is not None
-    assert amol_matching.amount == 1000.0
+    ).all()
+    assert len(amol_matching) == 0
 
     # Kumar earned ₹0 Pair Bonus
     kumar_pair = db_session.query(Commission).filter(
@@ -400,6 +399,5 @@ def test_10_deep_network_actual_child_pair_event(db_session: Session):
         PairEvent.slot_id == "SLOT-T10"
     ).first()
     assert pair_event is not None
-    assert pair_event.pair_bonus == 10000.0
-    assert pair_event.matching_upline_id == amol.id
-    assert pair_event.matching_commission == 1000.0
+    assert pair_event.pair_bonus == 15000.0
+    assert pair_event.matching_commission == 0.0

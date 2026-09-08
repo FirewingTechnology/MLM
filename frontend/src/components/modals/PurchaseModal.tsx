@@ -5,18 +5,18 @@ import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { ActivationStatusResponse } from '../../types';
-import { 
-  X, 
-  Sparkles, 
-  CheckCircle2, 
-  ShieldCheck, 
-  ShoppingBag, 
-  Award, 
-  TrendingUp, 
-  Loader2, 
-  KeyRound, 
-  CreditCard, 
-  Clock, 
+import {
+  X,
+  Sparkles,
+  CheckCircle2,
+  ShieldCheck,
+  ShoppingBag,
+  Award,
+  TrendingUp,
+  Loader2,
+  KeyRound,
+  CreditCard,
+  Clock,
   ArrowRight,
   UserCheck,
   AlertCircle,
@@ -155,7 +155,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div 
+      <div
         className="w-full max-w-xl rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 sm:p-7 relative overflow-hidden text-[#18211F] max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -234,11 +234,11 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                   </div>
                   <div className="flex items-center gap-2.5">
                     <Award className="w-4 h-4 text-[#063B32] shrink-0" />
-                    <span>Full 30,000 BV propagates upward through your binary upline leg</span>
+                    <span>Full 30,000 BV propagates upward through your Matching upline leg</span>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <Award className="w-4 h-4 text-[#C9A227] shrink-0" />
-                    <span>Qualifies for ₹10,000 Binary Matching Pair Bonus (30k:30k match)</span>
+                    <span>Qualifies for ₹15,000 Matching Pair Bonus (30k:30k match)</span>
                   </div>
                 </div>
 
@@ -492,7 +492,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                   <div className="text-[#18211F] mb-1 font-semibold">Commissions Processed:</div>
                   {successEvent.events.map((ev: any, idx: number) => (
                     <div key={idx} className="text-[#69736F] flex justify-between">
-                      <span>• {ev.type === 'DIRECT_REFERRAL' ? 'Direct Sponsor Bonus' : 'Matching Commission'} to {ev.beneficiary}</span>
+                      <span>• {ev.type === 'DIRECT_REFERRAL' ? 'Direct Sponsor Bonus' : 'Pair Bonus'} to {ev.beneficiary}</span>
                       <span className="text-[#0E9F6E] font-mono font-bold">+₹{ev.amount?.toLocaleString()}</span>
                     </div>
                   ))}

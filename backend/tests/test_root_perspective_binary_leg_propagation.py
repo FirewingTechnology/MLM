@@ -13,7 +13,7 @@ from app.services.time_service import time_provider, slot_service
 from app.services.mlm_service import build_binary_tree_node
 
 # ====================================================================
-# ROOT-PERSPECTIVE BINARY LEG PROPAGATION & MLM ENGINE TEST SUITE
+# ROOT-PERSPECTIVE Matching LEG PROPAGATION & MLM ENGINE TEST SUITE
 # TESTS 1 - 20 + SECTION 25 REQUIRED ACCEPTANCE SCENARIO
 # ====================================================================
 
@@ -79,7 +79,7 @@ def test_3_a_has_b_left_and_c_right(client, db_session):
 
     summary = pair_service.get_user_pair_summary(db_session, amol.id, slot_info.slot_id)
     assert summary['pair_completed'] is True
-    assert summary['pair_bonus_earned'] == 10000.0
+    assert summary['pair_bonus_earned'] == 15000.0
 
 def test_4_a_to_b_left_to_d_right(client, db_session):
     """TEST 4: A -> B LEFT -> D RIGHT. D ₹30k -> Expected: B RIGHT = ₹30k, A LEFT = ₹30k."""
@@ -252,7 +252,7 @@ def test_7_deep_extreme_left_and_extreme_right_pair(client, db_session):
     assert a_sum['effective_left_bv'] == 30000.0
     assert a_sum['effective_right_bv'] == 30000.0
     assert a_sum['pair_completed'] is True
-    assert a_sum['pair_bonus_earned'] == 10000.0
+    assert a_sum['pair_bonus_earned'] == 15000.0
 
 def test_8_90k_left_and_90k_right_only_one_pair_per_slot(client, db_session):
     """TEST 8: 90k LEFT + 90k RIGHT -> Expected: Only one pair paid in slot. Carry: LEFT 60k, RIGHT 60k."""
@@ -265,7 +265,7 @@ def test_8_90k_left_and_90k_right_only_one_pair_per_slot(client, db_session):
 
     summary = pair_service.get_user_pair_summary(db_session, amol.id, slot_info.slot_id)
     assert summary['pair_completed'] is True
-    assert summary['pair_bonus_earned'] == 10000.0
+    assert summary['pair_bonus_earned'] == 15000.0
     assert summary['ending_carry_left'] == 60000.0
     assert summary['ending_carry_right'] == 60000.0
 
@@ -341,7 +341,7 @@ def test_10_direct_sponsor_different_from_placement_parent(client, db_session):
     assert p_sum['effective_left_bv'] == 30000.0
 
 def test_11_child_pair_awards_override_carry_commission(client, db_session):
-    """TEST 11: Child pair -> Expected: Child gets ₹10,000. Eligible upline gets configured ₹1,000 carry commission."""
+    """TEST 11: Child pair -> Expected: Child gets ₹15,000. Eligible upline gets configured ₹1,000 carry commission."""
     amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
     slot_info = time_provider.get_current_slot_info(db_session)
 
@@ -358,24 +358,23 @@ def test_11_child_pair_awards_override_carry_commission(client, db_session):
     pair_service.record_bv_and_evaluate_pairs(db_session, b.id, 'RIGHT', 30000.0, slot_info.slot_id)
     db_session.commit()
 
-    # B gets ₹10,000 PAIR_BONUS
+    # B gets ₹15,000 PAIR_BONUS
     b_comm = db_session.query(Commission).filter(
         Commission.beneficiary_id == b.id,
         Commission.commission_type == 'PAIR_BONUS',
         Commission.slot_id == slot_info.slot_id
     ).first()
     assert b_comm is not None
-    assert b_comm.amount == 10000.0
+    assert b_comm.amount == 15000.0
 
-    # Amol gets ₹1,000 MATCHING / CARRY Commission
+    # Amol gets ₹0 Matching / Carry Commission (no upline commission per final rule)
     a_carry_comm = db_session.query(Commission).filter(
         Commission.beneficiary_id == amol.id,
         Commission.source_user_id == b.id,
         Commission.commission_type.in_(['MATCHING_COMMISSION', 'CARRY_COMMISSION']),
         Commission.slot_id == slot_info.slot_id
-    ).first()
-    assert a_carry_comm is not None
-    assert a_carry_comm.amount == 1000.0
+    ).all()
+    assert len(a_carry_comm) == 0
 
 def test_12_child_pair_does_not_consume_parent_pair_limit(client, db_session):
     """TEST 12: Child pair does not consume parent's pair limit."""
@@ -410,7 +409,7 @@ def test_12_child_pair_does_not_consume_parent_pair_limit(client, db_session):
 
     a_sum = pair_service.get_user_pair_summary(db_session, amol.id, slot_info.slot_id)
     assert a_sum['pair_completed'] is True
-    assert a_sum['pair_bonus_earned'] == 10000.0
+    assert a_sum['pair_bonus_earned'] == 15000.0
 
 def test_13_duplicate_purchase_does_not_duplicate_bv(client, db_session):
     """TEST 13: Duplicate purchase processing does not duplicate BV."""
@@ -436,7 +435,7 @@ def test_13_duplicate_purchase_does_not_duplicate_bv(client, db_session):
     assert a_sum['effective_left_bv'] == 30000.0  # NOT 60,000
 
 def test_14_duplicate_pair_evaluation_does_not_duplicate_payout(client, db_session):
-    """TEST 14: Duplicate pair evaluation does not duplicate ₹10,000."""
+    """TEST 14: Duplicate pair evaluation does not duplicate ₹15,000."""
     amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
     slot_info = time_provider.get_current_slot_info(db_session)
 
@@ -661,14 +660,14 @@ def test_21_required_acceptance_scenario_deep_extreme_descendants(client, db_ses
     assert v_ga.side == 'RIGHT'
     assert v_ga.amount == 30000.0
 
-    # Check that A has completed PAIR_BONUS = ₹10,000
+    # Check that A has completed PAIR_BONUS = ₹15,000
     a_sum_final = pair_service.get_user_pair_summary(db_session, amol.id, slot_info.slot_id)
     assert a_sum_final['effective_left_bv'] == 30000.0
     assert a_sum_final['effective_right_bv'] == 30000.0
     assert a_sum_final['consumed_left_bv'] == 30000.0
     assert a_sum_final['consumed_right_bv'] == 30000.0
     assert a_sum_final['pair_completed'] is True
-    assert a_sum_final['pair_bonus_earned'] == 10000.0
+    assert a_sum_final['pair_bonus_earned'] == 15000.0
     assert a_sum_final['ending_carry_left'] == 0.0
     assert a_sum_final['ending_carry_right'] == 0.0
 
@@ -679,7 +678,7 @@ def test_21_required_acceptance_scenario_deep_extreme_descendants(client, db_ses
         Commission.slot_id == slot_info.slot_id
     ).first()
     assert a_pair_comm is not None
-    assert a_pair_comm.amount == 10000.0
+    assert a_pair_comm.amount == 15000.0
 
     # Check VolumeLedger consumption for A
     db_session.refresh(v_ea)
@@ -731,7 +730,7 @@ def test_22_acceptance_next_slot_a_does_nothing_descendants_pair_a(client, db_se
     # Verify A paired in Slot 1
     a_sum_s1 = pair_service.get_user_pair_summary(db_session, amol.id, slot_1.slot_id)
     assert a_sum_s1['pair_completed'] is True
-    assert a_sum_s1['pair_bonus_earned'] == 10000.0
+    assert a_sum_s1['pair_bonus_earned'] == 15000.0
 
     # Advance to Slot 2
     slot_2 = time_provider.next_slot(db_session, admin.id)
@@ -760,7 +759,7 @@ def test_22_acceptance_next_slot_a_does_nothing_descendants_pair_a(client, db_se
     assert a_sum_s2['effective_left_bv'] == 30000.0
     assert a_sum_s2['effective_right_bv'] == 30000.0
     assert a_sum_s2['pair_completed'] is True
-    assert a_sum_s2['pair_bonus_earned'] == 10000.0
+    assert a_sum_s2['pair_bonus_earned'] == 15000.0
 
     # Check B in Slot 2: B has LEFT 30k, RIGHT 0 -> NO pair for B
     b_sum_s2 = pair_service.get_user_pair_summary(db_session, b.id, slot_2.slot_id)
@@ -844,31 +843,31 @@ def test_23_acceptance_multiple_child_pairs_independent(client, db_session):
     process_package_purchase(db_session, g.id)
     db_session.commit()
 
-    # 1. Verify B completed exactly 1 pair (30k L / 30k R) -> ₹10,000
+    # 1. Verify B completed exactly 1 pair (30k L / 30k R) -> ₹15,000
     b_sum = pair_service.get_user_pair_summary(db_session, b.id, slot_info.slot_id)
     assert b_sum['effective_left_bv'] == 30000.0
     assert b_sum['effective_right_bv'] == 30000.0
     assert b_sum['pair_completed'] is True
-    assert b_sum['pair_bonus_earned'] == 10000.0
+    assert b_sum['pair_bonus_earned'] == 15000.0
     assert b_sum['ending_carry_left'] == 0.0
     assert b_sum['ending_carry_right'] == 0.0
 
-    # 2. Verify C completed exactly 1 pair (30k L / 30k R) -> ₹10,000
+    # 2. Verify C completed exactly 1 pair (30k L / 30k R) -> ₹15,000
     c_sum = pair_service.get_user_pair_summary(db_session, c.id, slot_info.slot_id)
     assert c_sum['effective_left_bv'] == 30000.0
     assert c_sum['effective_right_bv'] == 30000.0
     assert c_sum['pair_completed'] is True
-    assert c_sum['pair_bonus_earned'] == 10000.0
+    assert c_sum['pair_bonus_earned'] == 15000.0
     assert c_sum['ending_carry_left'] == 0.0
     assert c_sum['ending_carry_right'] == 0.0
 
-    # 3. Verify A completed exactly 1 pair (60k L / 60k R effective, 30k consumed) -> ₹10,000, 30k carry on both sides
+    # 3. Verify A completed exactly 1 pair (60k L / 60k R effective, 30k consumed) -> ₹15,000, 30k carry on both sides
     a_sum = pair_service.get_user_pair_summary(db_session, amol.id, slot_info.slot_id)
     assert a_sum['effective_left_bv'] == 60000.0
     assert a_sum['effective_right_bv'] == 60000.0
     assert a_sum['consumed_left_bv'] == 30000.0
     assert a_sum['consumed_right_bv'] == 30000.0
     assert a_sum['pair_completed'] is True
-    assert a_sum['pair_bonus_earned'] == 10000.0
+    assert a_sum['pair_bonus_earned'] == 15000.0
     assert a_sum['ending_carry_left'] == 30000.0
     assert a_sum['ending_carry_right'] == 30000.0

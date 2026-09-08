@@ -3,18 +3,18 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
-import { 
-  Users, 
-  Copy, 
-  Check, 
+import {
+  Users,
+  Copy,
+  Check,
   ExternalLink,
   Lock,
   Share2,
-  ChevronLeft, 
-  ChevronRight, 
-  CheckCircle2, 
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
   Clock,
-  Sparkles 
+  Sparkles
 } from 'lucide-react';
 import { ReferralLinksData } from '../types';
 
@@ -37,14 +37,14 @@ export const ReferralsPage: React.FC = () => {
   const leftUrl = linksData?.left?.token
     ? `${window.location.origin}/register?ref=${linksData.left.token}`
     : user?.referral_code
-    ? `${window.location.origin}/register?ref=${user.referral_code}`
-    : '';
+      ? `${window.location.origin}/register?ref=${user.referral_code}`
+      : '';
 
   const rightUrl = linksData?.right?.token
     ? `${window.location.origin}/register?ref=${linksData.right.token}`
     : user?.referral_code
-    ? `${window.location.origin}/register?ref=${user.referral_code}`
-    : '';
+      ? `${window.location.origin}/register?ref=${user.referral_code}`
+      : '';
 
   const handleCopyLeft = () => {
     if (!leftUrl) return;
@@ -108,7 +108,7 @@ export const ReferralsPage: React.FC = () => {
         <div className="flex items-center justify-between border-b border-[#E5E0D3] pb-3">
           <div className="flex items-center gap-2 text-sm font-heading font-extrabold text-[#18211F]">
             <Lock className="w-4 h-4 text-[#063B32]" />
-            <span>MY REFERRAL LINKS (LOCKED BINARY PLACEMENT)</span>
+            <span>MY REFERRAL LINKS (LOCKED Matching PLACEMENT)</span>
           </div>
           <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]/60">
             Sponsor: {user?.referral_code}
@@ -257,13 +257,12 @@ export const ReferralsPage: React.FC = () => {
                       {m.binary_parent_name || 'Root'}
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`font-mono text-[10px] px-2 py-0.5 rounded-md font-bold border ${
-                        m.binary_position === 'LEFT'
+                      <span className={`font-mono text-[10px] px-2 py-0.5 rounded-md font-bold border ${m.binary_position === 'LEFT'
                           ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
                           : m.binary_position === 'RIGHT'
-                          ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]/60'
-                          : 'bg-[#F7F4EC] text-[#69736F] border-[#E5E0D3]'
-                      }`}>
+                            ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]/60'
+                            : 'bg-[#F7F4EC] text-[#69736F] border-[#E5E0D3]'
+                        }`}>
                         {m.binary_position || 'ROOT'}
                       </span>
                     </td>
@@ -272,18 +271,22 @@ export const ReferralsPage: React.FC = () => {
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span
-                        className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                          m.is_active
+                        className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${m.is_active
                             ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
                             : 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
-                        }`}
+                          }`}
                       >
                         {m.is_active ? <CheckCircle2 className="w-3 h-3 text-[#063B32]" /> : <Clock className="w-3 h-3 text-[#8C6C16]" />}
                         <span>{m.is_active ? 'Active' : 'Inactive'}</span>
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-right text-[#69736F] text-[11px]">
-                      {new Date(m.joined_at).toLocaleDateString()}
+                    <td className="py-3 px-4 text-right text-[#69736F] text-[11px] font-mono">
+                      <div className="font-bold text-[#18211F]">
+                        {new Date(m.joined_at).toLocaleDateString()}
+                      </div>
+                      <div className="text-[10px] text-[#69736F]">
+                        {new Date(m.joined_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -278,9 +278,9 @@ def test_backup_and_isolated_restore_verification(audit_db_env):
     db = Session()
 
     # Create backup using BackupService
-    backup_result = backup_service.create_database_backup(notes="Production audit verification")
+    backup_result = backup_service.create_database_backup(notes="Production audit verification", db_path=db_file, backup_dir=backup_dir)
     assert backup_result["success"] is True
-    backup_path = os.path.join(settings.BACKUP_DIR, backup_result["filename"])
+    backup_path = os.path.join(backup_dir, backup_result["filename"])
     assert os.path.exists(backup_path)
     assert backup_result["size_bytes"] > 0
 

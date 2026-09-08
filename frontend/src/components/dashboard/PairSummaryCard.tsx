@@ -1,11 +1,11 @@
 import React from 'react';
 import { PairSummary } from '../../types';
-import { 
-  Zap, 
-  CheckCircle2, 
-  Scale, 
-  Sparkles, 
-  Clock, 
+import {
+  Zap,
+  CheckCircle2,
+  Scale,
+  Sparkles,
+  Clock,
   ShieldCheck,
   RotateCcw
 } from 'lucide-react';
@@ -20,7 +20,7 @@ export const PairSummaryCard: React.FC<PairSummaryCardProps> = ({ pairSummary })
   }
 
   const threshold = pairSummary.pair_volume_threshold || 30000;
-  const bonusAmount = pairSummary.pair_bonus_amount || 10000;
+  const bonusAmount = pairSummary.pair_bonus_amount || 15000;
 
   const leftProgress = Math.min(100, (pairSummary.effective_left_bv / threshold) * 100);
   const rightProgress = Math.min(100, (pairSummary.effective_right_bv / threshold) * 100);
@@ -30,24 +30,22 @@ export const PairSummaryCard: React.FC<PairSummaryCardProps> = ({ pairSummary })
   const rightNeeded = pairSummary.needed_right_bv;
 
   return (
-    <div className={`rounded-3xl bg-[#FFFEF9] p-4 sm:p-6 border transition-all duration-200 shadow-wealth-card ${
-      isCompleted
+    <div className={`rounded-3xl bg-[#FFFEF9] p-4 sm:p-6 border transition-all duration-200 shadow-wealth-card ${isCompleted
         ? 'border-[#C9A227]/50 shadow-wealth-gold'
         : 'border-[#E5E0D3]'
-    }`}>
+      }`}>
       {/* Top Header Row */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div className="flex items-center gap-2.5">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm ${
-            isCompleted 
-              ? 'bg-[#063B32] text-[#E2C766] border border-[#C9A227]/40 shadow-wealth-gold' 
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm ${isCompleted
+              ? 'bg-[#063B32] text-[#E2C766] border border-[#C9A227]/40 shadow-wealth-gold'
               : 'bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]/50'
-          }`}>
+            }`}>
             <Scale className="w-4 h-4" />
           </div>
           <div>
             <div className="text-sm sm:text-base font-heading font-extrabold text-[#18211F] tracking-tight flex items-center gap-2">
-              <span>Binary Performance & Pair Bonus</span>
+              <span>Matching Performance & Pair Bonus</span>
               <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-[#FAF4DC] text-[#8C6C16] font-bold border border-[#E2C766]/50">
                 30k / 30k Match
               </span>
@@ -97,7 +95,7 @@ export const PairSummaryCard: React.FC<PairSummaryCardProps> = ({ pairSummary })
 
           {/* Progress Bar */}
           <div className="w-full h-2 bg-[#EFECE2] rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-[#063B32] to-[#0E9F6E] rounded-full transition-all duration-700"
               style={{ width: `${leftProgress}%` }}
             />
@@ -137,7 +135,7 @@ export const PairSummaryCard: React.FC<PairSummaryCardProps> = ({ pairSummary })
 
           {/* Progress Bar */}
           <div className="w-full h-2 bg-[#EFECE2] rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-[#C9A227] to-[#E2C766] rounded-full transition-all duration-700"
               style={{ width: `${rightProgress}%` }}
             />

@@ -86,7 +86,7 @@ def test_production_bootstrap_true_creates_admin_when_empty(clean_db, monkeypatc
     assert verify_password("SuperSecure2026!", admin.password_hash) is True
     assert verify_password("Admin@123", admin.password_hash) is False
 
-    # Check that wallet and binary volume exist for admin
+    # Check that wallet and Matching volume exist for admin
     wallet = clean_db.query(Wallet).filter(Wallet.user_id == admin.id).first()
     bv = clean_db.query(BinaryVolume).filter(BinaryVolume.user_id == admin.id).first()
     assert wallet is not None

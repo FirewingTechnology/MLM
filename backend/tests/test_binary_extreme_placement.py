@@ -3,7 +3,7 @@ from app.models.user import User
 from app.models.volume_ledger import VolumeLedger
 from app.services.mlm_service import (
     find_extreme_placement,
-    auto_place_in_binary_tree,
+    auto_place_in_Matching_tree,
     get_binary_ancestors,
     build_binary_tree_node
 )
@@ -12,7 +12,7 @@ from app.services.pair_service import pair_service
 from app.services.time_service import time_provider
 
 # ====================================================================
-# BINARY EXTREME PLACEMENT TEST SUITE
+# Matching EXTREME PLACEMENT TEST SUITE
 # ====================================================================
 
 def test_1_first_left_placement(client, db_session):

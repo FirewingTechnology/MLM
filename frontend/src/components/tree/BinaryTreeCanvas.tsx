@@ -1,24 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { BinaryTreeNode } from '../../types';
+import { MatchingTreeNode } from '../../types';
 import { TreeNodeCard } from './TreeNodeCard';
 import { NodeDetailModal } from './NodeDetailModal';
-import { 
-  ZoomIn, 
-  ZoomOut, 
-  RotateCcw, 
-  Search, 
-  Maximize2, 
+import {
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Search,
+  Maximize2,
   ChevronRight,
   ChevronLeft,
   ArrowLeft,
   ArrowRight,
-  Home, 
+  Home,
   Layers,
-  Sparkles 
+  Sparkles
 } from 'lucide-react';
 
-interface BinaryTreeCanvasProps {
-  rootNode: BinaryTreeNode | null;
+interface MatchingTreeCanvasProps {
+  rootNode: MatchingTreeNode | null;
   onSelectRootId?: (id: number | null) => void;
   depth?: number;
   onDepthChange?: (depth: number) => void;
@@ -32,7 +32,7 @@ interface BinaryTreeCanvasProps {
   viewMode?: 'network' | 'active_slot' | 'history';
 }
 
-export const BinaryTreeCanvas: React.FC<BinaryTreeCanvasProps> = ({
+export const MatchingTreeCanvas: React.FC<MatchingTreeCanvasProps> = ({
   rootNode,
   onSelectRootId,
   depth = 3,
@@ -50,7 +50,7 @@ export const BinaryTreeCanvas: React.FC<BinaryTreeCanvasProps> = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [selectedNode, setSelectedNode] = useState<BinaryTreeNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<MatchingTreeNode | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +97,7 @@ export const BinaryTreeCanvas: React.FC<BinaryTreeCanvasProps> = ({
   const handleMouseUp = () => setIsDragging(false);
 
   // Recursive tree renderer with curved SVG branch connectors
-  const renderTree = (node: BinaryTreeNode | null, level: number, maxLevel: number, posLabel?: 'LEFT' | 'RIGHT' | 'ROOT') => {
+  const renderTree = (node: MatchingTreeNode | null, level: number, maxLevel: number, posLabel?: 'LEFT' | 'RIGHT' | 'ROOT') => {
     if (level > maxLevel) return null;
 
     const hasLeft = node && node.left;
@@ -204,11 +204,10 @@ export const BinaryTreeCanvas: React.FC<BinaryTreeCanvasProps> = ({
                 onClick={onPrevUser}
                 disabled={!prevUser}
                 title={prevUser ? `Previous User: ${prevUser.full_name} (${prevUser.user_code})` : 'No previous user'}
-                className={`p-1.5 rounded-lg transition-all flex items-center gap-1 ${
-                  prevUser
+                className={`p-1.5 rounded-lg transition-all flex items-center gap-1 ${prevUser
                     ? 'hover:bg-[#063B32] hover:text-[#FFFEF9] text-[#18211F] cursor-pointer font-bold'
                     : 'text-[#C9C4B7] cursor-not-allowed opacity-40'
-                }`}
+                  }`}
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span className="text-[11px] hidden md:inline">Prev</span>
@@ -224,11 +223,10 @@ export const BinaryTreeCanvas: React.FC<BinaryTreeCanvasProps> = ({
                 onClick={onNextUser}
                 disabled={!nextUser}
                 title={nextUser ? `Next User: ${nextUser.full_name} (${nextUser.user_code})` : 'No next user'}
-                className={`p-1.5 rounded-lg transition-all flex items-center gap-1 ${
-                  nextUser
+                className={`p-1.5 rounded-lg transition-all flex items-center gap-1 ${nextUser
                     ? 'hover:bg-[#063B32] hover:text-[#FFFEF9] text-[#18211F] cursor-pointer font-bold'
                     : 'text-[#C9C4B7] cursor-not-allowed opacity-40'
-                }`}
+                  }`}
               >
                 <span className="text-[11px] hidden md:inline">Next</span>
                 <ChevronRight className="w-4 h-4" />
@@ -246,11 +244,10 @@ export const BinaryTreeCanvas: React.FC<BinaryTreeCanvasProps> = ({
               <button
                 key={d}
                 onClick={() => onDepthChange && onDepthChange(d)}
-                className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                  depth === d
+                className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${depth === d
                     ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                     : 'text-[#69736F] hover:text-[#18211F]'
-                }`}
+                  }`}
               >
                 {d}
               </button>
@@ -294,9 +291,8 @@ export const BinaryTreeCanvas: React.FC<BinaryTreeCanvasProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className={`flex-1 overflow-hidden relative cursor-grab bg-[#F7F4EC] ${
-          isDragging ? 'cursor-grabbing' : ''
-        } bg-[radial-gradient(#D3CCA9_1.2px,transparent_1.2px)] [background-size:24px_24px]`}
+        className={`flex-1 overflow-hidden relative cursor-grab bg-[#F7F4EC] ${isDragging ? 'cursor-grabbing' : ''
+          } bg-[radial-gradient(#D3CCA9_1.2px,transparent_1.2px)] [background-size:24px_24px]`}
       >
         {/* Floating Left Arrow Overlay (Previous User) */}
         {onPrevUser && prevUser && (

@@ -12,6 +12,7 @@ import {
   HelpCircle,
   TrendingUp,
   Sparkles,
+  Award
 } from 'lucide-react';
 
 import { MyStatusLogo } from '../common/MyStatusLogo';
@@ -26,7 +27,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/network', label: 'Network Tree', icon: GitFork },
+    { to: '/network', label: 'Franchise Partner', icon: GitFork },
+    { to: '/ranks', label: 'Rank & Rewards', icon: Award },
     { to: '/packages', label: 'Packages', icon: PackageCheck },
     { to: '/wallet', label: 'Income Wallet & Ledger', icon: Wallet },
     { to: '/commissions', label: 'Income Report', icon: Coins },
@@ -44,9 +46,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       )}
 
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-40 w-64 bg-[#063B32] border-r border-[#042C26] flex flex-col justify-between transition-transform duration-300 ease-in-out shadow-2xl ${
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`fixed lg:static top-0 bottom-0 left-0 z-40 w-64 bg-[#063B32] border-r border-[#042C26] flex flex-col justify-between transition-transform duration-300 ease-in-out shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
       >
         <div className="p-4 space-y-5">
           {/* Brand Logo & Emblem in Sidebar */}
@@ -70,10 +71,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     to={item.to}
                     onClick={onClose}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                        isActive
-                          ? 'bg-[#0A4D42] text-[#FFFEF9] font-bold border-l-2 border-[#C9A227] shadow-sm'
-                          : 'text-[#F7F4EC]/75 hover:text-[#FFFEF9] hover:bg-[#08453A]'
+                      `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${isActive
+                        ? 'bg-[#0A4D42] text-[#FFFEF9] font-bold border-l-2 border-[#C9A227] shadow-sm'
+                        : 'text-[#F7F4EC]/75 hover:text-[#FFFEF9] hover:bg-[#08453A]'
                       }`
                     }
                   >
@@ -101,10 +101,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   to="/admin/dashboard"
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      isActive
-                        ? 'bg-[#0A4D42] text-[#FFFEF9] font-bold border-l-2 border-[#C9A227]'
-                        : 'text-[#F7F4EC]/75 hover:text-[#FFFEF9] hover:bg-[#08453A]'
+                    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${isActive
+                      ? 'bg-[#0A4D42] text-[#FFFEF9] font-bold border-l-2 border-[#C9A227]'
+                      : 'text-[#F7F4EC]/75 hover:text-[#FFFEF9] hover:bg-[#08453A]'
                     }`
                   }
                 >
@@ -119,10 +118,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   to="/admin/users"
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      isActive
-                        ? 'bg-[#0A4D42] text-[#FFFEF9] font-bold border-l-2 border-[#C9A227]'
-                        : 'text-[#F7F4EC]/75 hover:text-[#FFFEF9] hover:bg-[#08453A]'
+                    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${isActive
+                      ? 'bg-[#0A4D42] text-[#FFFEF9] font-bold border-l-2 border-[#C9A227]'
+                      : 'text-[#F7F4EC]/75 hover:text-[#FFFEF9] hover:bg-[#08453A]'
                     }`
                   }
                 >
@@ -137,10 +135,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   to="/admin/withdrawals"
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      isActive
-                        ? 'bg-[#0A4D42] text-[#FFFEF9] font-bold border-l-2 border-[#C9A227]'
-                        : 'text-[#F7F4EC]/75 hover:text-[#FFFEF9] hover:bg-[#08453A]'
+                    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${isActive
+                      ? 'bg-[#0A4D42] text-[#FFFEF9] font-bold border-l-2 border-[#C9A227]'
+                      : 'text-[#F7F4EC]/75 hover:text-[#FFFEF9] hover:bg-[#08453A]'
                     }`
                   }
                 >
@@ -166,7 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="space-y-1 text-[11px] text-[#F7F4EC]/80 font-medium">
               <p>• Qualifying Package: <span className="text-[#FFFEF9] font-bold">₹35,000</span> (30k BV)</p>
               <p>• Direct Sponsor: <span className="text-[#C9A227] font-bold">10% (₹3,000)</span></p>
-              <p>• Binary Pair Bonus: <span className="text-[#E2C766] font-bold">₹10,000 / pair</span></p>
+              <p>• Matching Pair Bonus: <span className="text-[#E2C766] font-bold">₹15,000 / pair</span></p>
             </div>
           </div>
         </div>

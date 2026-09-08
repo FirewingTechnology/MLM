@@ -1,12 +1,6 @@
 import pytest
-from fastapi.testclient import TestClient
-from app.main import app
-from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.package import Package
-from app.models.purchase import Purchase
-from app.models.volume import BinaryVolume
-from app.models.commission import Commission
 from app.models.pin_order import SecurityPinOrder
 from app.models.pin_transfer import SecurityPinTransfer
 from app.models.pin_upline_request import SecurityPinUplineRequest
@@ -14,43 +8,29 @@ from app.models.pin_ledger import SecurityPinLedger
 from app.models.security_pin import SecurityPin
 from app.security import hash_password, create_access_token
 
-client = TestClient(app)
+def get_headers(user_id: int, role: str = "USER") -> dict:
+    token = create_access_token(user_id=user_id, role=role)
+    return {"Authorization": f"Bearer {token}"}
 
-@pytest.fixture(autouse=True)
-def setup_api_test_db():
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    
-    # Clean
-    db.query(SecurityPinLedger).delete()
-    db.query(SecurityPinTransfer).delete()
-    db.query(SecurityPinUplineRequest).delete()
-    db.query(SecurityPin).delete()
-    db.query(SecurityPinOrder).delete()
-    db.query(Commission).delete()
-    db.query(Purchase).delete()
-    db.query(BinaryVolume).delete()
-    db.query(User).delete()
-    db.query(Package).delete()
-    db.commit()
-
-    # Package
-    pkg = Package(
-        id=1,
-        name="Premium Franchise Package",
-        price=35000.0,
-        product_value=30000.0,
-        gst_amount=5000.0,
-        bv=30000.0,
-        is_active=True
-    )
-    db.add(pkg)
+def test_full_pin_inventory_api_flow(client, db_session):
+    # Ensure package exists
+    pkg = db_session.query(Package).filter(Package.id == 1).first()
+    if not pkg:
+        pkg = Package(
+            id=1,
+            name="Premium Franchise Package",
+            price=35000.0,
+            product_value=30000.0,
+            gst_amount=5000.0,
+            bv=30000.0,
+            is_active=True
+        )
+        db_session.add(pkg)
 
     # Admin
     admin = User(
-        id=1,
         user_code="ADM-001",
-        email="admin@test.com",
+        email="admin_pin@test.com",
         mobile="9000000000",
         full_name="System Admin",
         password_hash=hash_password("Admin@123"),
@@ -58,13 +38,13 @@ def setup_api_test_db():
         referral_code="ADM01",
         is_active=True
     )
-    db.add(admin)
+    db_session.add(admin)
+    db_session.flush()
 
     # Amol
     amol = User(
-        id=2,
         user_code="USR-AMOL",
-        email="amol@test.com",
+        email="amol_pin@test.com",
         mobile="9111111111",
         full_name="Amol Sharma",
         password_hash=hash_password("Pass@123"),
@@ -74,43 +54,35 @@ def setup_api_test_db():
         binary_parent_id=None,
         is_active=False
     )
-    db.add(amol)
+    db_session.add(amol)
+    db_session.flush()
 
     # Member B (downline)
     user_b = User(
-        id=3,
         user_code="USR-B",
-        email="user_b@test.com",
+        email="user_b_pin@test.com",
         mobile="9222222222",
         full_name="Member B",
         password_hash=hash_password("Pass@123"),
         role="USER",
         referral_code="B01",
-        sponsor_id=2,
-        binary_parent_id=2,
+        sponsor_id=amol.id,
+        binary_parent_id=amol.id,
         binary_position="LEFT",
         is_active=False
     )
-    db.add(user_b)
+    db_session.add(user_b)
+    db_session.commit()
 
-    db.commit()
-    db.close()
-    yield
-
-def get_headers(user_id: int, role: str = "USER") -> dict:
-    token = create_access_token(user_id=user_id, role=role)
-    return {"Authorization": f"Bearer {token}"}
-
-def test_full_pin_inventory_api_flow():
-    admin_headers = get_headers(1, "ADMIN")
-    amol_headers = get_headers(2, "USER")
-    b_headers = get_headers(3, "USER")
+    admin_headers = get_headers(admin.id, "ADMIN")
+    amol_headers = get_headers(amol.id, "USER")
+    b_headers = get_headers(user_b.id, "USER")
 
     # 1. Amol orders 10 PINs
     order_res = client.post(
         "/api/security-pins/orders",
         json={
-            "package_id": 1,
+            "package_id": pkg.id,
             "quantity": 10,
             "payment_method": "UPI_TRANSFER",
             "payment_reference": "UTR-API-10PINS"
@@ -163,7 +135,7 @@ def test_full_pin_inventory_api_flow():
     downlines_res = client.get("/api/security-pins/downline-eligible", headers=amol_headers)
     assert downlines_res.status_code == 200
     downlines = downlines_res.json()["data"]
-    assert any(d["id"] == 3 for d in downlines)
+    assert any(d["id"] == user_b.id for d in downlines)
 
     # 7. Amol transfers 1 PIN to Member B
     trf_res = client.post(

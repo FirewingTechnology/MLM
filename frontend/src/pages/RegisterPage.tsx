@@ -4,17 +4,17 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 import { MyStatusLogo } from '../components/common/MyStatusLogo';
-import { 
-  Sparkles, 
-  User as UserIcon, 
-  Mail, 
-  Phone, 
-  Lock, 
-  Link2, 
-  CheckCircle2, 
-  AlertCircle, 
-  ArrowRight, 
-  Loader2 
+import {
+  Sparkles,
+  User as UserIcon,
+  Mail,
+  Phone,
+  Lock,
+  Link2,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
@@ -29,8 +29,8 @@ export const RegisterPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
-  const [binaryPosition, setBinaryPosition] = useState<'LEFT' | 'RIGHT'>('LEFT');
-  const [binaryParentCode, setBinaryParentCode] = useState('');
+  const [binaryPosition, setbinaryPosition] = useState<'LEFT' | 'RIGHT'>('LEFT');
+  const [binaryParentCode, setbinaryParentCode] = useState('');
 
   const [sponsorInfo, setSponsorInfo] = useState<{
     valid: boolean;
@@ -65,8 +65,8 @@ export const RegisterPage: React.FC = () => {
         const valData = res.data.data;
         setSponsorInfo(valData);
         if (valData.is_locked && valData.placement_side) {
-          setBinaryPosition(valData.placement_side);
-          setBinaryParentCode('');
+          setbinaryPosition(valData.placement_side);
+          setbinaryParentCode('');
         }
       } else {
         setSponsorInfo(null);
@@ -79,7 +79,7 @@ export const RegisterPage: React.FC = () => {
           const valData = res2.data.data;
           setSponsorInfo(valData);
           if (valData.is_locked && valData.placement_side) {
-            setBinaryPosition(valData.placement_side);
+            setbinaryPosition(valData.placement_side);
           }
         } else {
           setSponsorInfo(null);
@@ -311,11 +311,10 @@ export const RegisterPage: React.FC = () => {
                       <Lock className="w-4 h-4 text-[#C9A227]" />
                       <span>PLACEMENT LOCKED</span>
                     </div>
-                    <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${
-                      binaryPosition === 'LEFT'
+                    <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${binaryPosition === 'LEFT'
                         ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
                         : 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
-                    }`}>
+                      }`}>
                       {binaryPosition} LEG (LOCKED)
                     </span>
                   </div>
@@ -352,23 +351,21 @@ export const RegisterPage: React.FC = () => {
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        onClick={() => setBinaryPosition('LEFT')}
-                        className={`py-2.5 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${
-                          binaryPosition === 'LEFT'
+                        onClick={() => setbinaryPosition('LEFT')}
+                        className={`py-2.5 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${binaryPosition === 'LEFT'
                             ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF] shadow-xs'
                             : 'bg-[#F7F4EC] border-[#E5E0D3] text-[#69736F] hover:bg-[#EFECE2]'
-                        }`}
+                          }`}
                       >
                         Left Leg
                       </button>
                       <button
                         type="button"
-                        onClick={() => setBinaryPosition('RIGHT')}
-                        className={`py-2.5 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${
-                          binaryPosition === 'RIGHT'
+                        onClick={() => setbinaryPosition('RIGHT')}
+                        className={`py-2.5 rounded-2xl text-xs font-bold transition-all border cursor-pointer ${binaryPosition === 'RIGHT'
                             ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766] shadow-xs'
                             : 'bg-[#F7F4EC] border-[#E5E0D3] text-[#69736F] hover:bg-[#EFECE2]'
-                        }`}
+                          }`}
                       >
                         Right Leg
                       </button>
@@ -376,7 +373,7 @@ export const RegisterPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Optional Specific Binary Parent code */}
+                {/* Optional Specific Matching Parent code */}
                 <div>
                   <label className="block text-[11px] font-medium text-[#69736F] mb-1">
                     Specific Placement Parent Code (Optional — leave blank for auto extreme leg placement)
@@ -384,7 +381,7 @@ export const RegisterPage: React.FC = () => {
                   <input
                     type="text"
                     value={binaryParentCode}
-                    onChange={(e) => setBinaryParentCode(e.target.value.toUpperCase())}
+                    onChange={(e) => setbinaryParentCode(e.target.value.toUpperCase())}
                     placeholder="e.g. USR-00003 or SPONSOR001 (Optional)"
                     className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] text-[#18211F] text-xs font-mono uppercase focus:outline-none focus:border-[#063B32] shadow-xs"
                   />

@@ -277,7 +277,7 @@ def test_slot_settlement_and_carry_persistence(temp_db_path):
         left_matched=30000.0,
         right_matched=30000.0,
         pairs_paid=1,
-        pair_bonus=10000.0,
+        pair_bonus=15000.0,
         left_carry=30000.0,
         right_carry=0.0,
         status="SETTLED"
@@ -295,7 +295,7 @@ def test_slot_settlement_and_carry_persistence(temp_db_path):
     assert re_settle is not None
     assert re_settle.left_carry == 30000.0
     assert re_settle.right_carry == 0.0
-    assert re_settle.pair_bonus == 10000.0
+    assert re_settle.pair_bonus == 15000.0
     db2.close()
     engine2.dispose()
 
@@ -436,7 +436,7 @@ def test_atomic_transaction_rollback_preserves_integrity(temp_db_path):
     db.close()
     engine.dispose()
 
-def test_referral_and_binary_placement_independence(temp_db_path):
+def test_referral_and_Matching_placement_independence(temp_db_path):
     """Test 12, 13: Verifies that sponsor_id and binary_parent_id remain independent and permanent."""
     engine, Session = create_temp_engine_session(temp_db_path)
     Base.metadata.create_all(bind=engine)
@@ -460,7 +460,7 @@ def test_referral_and_binary_placement_independence(temp_db_path):
         user_code="USR-PARENT",
         email="parent@test.com",
         mobile="9000000077",
-        full_name="Binary Parent",
+        full_name="Matching Parent",
         password_hash=hash_password("Pass@123"),
         role="USER",
         referral_code="PAR01",
@@ -469,7 +469,7 @@ def test_referral_and_binary_placement_independence(temp_db_path):
     db.add(parent)
     db.flush()
 
-    # Child sponsored by Sponsor, but placed under Binary Parent on RIGHT
+    # Child sponsored by Sponsor, but placed under Matching Parent on RIGHT
     child = User(
         user_code="USR-SPILLOVER",
         email="spill@test.com",

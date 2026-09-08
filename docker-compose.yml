@@ -9,8 +9,8 @@ services:
       - "5000:5000"
     environment:
       - FLASK_ENV=production
-      - SECRET_KEY=virtual-binary-mlm-secret-key-2026
-      - JWT_SECRET_KEY=virtual-binary-mlm-jwt-secret-2026
+      - SECRET_KEY=virtual-Matching-mlm-secret-key-2026
+      - JWT_SECRET_KEY=virtual-Matching-mlm-jwt-secret-2026
       - DATABASE_URL=sqlite:///mlm_demo.db
       - FRONTEND_URL=http://localhost:5173
     volumes:

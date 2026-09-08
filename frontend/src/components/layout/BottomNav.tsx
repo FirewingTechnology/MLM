@@ -11,7 +11,8 @@ import {
   Shield, 
   LogOut, 
   X,
-  ShoppingBag
+  ShoppingBag,
+  Award
 } from 'lucide-react';
 
 interface BottomNavProps {
@@ -120,6 +121,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onOpenPurchaseModal }) => 
               >
                 <Users className="w-4 h-4 text-[#063B32]" />
                 <span>Direct Team</span>
+              </NavLink>
+
+              <NavLink
+                to="/ranks"
+                onClick={() => setIsMoreOpen(false)}
+                className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FDFBF7] border border-[#E5E0D3] text-[#18211F] font-semibold hover:bg-[#FAF8F2]"
+              >
+                <Award className="w-4 h-4 text-[#C9A227]" />
+                <span>Rank & Rewards</span>
               </NavLink>
 
               <NavLink

@@ -2,28 +2,32 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
-import { 
-  AdminDashboardData, 
-  SlotSettlement, 
-  VolumeLedgerEntry, 
-  Commission, 
-  PackageActivationRequest, 
+import {
+  AdminDashboardData,
+  SlotSettlement,
+  VolumeLedgerEntry,
+  Commission,
+  PackageActivationRequest,
   SecurityPin,
   SecurityPinOrder,
   SecurityPinTransfer,
-  SecurityPinLedgerItem
+  SecurityPinLedgerItem,
+  RankConfig,
+  RankAchievement,
+  EarningCycle,
+  AdminEarningCapListResponse
 } from '../../types';
 import { LiveSystemClock } from '../../components/admin/LiveSystemClock';
 import { CommissionDetailModal } from '../../components/modals/CommissionDetailModal';
-import { 
-  ShieldAlert, 
-  Users, 
-  ShoppingBag, 
-  Coins, 
-  Wallet, 
-  Clock, 
-  TrendingUp, 
-  Activity, 
+import {
+  ShieldAlert,
+  Users,
+  ShoppingBag,
+  Coins,
+  Wallet,
+  Clock,
+  TrendingUp,
+  Activity,
   CheckCircle2,
   GitFork,
   Layers,
@@ -47,7 +51,13 @@ import {
   Package,
   Send,
   History,
-  FileText
+  FileText,
+  Crown,
+  Star,
+  Edit3,
+  Bike,
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 
@@ -55,9 +65,16 @@ export const AdminDashboardPage: React.FC = () => {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
-  const [adminTab, setAdminTab] = useState<'analytics' | 'activations' | 'commissions' | 'settlements' | 'volume_ledger'>('analytics');
+  const [adminTab, setAdminTab] = useState<'analytics' | 'activations' | 'earning_caps' | 'rank_rewards' | 'commissions' | 'settlements' | 'volume_ledger'>('analytics');
   const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
-  
+
+  // Earning Cap & Retopup states
+  const [earningCapStatusFilter, setEarningCapStatusFilter] = useState<string>('ALL');
+  const [earningCapSearch, setEarningCapSearch] = useState<string>('');
+  const [overrideCycleModal, setOverrideCycleModal] = useState<EarningCycle | null>(null);
+  const [overrideReason, setOverrideReason] = useState('');
+  const [overrideLoading, setOverrideLoading] = useState(false);
+
   // Commission filters
   const [commTypeFilter, setCommTypeFilter] = useState<string>('');
   const [commSearch, setCommSearch] = useState<string>('');
@@ -206,6 +223,163 @@ export const AdminDashboardPage: React.FC = () => {
     refetchInterval: 10000,
   });
 
+  // Rank & Rewards Queries & State
+  const [rankFilter, setRankFilter] = useState<string>('');
+  const [rankStatusFilter, setRankStatusFilter] = useState<string>('');
+  const [rankRewardStatusFilter, setRankRewardStatusFilter] = useState<string>('');
+  const [rankSearch, setRankSearch] = useState<string>('');
+  const [rankPage, setRankPage] = useState<number>(1);
+
+  const { data: rankConfigs, refetch: refetchRankConfigs } = useQuery<RankConfig[]>({
+    queryKey: ['adminRankConfigs'],
+    queryFn: async () => {
+      const res = await api.get('/admin/rank-rewards/config');
+      return res.data.data;
+    },
+    enabled: adminTab === 'rank_rewards',
+  });
+
+  const { data: rankAchievementsData, isLoading: loadingRankAchievements, refetch: refetchAchievements } = useQuery({
+    queryKey: ['adminRankAchievements', rankFilter, rankStatusFilter, rankRewardStatusFilter, rankSearch, rankPage],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (rankFilter) params.append('rank_name', rankFilter);
+      if (rankStatusFilter) params.append('status', rankStatusFilter);
+      if (rankRewardStatusFilter) params.append('reward_status', rankRewardStatusFilter);
+      if (rankSearch) params.append('search', rankSearch);
+      params.append('page', rankPage.toString());
+      params.append('per_page', '20');
+      const res = await api.get(`/admin/rank-rewards/achievements?${params.toString()}`);
+      return res.data.data;
+    },
+    enabled: adminTab === 'rank_rewards',
+    refetchInterval: 10000,
+  });
+
+  // Edit Config Modal State
+  const [editingConfig, setEditingConfig] = useState<RankConfig | null>(null);
+  const [editDays, setEditDays] = useState<number>(7);
+  const [editRewardType, setEditRewardType] = useState<'CASH' | 'EV_SCOOTER'>('CASH');
+  const [editRewardAmount, setEditRewardAmount] = useState<number>(0);
+  const [savingConfig, setSavingConfig] = useState<boolean>(false);
+
+  // Fulfillment Modal State
+  const [fulfillingAchievement, setFulfillingAchievement] = useState<RankAchievement | null>(null);
+  const [fulfillmentStatus, setFulfillmentStatus] = useState<string>('FULFILLED');
+  const [adminFulfillmentNotes, setAdminFulfillmentNotes] = useState<string>('');
+  const [updatingFulfillment, setUpdatingFulfillment] = useState<boolean>(false);
+
+  // Manual User Rank Evaluation
+  const [evaluatingUserId, setEvaluatingUserId] = useState<string>('');
+  const [evaluatingLoading, setEvaluatingLoading] = useState<boolean>(false);
+
+  const handleSaveRankConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingConfig) return;
+    setSavingConfig(true);
+    try {
+      const res = await api.put(`/admin/rank-rewards/config/${editingConfig.rank_name}`, {
+        qualification_days: editDays,
+        reward_type: editRewardType,
+        reward_amount: editRewardAmount
+      });
+      if (res.data?.success) {
+        showToast(`${editingConfig.display_name} configuration updated successfully!`, 'success');
+        setEditingConfig(null);
+        refetchRankConfigs();
+        queryClient.invalidateQueries({ queryKey: ['rankOverview'] });
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || err.response?.data?.detail?.message || 'Could not update rank config';
+      showToast(msg, 'error');
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
+  const handleUpdateFulfillment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fulfillingAchievement) return;
+    setUpdatingFulfillment(true);
+    try {
+      const res = await api.put(`/admin/rank-rewards/achievements/${fulfillingAchievement.id}/fulfillment`, {
+        reward_status: fulfillmentStatus,
+        admin_notes: adminFulfillmentNotes.trim()
+      });
+      if (res.data?.success) {
+        showToast(`Fulfillment updated for #${fulfillingAchievement.id}!`, 'success');
+        setFulfillingAchievement(null);
+        setAdminFulfillmentNotes('');
+        refetchAchievements();
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || err.response?.data?.detail?.message || 'Could not update fulfillment';
+      showToast(msg, 'error');
+    } finally {
+      setUpdatingFulfillment(false);
+    }
+  };
+
+  const { data: earningCapData, isLoading: loadingEarningCaps, refetch: refetchEarningCaps } = useQuery<AdminEarningCapListResponse>({
+    queryKey: ['adminEarningCaps', earningCapStatusFilter, earningCapSearch],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (earningCapStatusFilter && earningCapStatusFilter !== 'ALL') {
+        params.append('status', earningCapStatusFilter);
+      }
+      if (earningCapSearch.trim()) {
+        params.append('search', earningCapSearch.trim());
+      }
+      const res = await api.get(`/earning-cap/admin/list?${params.toString()}`);
+      return res.data;
+    },
+    enabled: adminTab === 'earning_caps',
+    refetchInterval: 10000,
+  });
+
+  const handleOverrideReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!overrideCycleModal || !overrideReason.trim()) return;
+    setOverrideLoading(true);
+    try {
+      const res = await api.post(`/earning-cap/admin/${overrideCycleModal.user_id}/override-reset`, {
+        reason: overrideReason.trim()
+      });
+      if (res.data?.new_cycle) {
+        showToast(`Successfully reset earning cap cycle for user ${overrideCycleModal.user_code || overrideCycleModal.user_id}!`, 'success');
+        setOverrideCycleModal(null);
+        setOverrideReason('');
+        refetchEarningCaps();
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || err.response?.data?.detail || 'Could not reset earning cycle';
+      showToast(msg, 'error');
+    } finally {
+      setOverrideLoading(false);
+    }
+  };
+
+  const handleManualEvaluate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!evaluatingUserId.trim()) return;
+    setEvaluatingLoading(true);
+    try {
+      const res = await api.post(`/admin/rank-rewards/evaluate/${evaluatingUserId.trim()}`);
+      if (res.data?.success) {
+        const events = res.data.data.events_triggered || [];
+        showToast(`Evaluated user ${evaluatingUserId}. ${events.length} rank promotions triggered.`, 'success');
+        setEvaluatingUserId('');
+        refetchAchievements();
+        refetchRankConfigs();
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || err.response?.data?.detail?.message || 'Evaluation failed';
+      showToast(msg, 'error');
+    } finally {
+      setEvaluatingLoading(false);
+    }
+  };
+
   const kpis = data?.kpis;
 
   // Bulk PIN Order Handlers
@@ -239,7 +413,7 @@ export const AdminDashboardPage: React.FC = () => {
         const pinsList: any[] = batchData.pins || batchData.generated_pins || [];
         const rawPinsList: string[] = batchData.raw_security_pins || pinsList.map((p: any) => p.raw_pin || p.raw_security_pin || '');
         const updatedOrder = batchData.order || order;
-        
+
         setBatchGeneratedPinsModal({
           order: updatedOrder,
           pins: pinsList,
@@ -380,7 +554,7 @@ export const AdminDashboardPage: React.FC = () => {
 
   const commissionPieData = [
     { name: 'Direct Sponsor (10%)', value: kpis?.direct_commissions || 0, color: '#063B32' },
-    { name: 'Pair Bonus (₹10k)', value: kpis?.pair_commissions || 0, color: '#C9A227' },
+    { name: 'Pair Bonus (₹15k)', value: kpis?.pair_commissions || 0, color: '#C9A227' },
     { name: 'Matching Upline', value: kpis?.matching_commissions || 0, color: '#EA580C' },
     { name: 'Carry Commission', value: kpis?.carry_commissions || 0, color: '#3B82F6' },
   ].filter(d => d.value > 0);
@@ -426,22 +600,20 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="flex items-center gap-1.5 bg-[#F7F4EC] p-1.5 rounded-2xl border border-[#E5E0D3] self-start sm:self-auto flex-wrap">
           <button
             onClick={() => setAdminTab('analytics')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              adminTab === 'analytics'
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${adminTab === 'analytics'
                 ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                 : 'text-[#69736F] hover:text-[#18211F]'
-            }`}
+              }`}
           >
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Overview</span>
           </button>
           <button
             onClick={() => setAdminTab('activations')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
-              adminTab === 'activations'
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${adminTab === 'activations'
                 ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                 : 'text-[#69736F] hover:text-[#18211F]'
-            }`}
+              }`}
           >
             <KeyRound className="w-3.5 h-3.5 text-[#C9A227]" />
             <span>Security PIN & Activations</span>
@@ -450,34 +622,51 @@ export const AdminDashboardPage: React.FC = () => {
             )}
           </button>
           <button
-            onClick={() => setAdminTab('commissions')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              adminTab === 'commissions'
+            onClick={() => setAdminTab('earning_caps')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${adminTab === 'earning_caps'
                 ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                 : 'text-[#69736F] hover:text-[#18211F]'
-            }`}
+              }`}
+          >
+            <Zap className="w-3.5 h-3.5 text-[#C9A227]" />
+            <span>Earning Cap (₹3L)</span>
+          </button>
+          <button
+            onClick={() => setAdminTab('rank_rewards')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${adminTab === 'rank_rewards'
+                ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
+                : 'text-[#69736F] hover:text-[#18211F]'
+              }`}
+          >
+            <Award className="w-3.5 h-3.5 text-[#C9A227]" />
+            <span>Rank & Rewards</span>
+          </button>
+          <button
+            onClick={() => setAdminTab('commissions')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${adminTab === 'commissions'
+                ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
+                : 'text-[#69736F] hover:text-[#18211F]'
+              }`}
           >
             <Coins className="w-3.5 h-3.5 text-[#C9A227]" />
             <span>Income Audit</span>
           </button>
           <button
             onClick={() => setAdminTab('settlements')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              adminTab === 'settlements'
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${adminTab === 'settlements'
                 ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                 : 'text-[#69736F] hover:text-[#18211F]'
-            }`}
+              }`}
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-[#C9A227]" />
             <span>Slot Settlements</span>
           </button>
           <button
             onClick={() => setAdminTab('volume_ledger')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              adminTab === 'volume_ledger'
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${adminTab === 'volume_ledger'
                 ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                 : 'text-[#69736F] hover:text-[#18211F]'
-            }`}
+              }`}
           >
             <Layers className="w-3.5 h-3.5 text-[#063B32]" />
             <span>Volume Ledger</span>
@@ -673,7 +862,7 @@ export const AdminDashboardPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-[#C9A227]" />
-                  <span className="text-[#69736F] font-medium">Binary Matching (₹10k/Pair)</span>
+                  <span className="text-[#69736F] font-medium">Matching Pair Bonus (₹15k/Pair)</span>
                 </div>
               </div>
             </div>
@@ -776,11 +965,10 @@ export const AdminDashboardPage: React.FC = () => {
               <button
                 key={st.id}
                 onClick={() => setPinSubTab(st.id as any)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  pinSubTab === st.id
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${pinSubTab === st.id
                     ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                     : 'bg-[#F7F4EC] text-[#69736F] hover:text-[#18211F] border border-[#E5E0D3]'
-                }`}
+                  }`}
               >
                 <st.icon className="w-3.5 h-3.5" />
                 <span>{st.label}</span>
@@ -817,11 +1005,10 @@ export const AdminDashboardPage: React.FC = () => {
                   <button
                     key={tab.value}
                     onClick={() => setPinOrderStatusFilter(tab.value)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                      pinOrderStatusFilter === tab.value
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${pinOrderStatusFilter === tab.value
                         ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                         : 'bg-[#F7F4EC] text-[#69736F] hover:text-[#18211F] border border-[#E5E0D3]'
-                    }`}
+                      }`}
                   >
                     {tab.label}
                   </button>
@@ -884,18 +1071,16 @@ export const AdminDashboardPage: React.FC = () => {
                               <div className="text-[10px] text-[#69736F] mt-0.5">{order.payment_method}</div>
                             </td>
                             <td className="py-3.5 px-3">
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-                                order.status === 'COMPLETED'
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${order.status === 'COMPLETED'
                                   ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
                                   : order.status === 'PAYMENT_VERIFIED'
-                                  ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
-                                  : order.status === 'REJECTED'
-                                  ? 'bg-red-50 text-red-700 border-red-200'
-                                  : 'bg-amber-50 text-amber-800 border-amber-200'
-                              }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                  order.status === 'COMPLETED' ? 'bg-[#0E9F6E]' : order.status === 'PAYMENT_VERIFIED' ? 'bg-[#C9A227]' : order.status === 'REJECTED' ? 'bg-red-600' : 'bg-amber-600'
-                                }`} />
+                                    ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
+                                    : order.status === 'REJECTED'
+                                      ? 'bg-red-50 text-red-700 border-red-200'
+                                      : 'bg-amber-50 text-amber-800 border-amber-200'
+                                }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${order.status === 'COMPLETED' ? 'bg-[#0E9F6E]' : order.status === 'PAYMENT_VERIFIED' ? 'bg-[#C9A227]' : order.status === 'REJECTED' ? 'bg-red-600' : 'bg-amber-600'
+                                  }`} />
                                 <span>{order.status.replace('_', ' ')}</span>
                               </span>
                             </td>
@@ -998,11 +1183,10 @@ export const AdminDashboardPage: React.FC = () => {
                     <button
                       key={tab.value}
                       onClick={() => setActivationStatusFilter(tab.value)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                        activationStatusFilter === tab.value
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${activationStatusFilter === tab.value
                           ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                           : 'bg-[#F7F4EC] text-[#69736F] hover:text-[#18211F] border border-[#E5E0D3]'
-                      }`}
+                        }`}
                     >
                       {tab.label}
                     </button>
@@ -1082,20 +1266,18 @@ export const AdminDashboardPage: React.FC = () => {
                               <div className="text-[10px] text-[#69736F] mt-0.5">{r.payment_method}</div>
                             </td>
                             <td className="py-3.5 px-3 font-sans">
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-                                r.status === 'ACTIVATED'
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${r.status === 'ACTIVATED'
                                   ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
                                   : r.status === 'PIN_ISSUED'
-                                  ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
-                                  : r.status === 'PAYMENT_VERIFIED'
-                                  ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
-                                  : r.status === 'REJECTED'
-                                  ? 'bg-red-50 text-red-700 border-red-200'
-                                  : 'bg-amber-50 text-amber-800 border-amber-200'
-                              }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                  r.status === 'ACTIVATED' ? 'bg-[#0E9F6E]' : r.status === 'PIN_ISSUED' ? 'bg-[#C9A227]' : r.status === 'REJECTED' ? 'bg-red-600' : 'bg-amber-600'
-                                }`} />
+                                    ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
+                                    : r.status === 'PAYMENT_VERIFIED'
+                                      ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
+                                      : r.status === 'REJECTED'
+                                        ? 'bg-red-50 text-red-700 border-red-200'
+                                        : 'bg-amber-50 text-amber-800 border-amber-200'
+                                }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${r.status === 'ACTIVATED' ? 'bg-[#0E9F6E]' : r.status === 'PIN_ISSUED' ? 'bg-[#C9A227]' : r.status === 'REJECTED' ? 'bg-red-600' : 'bg-amber-600'
+                                  }`} />
                                 <span>{r.status.replace('_', ' ')}</span>
                               </span>
                             </td>
@@ -1234,13 +1416,12 @@ export const AdminDashboardPage: React.FC = () => {
                             <div className="text-[10px] text-[#69736F] font-mono">{p.original_owner_code}</div>
                           </td>
                           <td className="py-3 px-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                              p.status === 'AVAILABLE' || p.status === 'ISSUED'
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${p.status === 'AVAILABLE' || p.status === 'ISSUED'
                                 ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
                                 : p.status === 'USED'
-                                ? 'bg-[#F7F4EC] text-[#69736F] border-[#E5E0D3]'
-                                : 'bg-red-50 text-red-700 border-red-200'
-                            }`}>
+                                  ? 'bg-[#F7F4EC] text-[#69736F] border-[#E5E0D3]'
+                                  : 'bg-red-50 text-red-700 border-red-200'
+                              }`}>
                               {p.status}
                             </span>
                           </td>
@@ -1395,6 +1576,767 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       )}
 
+      {/* RANK & REWARDS MANAGEMENT TAB */}
+      {adminTab === 'rank_rewards' && (
+        <div className="space-y-6">
+          {/* 1. Rank Configurations Table Card */}
+          <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E0D3] pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#FAF4DC] border border-[#E2C766] flex items-center justify-center text-[#8C6C16]">
+                    <Award className="w-4 h-4 text-[#C9A227]" />
+                  </div>
+                  <h2 className="text-lg font-heading font-extrabold text-[#18211F]">
+                    Rank & Reward Tier Configuration
+                  </h2>
+                </div>
+                <p className="text-xs text-[#69736F] mt-1">
+                  Configure sprint duration (default: 7 days), direct referral targets, and reward awards (Cash / EV Scooter).
+                </p>
+              </div>
+
+              {/* Manual User Rank Evaluator */}
+              <form onSubmit={handleManualEvaluate} className="flex items-center gap-2 self-start sm:self-auto">
+                <input
+                  type="text"
+                  placeholder="User ID (e.g. 10)"
+                  value={evaluatingUserId}
+                  onChange={(e) => setEvaluatingUserId(e.target.value)}
+                  className="w-32 px-3 py-1.5 rounded-xl bg-[#F7F4EC] border border-[#E5E0D3] text-xs font-mono font-bold text-[#18211F] focus:outline-none focus:border-[#063B32]"
+                />
+                <button
+                  type="submit"
+                  disabled={evaluatingLoading || !evaluatingUserId.trim()}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+                >
+                  {evaluatingLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-[#C9A227]" />}
+                  <span>Evaluate</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Configs Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-[#E5E0D3] text-[#69736F] uppercase text-[10px] font-mono">
+                    <th className="py-3 px-3">Rank Name</th>
+                    <th className="py-3 px-3">Level</th>
+                    <th className="py-3 px-3">Target Condition</th>
+                    <th className="py-3 px-3">Sprint Window</th>
+                    <th className="py-3 px-3">Reward Type</th>
+                    <th className="py-3 px-3">Award Amount</th>
+                    <th className="py-3 px-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E5E0D3]/60">
+                  {rankConfigs?.map((cfg) => {
+                    const isStar = cfg.rank_name === 'STAR';
+                    const isSuperStar = cfg.rank_name === 'SUPER_STAR';
+                    const isVIP = cfg.rank_name === 'VIP';
+                    const TierIcon = isStar ? Star : isSuperStar ? Sparkles : Crown;
+
+                    return (
+                      <tr key={cfg.id} className="hover:bg-[#F7F4EC]/60 transition-colors">
+                        <td className="py-3.5 px-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-[#FAF4DC] border border-[#E2C766] flex items-center justify-center text-[#8C6C16]">
+                              <TierIcon className="w-3.5 h-3.5 text-[#C9A227]" />
+                            </div>
+                            <div>
+                              <div className="font-heading font-extrabold text-[#18211F] text-sm">
+                                {cfg.display_name}
+                              </div>
+                              <div className="text-[10px] font-mono text-[#8C6C16]">
+                                {cfg.rank_name}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-3 font-mono font-bold text-[#063B32]">
+                          Level {cfg.level}
+                        </td>
+                        <td className="py-3.5 px-3">
+                          <span className="font-medium text-[#18211F]">
+                            {isStar && '2 Direct Sponsored Members'}
+                            {isSuperStar && '2 Direct Members become Star'}
+                            {isVIP && '2 Direct Members become Super Star'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-3 font-mono">
+                          <span className="px-2 py-0.5 rounded-md bg-[#F7F4EC] text-[#18211F] font-bold border border-[#E5E0D3]">
+                            {cfg.qualification_days} Days
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-3">
+                          {cfg.reward_type === 'EV_SCOOTER' ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]">
+                              <Bike className="w-3 h-3 text-[#8C6C16]" />
+                              EV Scooter
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#E0F3EE] text-[#063B32] border border-[#8DCFBF]">
+                              <Coins className="w-3 h-3 text-[#063B32]" />
+                              Cash Bonus
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-3 font-mono font-bold text-[#063B32] text-sm">
+                          {cfg.reward_type === 'EV_SCOOTER' ? 'Non-Cash (Scooter)' : `₹${cfg.reward_amount.toLocaleString()}`}
+                        </td>
+                        <td className="py-3.5 px-3 text-right">
+                          <button
+                            onClick={() => {
+                              setEditingConfig(cfg);
+                              setEditDays(cfg.qualification_days);
+                              setEditRewardType(cfg.reward_type);
+                              setEditRewardAmount(cfg.reward_amount);
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-[#FAF4DC] hover:bg-[#F4E7B4] text-[#8C6C16] border border-[#E2C766] text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 2. Rank Achievements & Fulfillment Ledger Card */}
+          <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E0D3] pb-4">
+              <div>
+                <h2 className="text-lg font-heading font-extrabold text-[#18211F]">
+                  Achievement & Fulfillment Audit Log
+                </h2>
+                <p className="text-xs text-[#69736F]">
+                  Live ledger of member rank qualifications, sprint deadlines, wallet payouts, and non-cash reward fulfillment.
+                </p>
+              </div>
+              <span className="text-xs font-mono bg-[#F7F4EC] px-3 py-1.5 rounded-xl border border-[#E5E0D3] font-bold text-[#063B32] self-start sm:self-auto">
+                {rankAchievementsData?.total || 0} Total Records
+              </span>
+            </div>
+
+            {/* Filter Toolbar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+                {/* Rank Filter */}
+                <select
+                  value={rankFilter}
+                  onChange={(e) => {
+                    setRankFilter(e.target.value);
+                    setRankPage(1);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-[#F7F4EC] border border-[#E5E0D3] text-xs text-[#18211F] font-bold focus:outline-none"
+                >
+                  <option value="">All Ranks</option>
+                  <option value="STAR">Star ⭐</option>
+                  <option value="SUPER_STAR">Super Star 🌟</option>
+                  <option value="VIP">VIP 👑</option>
+                </select>
+
+                {/* Status Filter */}
+                <select
+                  value={rankStatusFilter}
+                  onChange={(e) => {
+                    setRankStatusFilter(e.target.value);
+                    setRankPage(1);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-[#F7F4EC] border border-[#E5E0D3] text-xs text-[#18211F] font-bold focus:outline-none"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="ACHIEVED">Achieved</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="EXPIRED">Expired</option>
+                </select>
+
+                {/* Reward Status Filter */}
+                <select
+                  value={rankRewardStatusFilter}
+                  onChange={(e) => {
+                    setRankRewardStatusFilter(e.target.value);
+                    setRankPage(1);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-[#F7F4EC] border border-[#E5E0D3] text-xs text-[#18211F] font-bold focus:outline-none"
+                >
+                  <option value="">All Rewards</option>
+                  <option value="CREDITED">Wallet Credited</option>
+                  <option value="PENDING_FULFILLMENT">Pending Fulfillment</option>
+                  <option value="FULFILLED">Fulfilled</option>
+                </select>
+              </div>
+
+              {/* Search Box */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#69736F]" />
+                <input
+                  type="text"
+                  placeholder="Search user code, name..."
+                  value={rankSearch}
+                  onChange={(e) => {
+                    setRankSearch(e.target.value);
+                    setRankPage(1);
+                  }}
+                  className="w-full sm:w-60 pl-8 pr-3 py-1.5 rounded-xl bg-[#F7F4EC] border border-[#E5E0D3] text-xs text-[#18211F] focus:outline-none focus:border-[#063B32]"
+                />
+              </div>
+            </div>
+
+            {/* Achievements Table */}
+            <div className="overflow-x-auto">
+              {loadingRankAchievements ? (
+                <div className="py-12 flex justify-center items-center gap-2 text-xs text-[#69736F]">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#C9A227]" />
+                  <span>Loading rank records...</span>
+                </div>
+              ) : rankAchievementsData?.items && rankAchievementsData.items.length > 0 ? (
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#E5E0D3] text-[#69736F] uppercase text-[10px] font-mono">
+                      <th className="py-3 px-3">ID</th>
+                      <th className="py-3 px-3">Member</th>
+                      <th className="py-3 px-3">Rank</th>
+                      <th className="py-3 px-3">Status</th>
+                      <th className="py-3 px-3 font-mono">Sprint Window</th>
+                      <th className="py-3 px-3">Achieved On</th>
+                      <th className="py-3 px-3">Award</th>
+                      <th className="py-3 px-3">Reward Status</th>
+                      <th className="py-3 px-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E5E0D3]/60">
+                    {rankAchievementsData.items.map((ach: RankAchievement) => (
+                      <tr key={ach.id} className="hover:bg-[#F7F4EC]/60 transition-colors">
+                        <td className="py-3 px-3 font-mono text-[#69736F]">#{ach.id}</td>
+                        <td className="py-3 px-3">
+                          <div className="font-bold text-[#18211F]">{ach.user_name}</div>
+                          <div className="text-[10px] font-mono text-[#063B32]">{ach.user_code}</div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="font-bold text-[#063B32]">
+                            {ach.rank_name}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${ach.status === 'ACHIEVED'
+                                ? 'bg-[#E0F3EE] text-[#063B32] border border-[#8DCFBF]'
+                                : ach.status === 'IN_PROGRESS'
+                                  ? 'bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]'
+                                  : 'bg-[#FDF2F2] text-[#C94B4B] border border-[#F8B4B4]'
+                              }`}
+                          >
+                            {ach.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[11px] text-[#69736F]">
+                          <div>{new Date(ach.qualification_started_at).toLocaleDateString()}</div>
+                          <div className="text-[10px] text-[#8C6C16]">to {new Date(ach.qualification_deadline).toLocaleDateString()}</div>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[11px]">
+                          {ach.achieved_at ? new Date(ach.achieved_at).toLocaleDateString() : '-'}
+                        </td>
+                        <td className="py-3 px-3 font-mono font-bold text-[#063B32]">
+                          {ach.reward_type === 'EV_SCOOTER' ? 'EV Scooter' : `₹${ach.reward_amount.toLocaleString()}`}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${ach.reward_status === 'CREDITED' || ach.reward_status === 'FULFILLED'
+                                ? 'bg-[#E0F3EE] text-[#063B32] border border-[#8DCFBF]'
+                                : ach.reward_status === 'PENDING_FULFILLMENT'
+                                  ? 'bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]'
+                                  : 'bg-[#F7F4EC] text-[#69736F] border border-[#E5E0D3]'
+                              }`}
+                          >
+                            {ach.reward_status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <button
+                            onClick={() => {
+                              setFulfillingAchievement(ach);
+                              setFulfillmentStatus(ach.reward_status);
+                              setAdminFulfillmentNotes(ach.admin_notes || '');
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-[#F7F4EC] hover:bg-[#FAF4DC] text-[#18211F] text-xs font-bold border border-[#E5E0D3] transition-colors cursor-pointer"
+                          >
+                            Fulfillment
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="py-12 text-center text-xs text-[#69736F]">
+                  No rank achievement records found.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3b. EARNING CAP & RETOPUP (₹3,00,000) TAB */}
+      {adminTab === 'earning_caps' && (
+        <div className="space-y-6">
+          {/* Top Metrics Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="p-5 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card">
+              <div className="text-[10px] uppercase font-bold tracking-widest text-[#69736F] font-mono">
+                Active Earning Cycles
+              </div>
+              <div className="text-2xl font-heading font-extrabold text-[#063B32] mt-1 font-mono">
+                {earningCapData?.summary?.total_active_cycles || 0}
+              </div>
+              <div className="text-xs text-[#69736F] mt-0.5 font-medium">Currently accumulating bonuses</div>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-gradient-to-br from-[#FFF5F5] to-[#FFFEF9] border border-[#FEB2B2] shadow-wealth-card">
+              <div className="text-[10px] uppercase font-bold tracking-widest text-[#C53030] font-mono flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-[#E53E3E]" />
+                <span>Retopup Required</span>
+              </div>
+              <div className="text-2xl font-heading font-extrabold text-[#9B2C2C] mt-1 font-mono">
+                {earningCapData?.summary?.total_retopup_required || 0}
+              </div>
+              <div className="text-xs text-[#742A2A] mt-0.5 font-medium">Reached ₹3,00,000 earning cap</div>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card">
+              <div className="text-[10px] uppercase font-bold tracking-widest text-[#D69E2E] font-mono">
+                Near Cap (&gt;80%)
+              </div>
+              <div className="text-2xl font-heading font-extrabold text-[#B7791F] mt-1 font-mono">
+                {earningCapData?.summary?.total_near_cap || 0}
+              </div>
+              <div className="text-xs text-[#69736F] mt-0.5 font-medium">Within ₹60,000 of cap</div>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-[#063B32] text-[#FFFEF9] border border-[#C9A227]/30 shadow-wealth-card">
+              <div className="text-[10px] uppercase font-bold tracking-widest text-[#C9A227] font-mono">
+                Per-Cycle Earning Limit
+              </div>
+              <div className="text-2xl font-heading font-extrabold text-[#E2C766] mt-1 font-mono">
+                ₹{(earningCapData?.summary?.cap_limit || 300000).toLocaleString()}
+              </div>
+              <div className="text-xs text-[#E0F3EE] mt-0.5 font-medium">Direct + Pairing income</div>
+            </div>
+          </div>
+
+          {/* Search, Filter & Audit Table */}
+          <div className="p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-heading font-extrabold text-[#18211F]">
+                  Earning Cap Audit & Retopup Monitoring
+                </h3>
+                <p className="text-xs text-[#69736F]">
+                  Track member eligible Direct + Pairing income progress towards the ₹3,00,000 limit.
+                </p>
+              </div>
+
+              {/* Status Filter Pills */}
+              <div className="flex items-center gap-1.5 bg-[#F7F4EC] p-1 rounded-2xl border border-[#E5E0D3] flex-wrap">
+                {(['ALL', 'ACTIVE', 'NEAR_CAP', 'RETOPUP_REQUIRED', 'COMPLETED'] as const).map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setEarningCapStatusFilter(st)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${earningCapStatusFilter === st
+                        ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
+                        : 'text-[#69736F] hover:text-[#18211F]'
+                      }`}
+                  >
+                    {st === 'NEAR_CAP' ? 'Near Cap' : st === 'RETOPUP_REQUIRED' ? 'Retopup Required' : st}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Search Input */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#69736F]" />
+                <input
+                  type="text"
+                  placeholder="Search by member name, user code, mobile or email..."
+                  value={earningCapSearch}
+                  onChange={(e) => setEarningCapSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#E5E0D3] bg-[#F7F4EC] text-xs font-medium text-[#18211F] placeholder-[#69736F] focus:outline-none focus:border-[#063B32]"
+                />
+              </div>
+              <button
+                onClick={() => refetchEarningCaps()}
+                className="px-4 py-2.5 rounded-xl bg-[#F7F4EC] hover:bg-[#FAF4DC] border border-[#E5E0D3] text-xs font-bold text-[#18211F] transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-[#063B32]" />
+                <span>Refresh</span>
+              </button>
+            </div>
+
+            {/* Cycles Table */}
+            <div className="overflow-x-auto rounded-2xl border border-[#E5E0D3]">
+              {loadingEarningCaps ? (
+                <div className="py-12 flex justify-center items-center gap-2 text-xs text-[#69736F]">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#063B32]" />
+                  <span>Loading earning cap records...</span>
+                </div>
+              ) : earningCapData && earningCapData.items.length > 0 ? (
+                <table className="w-full text-left text-xs text-[#18211F]">
+                  <thead className="bg-[#F7F4EC] text-[#69736F] font-mono font-bold uppercase text-[10px] border-b border-[#E5E0D3]">
+                    <tr>
+                      <th className="py-3 px-3">Member</th>
+                      <th className="py-3 px-3">Package</th>
+                      <th className="py-3 px-3">Cycle</th>
+                      <th className="py-3 px-3">Direct Income</th>
+                      <th className="py-3 px-3">Pairing Income</th>
+                      <th className="py-3 px-3">Total Eligible</th>
+                      <th className="py-3 px-3">Remaining</th>
+                      <th className="py-3 px-3">Status</th>
+                      <th className="py-3 px-3">Started</th>
+                      <th className="py-3 px-3">Capped At</th>
+                      <th className="py-3 px-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E5E0D3]/60">
+                    {earningCapData.items.map((cycle: EarningCycle) => (
+                      <tr key={cycle.id} className="hover:bg-[#F7F4EC]/60 transition-colors">
+                        <td className="py-3 px-3">
+                          <div className="font-bold text-[#18211F]">{cycle.user_name || 'Member'}</div>
+                          <div className="text-[10px] font-mono text-[#063B32]">{cycle.user_code}</div>
+                        </td>
+                        <td className="py-3 px-3 text-[#69736F]">
+                          {cycle.package_name || 'Premium Package'}
+                        </td>
+                        <td className="py-3 px-3 font-mono font-bold text-[#063B32]">
+                          #{cycle.cycle_number}
+                        </td>
+                        <td className="py-3 px-3 font-mono">
+                          ₹{cycle.direct_income.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-3 font-mono">
+                          ₹{cycle.pairing_income.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-3 font-mono font-bold text-[#18211F]">
+                          ₹{cycle.total_eligible_income.toLocaleString()}
+                          <div className="w-16 h-1 rounded-full bg-[#E5E0D3] mt-1 overflow-hidden">
+                            <div
+                              className={`h-full ${cycle.progress_percentage >= 100
+                                  ? 'bg-[#C53030]'
+                                  : cycle.progress_percentage >= 80
+                                    ? 'bg-[#D69E2E]'
+                                    : 'bg-[#063B32]'
+                                }`}
+                              style={{ width: `${Math.min(100, cycle.progress_percentage)}%` }}
+                            />
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 font-mono font-bold text-[#063B32]">
+                          ₹{cycle.remaining_capacity.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${cycle.status === 'RETOPUP_REQUIRED'
+                                ? 'bg-[#FDF2F2] text-[#C53030] border border-[#FEB2B2]'
+                                : cycle.status === 'ACTIVE'
+                                  ? 'bg-[#E0F3EE] text-[#063B32] border border-[#8DCFBF]'
+                                  : 'bg-[#F7F4EC] text-[#69736F] border border-[#E5E0D3]'
+                              }`}
+                          >
+                            {cycle.status === 'RETOPUP_REQUIRED' ? 'RETOPUP REQUIRED' : cycle.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[11px] text-[#69736F]">
+                          {cycle.started_at ? (
+                            <div>
+                              <div>{new Date(cycle.started_at).toLocaleDateString()}</div>
+                              <div className="text-[10px] text-[#69736F]">{new Date(cycle.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                            </div>
+                          ) : '-'}
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[11px] text-[#C53030]">
+                          {cycle.capped_at ? (
+                            <div>
+                              <div className="font-bold">{new Date(cycle.capped_at).toLocaleDateString()}</div>
+                              <div className="text-[10px]">{new Date(cycle.capped_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                            </div>
+                          ) : '-'}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <button
+                            onClick={() => {
+                              setOverrideCycleModal(cycle);
+                              setOverrideReason('');
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-[#F7F4EC] hover:bg-[#FAF4DC] text-[#18211F] text-xs font-bold border border-[#E5E0D3] transition-colors cursor-pointer"
+                          >
+                            Override Reset
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="py-12 text-center text-xs text-[#69736F]">
+                  No earning cap records found matching criteria.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN OVERRIDE RESET CYCLE MODAL */}
+      {overrideCycleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-md rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 relative text-[#18211F]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#E5E0D3] pb-3 mb-4">
+              <h3 className="text-lg font-heading font-extrabold text-[#18211F]">
+                Override Reset Earning Cycle
+              </h3>
+              <button
+                onClick={() => setOverrideCycleModal(null)}
+                className="w-8 h-8 rounded-full hover:bg-[#F7F4EC] flex items-center justify-center text-[#69736F] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleOverrideReset} className="space-y-4">
+              <div className="p-3.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] space-y-1.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-[#69736F]">Member:</span>
+                  <span className="font-bold text-[#18211F]">{overrideCycleModal.user_name} ({overrideCycleModal.user_code})</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#69736F]">Current Cycle:</span>
+                  <span className="font-bold font-mono text-[#063B32]">#{overrideCycleModal.cycle_number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#69736F]">Total Income Earned:</span>
+                  <span className="font-bold font-mono text-[#18211F]">₹{overrideCycleModal.total_eligible_income.toLocaleString()} / ₹{overrideCycleModal.earning_cap.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#69736F]">Current Status:</span>
+                  <span className="font-bold uppercase text-[#C53030]">{overrideCycleModal.status}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
+                  Mandatory Audit Reason (min 5 characters) *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="e.g. Approved top-up payment verified offline or special administrative exception..."
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E5E0D3] bg-[#F7F4EC] text-xs text-[#18211F] placeholder-[#69736F] focus:outline-none focus:border-[#063B32]"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#FAF4DC] border border-[#E2C766] text-xs text-[#8C6C16] flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-[#C88A16] shrink-0 mt-0.5" />
+                <span>
+                  This will mark Cycle #{overrideCycleModal.cycle_number} as COMPLETED, create Cycle #{overrideCycleModal.cycle_number + 1} starting at ₹0, and set the user's status back to ACTIVE. All changes are logged in the immutable audit trail.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#E5E0D3]">
+                <button
+                  type="button"
+                  onClick={() => setOverrideCycleModal(null)}
+                  className="px-4 py-2 rounded-xl border border-[#E5E0D3] text-xs font-bold text-[#69736F] hover:bg-[#F7F4EC] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={overrideLoading || overrideReason.trim().length < 5}
+                  className="px-5 py-2 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                >
+                  {overrideLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Confirm Override Reset</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT RANK CONFIG MODAL */}
+      {editingConfig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-md rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 relative text-[#18211F]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#E5E0D3] pb-3 mb-4">
+              <h3 className="text-lg font-heading font-extrabold text-[#18211F]">
+                Edit {editingConfig.display_name} Config
+              </h3>
+              <button
+                onClick={() => setEditingConfig(null)}
+                className="p-1 rounded-lg text-[#69736F] hover:bg-[#F7F4EC] cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveRankConfig} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
+                  Sprint Duration (Days)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  required
+                  value={editDays}
+                  onChange={(e) => setEditDays(parseInt(e.target.value) || 7)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E0D3] text-xs font-mono font-bold text-[#18211F] focus:outline-none focus:border-[#063B32]"
+                />
+                <p className="text-[10px] text-[#69736F] mt-1">Default is 7 days from qualification sprint start.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
+                  Reward Type
+                </label>
+                <select
+                  value={editRewardType}
+                  onChange={(e) => setEditRewardType(e.target.value as any)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E0D3] text-xs font-bold text-[#18211F] focus:outline-none focus:border-[#063B32]"
+                >
+                  <option value="CASH">CASH (Direct Wallet Credit)</option>
+                  {editingConfig.rank_name === 'VIP' && (
+                    <option value="EV_SCOOTER">EV_SCOOTER (Non-Cash Fulfillment)</option>
+                  )}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
+                  Reward Amount (₹)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step={100}
+                  required
+                  value={editRewardAmount}
+                  onChange={(e) => setEditRewardAmount(parseFloat(e.target.value) || 0)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E0D3] text-xs font-mono font-bold text-[#18211F] focus:outline-none focus:border-[#063B32]"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingConfig(null)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-[#E5E0D3] hover:bg-[#EFECE2] text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingConfig}
+                  className="flex-1 py-2.5 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {savingConfig ? 'Saving...' : 'Save Configuration'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* FULFILLMENT MODAL */}
+      {fulfillingAchievement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-md rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 relative text-[#18211F]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#E5E0D3] pb-3 mb-4">
+              <div>
+                <h3 className="text-lg font-heading font-extrabold text-[#18211F]">
+                  Update Reward Fulfillment
+                </h3>
+                <p className="text-xs text-[#69736F]">
+                  {fulfillingAchievement.user_name} • {fulfillingAchievement.rank_name}
+                </p>
+              </div>
+              <button
+                onClick={() => setFulfillingAchievement(null)}
+                className="p-1 rounded-lg text-[#69736F] hover:bg-[#F7F4EC] cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateFulfillment} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
+                  Fulfillment Status
+                </label>
+                <select
+                  value={fulfillmentStatus}
+                  onChange={(e) => setFulfillmentStatus(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E0D3] text-xs font-bold text-[#18211F] focus:outline-none focus:border-[#063B32]"
+                >
+                  <option value="PENDING_FULFILLMENT">Pending Fulfillment (Processing)</option>
+                  <option value="FULFILLED">Fulfilled (Delivered / Dispatched)</option>
+                  <option value="CREDITED">Credited (Wallet Ledger)</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#18211F] mb-1">
+                  Admin Notes / Tracking Details
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. EV Scooter dispatch tracking #EV98273 or Handover receipt verified"
+                  value={adminFulfillmentNotes}
+                  onChange={(e) => setAdminFulfillmentNotes(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E0D3] text-xs text-[#18211F] focus:outline-none focus:border-[#063B32]"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setFulfillingAchievement(null)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-[#E5E0D3] hover:bg-[#EFECE2] text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingFulfillment}
+                  className="flex-1 py-2.5 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {updatingFulfillment ? 'Updating...' : 'Confirm Update'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* 1. Commissions Audit Table */}
       {adminTab === 'commissions' && (
         <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card space-y-4">
@@ -1402,7 +2344,7 @@ export const AdminDashboardPage: React.FC = () => {
             <div>
               <h2 className="text-lg font-heading font-extrabold text-[#18211F]">Network Commissions Audit Log</h2>
               <p className="text-xs text-[#69736F]">
-                Real-time lineage of all Direct Sponsor, Pair Bonus (₹10k), Matching Upline, and Carry Commission events.
+                Real-time lineage of all Direct Sponsor and Pair Bonus (₹15k) events.
               </p>
             </div>
             <span className="text-xs font-mono bg-[#F7F4EC] px-3 py-1.5 rounded-xl border border-[#E5E0D3] font-bold text-[#063B32] self-start sm:self-auto">
@@ -1416,18 +2358,15 @@ export const AdminDashboardPage: React.FC = () => {
               {[
                 { label: 'All Commissions', value: '' },
                 { label: '🟢 Direct Sponsor', value: 'DIRECT_COMMISSION' },
-                { label: '🟣 Pair Bonus (₹10k)', value: 'PAIR_BONUS' },
-                { label: '🟠 Matching Upline', value: 'MATCHING_COMMISSION' },
-                { label: '🔵 Carry Forward', value: 'CARRY_COMMISSION' },
+                { label: '🟣 Pair Bonus (₹15k)', value: 'PAIR_BONUS' },
               ].map((tab) => (
                 <button
                   key={tab.value}
                   onClick={() => setCommTypeFilter(tab.value)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                    commTypeFilter === tab.value
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${commTypeFilter === tab.value
                       ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                       : 'bg-[#F7F4EC] text-[#69736F] hover:text-[#18211F] border border-[#E5E0D3]'
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -1471,15 +2410,14 @@ export const AdminDashboardPage: React.FC = () => {
                         <div className="font-bold text-[#063B32]">{c.beneficiary_name}</div>
                       </td>
                       <td className="py-3 px-3 font-sans">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                          c.commission_type === 'DIRECT_REFERRAL' || c.commission_type === 'DIRECT_COMMISSION'
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${c.commission_type === 'DIRECT_REFERRAL' || c.commission_type === 'DIRECT_COMMISSION'
                             ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
                             : c.commission_type === 'PAIR_BONUS'
-                            ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
-                            : c.commission_type === 'MATCHING_COMMISSION'
-                            ? 'bg-orange-50 text-orange-800 border-orange-200'
-                            : 'bg-blue-50 text-blue-800 border-blue-200'
-                        }`}>
+                              ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
+                              : c.commission_type === 'MATCHING_COMMISSION'
+                                ? 'bg-orange-50 text-orange-800 border-orange-200'
+                                : 'bg-blue-50 text-blue-800 border-blue-200'
+                          }`}>
                           {c.commission_type.replace('_', ' ')}
                         </span>
                       </td>
@@ -1573,9 +2511,9 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card space-y-4">
           <div className="flex items-center justify-between border-b border-[#E5E0D3] pb-4">
             <div>
-              <h2 className="text-lg font-heading font-extrabold text-[#18211F]">Binary Volume Propagation Ledger</h2>
+              <h2 className="text-lg font-heading font-extrabold text-[#18211F]">Matching Volume Propagation Ledger</h2>
               <p className="text-xs text-[#69736F]">
-                FIFO tracking of volume segments as 30,000 BV bubbles upward through Left & Right binary ancestry trees.
+                FIFO tracking of volume segments as 30,000 BV bubbles upward through Left & Right Matching ancestry trees.
               </p>
             </div>
             <span className="text-xs font-mono bg-[#F7F4EC] px-3 py-1.5 rounded-xl border border-[#E5E0D3] font-bold text-[#063B32]">
@@ -1610,9 +2548,8 @@ export const AdminDashboardPage: React.FC = () => {
                         <div className="text-[10px] text-[#69736F] font-mono">{v.ancestor_user_code}</div>
                       </td>
                       <td className="py-3 px-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          v.side === 'LEFT' ? 'bg-[#E0F3EE] text-[#063B32]' : 'bg-[#FAF4DC] text-[#8C6C16]'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${v.side === 'LEFT' ? 'bg-[#E0F3EE] text-[#063B32]' : 'bg-[#FAF4DC] text-[#8C6C16]'
+                          }`}>
                           {v.side}
                         </span>
                       </td>
@@ -1621,11 +2558,10 @@ export const AdminDashboardPage: React.FC = () => {
                       <td className="py-3 px-3 text-[#8C6C16]">₹{v.consumed_amount?.toLocaleString()}</td>
                       <td className="py-3 px-3 font-bold text-[#063B32]">₹{v.remaining_amount?.toLocaleString()}</td>
                       <td className="py-3 px-3 font-sans">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                          v.status === 'CONSUMED' 
-                            ? 'bg-[#F7F4EC] text-[#69736F] border-[#E5E0D3]' 
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${v.status === 'CONSUMED'
+                            ? 'bg-[#F7F4EC] text-[#69736F] border-[#E5E0D3]'
                             : 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
-                        }`}>
+                          }`}>
                           {v.status}
                         </span>
                       </td>
@@ -1643,7 +2579,7 @@ export const AdminDashboardPage: React.FC = () => {
       {/* ONE-TIME SECURITY PIN DISPLAY DIALOG */}
       {generatedPinModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div 
+          <div
             className="w-full max-w-lg rounded-3xl bg-[#FFFEF9] border-2 border-[#C9A227] shadow-wealth-gold p-6 sm:p-7 relative text-[#18211F]"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1712,7 +2648,7 @@ export const AdminDashboardPage: React.FC = () => {
       {/* BATCH SECURITY PINS GENERATED MODAL (FOR BULK ORDERS) */}
       {batchGeneratedPinsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div 
+          <div
             className="w-full max-w-2xl rounded-3xl bg-[#FFFEF9] border-2 border-[#C9A227] shadow-wealth-gold p-6 sm:p-7 relative text-[#18211F] max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1764,7 +2700,7 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
-                  const allPinsFormatted = batchGeneratedPinsModal.pins.map((p, i) => 
+                  const allPinsFormatted = batchGeneratedPinsModal.pins.map((p, i) =>
                     `PIN #${i + 1}: ${batchGeneratedPinsModal.raw_pins[i]} (Ref: ${p.pin_code})`
                   ).join('\n');
                   navigator.clipboard.writeText(allPinsFormatted);
@@ -1800,7 +2736,7 @@ export const AdminDashboardPage: React.FC = () => {
       {/* REJECT REQUEST MODAL (SINGLE USER) */}
       {rejectingReq && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div 
+          <div
             className="w-full max-w-md rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 relative text-[#18211F]"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1850,7 +2786,7 @@ export const AdminDashboardPage: React.FC = () => {
       {/* REJECT BULK PIN ORDER MODAL */}
       {rejectingPinOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div 
+          <div
             className="w-full max-w-md rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 relative text-[#18211F]"
             onClick={(e) => e.stopPropagation()}
           >

@@ -1,11 +1,11 @@
 import React from 'react';
-import { BinaryTreeNode } from '../../types';
+import { MatchingTreeNode } from '../../types';
 import { User as UserIcon, Award, ArrowUpRight, Sparkles, RotateCcw, Zap, CheckCircle2 } from 'lucide-react';
 
 interface TreeNodeCardProps {
-  node: BinaryTreeNode | null;
+  node: MatchingTreeNode | null;
   positionLabel?: 'LEFT' | 'RIGHT' | 'ROOT';
-  onSelectNode: (node: BinaryTreeNode) => void;
+  onSelectNode: (node: MatchingTreeNode) => void;
   isSelected?: boolean;
   viewMode?: 'network' | 'active_slot' | 'history';
 }
@@ -44,15 +44,14 @@ export const TreeNodeCard: React.FC<TreeNodeCardProps> = ({
   return (
     <div
       onClick={() => onSelectNode(node)}
-      className={`w-64 rounded-3xl p-4 cursor-pointer transition-all duration-200 text-left relative bg-[#FFFEF9] border ${
-        isSelected
+      className={`w-64 rounded-3xl p-4 cursor-pointer transition-all duration-200 text-left relative bg-[#FFFEF9] border ${isSelected
           ? 'border-[#C9A227] shadow-wealth-gold ring-4 ring-[#FAF4DC]'
           : node.has_active_slot_volume && isActiveSlotMode
-          ? 'border-[#063B32] ring-2 ring-[#8DCFBF]/50 shadow-wealth-elevated'
-          : isRoot
-          ? 'border-[#C9A227]/60 shadow-wealth-elevated'
-          : 'border-[#E5E0D3] shadow-wealth-card hover:border-[#C9A227]/60 hover:shadow-md'
-      }`}
+            ? 'border-[#063B32] ring-2 ring-[#8DCFBF]/50 shadow-wealth-elevated'
+            : isRoot
+              ? 'border-[#C9A227]/60 shadow-wealth-elevated'
+              : 'border-[#E5E0D3] shadow-wealth-card hover:border-[#C9A227]/60 hover:shadow-md'
+        }`}
     >
       {/* Active slot indicator banner if in active slot mode */}
       {isActiveSlotMode && node.has_active_slot_volume && (
@@ -65,11 +64,10 @@ export const TreeNodeCard: React.FC<TreeNodeCardProps> = ({
       {/* Top Tag: Active status & Position */}
       <div className="flex items-center justify-between mb-2.5">
         <span
-          className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-            node.is_active
+          className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${node.is_active
               ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
               : 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
-          }`}
+            }`}
         >
           {node.is_active ? '● Active' : '● Inactive'}
         </span>
@@ -82,13 +80,12 @@ export const TreeNodeCard: React.FC<TreeNodeCardProps> = ({
       {/* User Info */}
       <div className="flex items-center gap-2.5 mb-3">
         <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center font-heading font-extrabold text-xs uppercase shrink-0 transition-transform ${
-            isRoot
+          className={`w-10 h-10 rounded-full flex items-center justify-center font-heading font-extrabold text-xs uppercase shrink-0 transition-transform ${isRoot
               ? 'bg-[#063B32] text-[#E2C766] gold-ring shadow-wealth-gold'
               : node.is_active
-              ? 'bg-[#063B32] text-[#FFFEF9] border border-[#C9A227]/40 shadow-xs'
-              : 'bg-[#69736F] text-[#FFFEF9]'
-          }`}
+                ? 'bg-[#063B32] text-[#FFFEF9] border border-[#C9A227]/40 shadow-xs'
+                : 'bg-[#69736F] text-[#FFFEF9]'
+            }`}
         >
           {node.full_name?.substring(0, 2) || 'AM'}
         </div>
@@ -134,12 +131,12 @@ export const TreeNodeCard: React.FC<TreeNodeCardProps> = ({
       {node.pair_completed ? (
         <div className="mb-2 p-1.5 rounded-xl bg-[#E0F3EE] border border-[#8DCFBF] text-center text-[10px] font-bold text-[#063B32] flex items-center justify-center gap-1">
           <CheckCircle2 className="w-3 h-3 text-[#063B32]" />
-          <span>✓ Slot Pair Paid (₹10,000)</span>
+          <span>✓ Slot Pair Paid (₹15,000)</span>
         </div>
       ) : isPairQualified ? (
         <div className="mb-2 p-1.5 rounded-xl bg-[#FAF4DC] border border-[#E2C766] text-center text-[10px] font-bold text-[#8C6C16] flex items-center justify-center gap-1 shimmer-gold">
           <Sparkles className="w-3.5 h-3.5 text-[#C9A227]" />
-          <span>₹10,000 Pair Qualified</span>
+          <span>₹15,000 Pair Qualified</span>
         </div>
       ) : null}
 

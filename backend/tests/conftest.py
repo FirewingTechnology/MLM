@@ -16,6 +16,9 @@ import app.models.withdrawal
 import app.models.audit_log
 import app.models.demo_time
 import app.models.referral_token
+import app.models.rank_config
+import app.models.rank_achievement
+import app.models.earning_cycle
 
 
 import os

@@ -4,13 +4,13 @@ import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { User } from '../../types';
 import { AdminAdjustmentModal } from '../../components/modals/AdminAdjustmentModal';
-import { 
-  Users, 
-  Search, 
-  CheckCircle2, 
-  Clock, 
-  DollarSign, 
-  ChevronLeft, 
+import {
+  Users,
+  Search,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  ChevronLeft,
   ChevronRight,
   ShieldAlert
 } from 'lucide-react';
@@ -64,7 +64,7 @@ export const AdminUsersPage: React.FC = () => {
           </div>
           <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Distributor Management</h1>
           <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-            Inspect all registered accounts, binary positions, wallet balances, and manually adjust ledgers.
+            Inspect all registered accounts, Matching positions, wallet balances, and manually adjust ledgers.
           </p>
         </div>
       </div>
@@ -97,11 +97,10 @@ export const AdminUsersPage: React.FC = () => {
                 setStatusFilter(tab.value);
                 setPage(1);
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-heading font-bold transition-all cursor-pointer ${
-                statusFilter === tab.value
+              className={`px-3 py-1.5 rounded-xl text-xs font-heading font-bold transition-all cursor-pointer ${statusFilter === tab.value
                   ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
                   : 'text-[#69736F] hover:text-[#18211F] hover:bg-[#F7F4EC]'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -142,9 +141,8 @@ export const AdminUsersPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
-                        u.role === 'ADMIN' ? 'bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]' : 'bg-[#F7F4EC] text-[#69736F] border border-[#E5E0D3]'
-                      }`}>
+                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${u.role === 'ADMIN' ? 'bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]' : 'bg-[#F7F4EC] text-[#69736F] border border-[#E5E0D3]'
+                        }`}>
                         {u.role}
                       </span>
                     </td>
@@ -165,11 +163,10 @@ export const AdminUsersPage: React.FC = () => {
                     <td className="py-3 px-4 text-center">
                       <button
                         onClick={() => handleToggleStatus(u)}
-                        className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border transition-all cursor-pointer ${
-                          u.is_active
+                        className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border transition-all cursor-pointer ${u.is_active
                             ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF] hover:bg-[#CBECE3]'
                             : 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766] hover:bg-[#F2E8C4]'
-                        }`}
+                          }`}
                         title="Click to toggle status"
                       >
                         {u.is_active ? <CheckCircle2 className="w-3 h-3 text-[#063B32]" /> : <Clock className="w-3 h-3 text-[#8C6C16]" />}

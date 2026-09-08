@@ -8,13 +8,15 @@
 | **Application Framework** | FastAPI (Gunicorn + UvicornWorker on port `8000`) | **CONFIRMED** |
 | **Database Target** | AWS RDS PostgreSQL (`postgresql+psycopg://`) | **CONFIRMED** |
 | **Archive Output Path** | `deploy/mlm-backend-elastic-beanstalk.zip` | **CONFIRMED** |
-| **Archive File Size** | `123,807` bytes (~0.12 MB) | **OPTIMAL** |
+| **Archive File Size** | `124,183` bytes (~0.12 MB) | **OPTIMAL** |
 | **Total Included Files** | `89` files | **CONFIRMED** |
-| **Total Excluded Artifacts** | `202` files/directories | **EXCLUDED** |
+| **Total Excluded Artifacts** | `203` files/directories | **EXCLUDED** |
 | **Forbidden Artifact Violations** | **0 violations** | **PASSED** |
-| **Backend Test Suite Status** | **185 / 185 Passed** (100% Pass Rate) | **PASSED** |
+| **Backend Test Suite Status** | **187 / 187 Passed** (100% Pass Rate) | **PASSED** |
 | **Static Code & Syntax Audit** | `python -m compileall app scripts` (0 Errors) | **PASSED** |
 | **Dependency Consistency Audit** | `pip check` (No broken requirements found) | **PASSED** |
+| **Production Secret Key Isolation** | Enforced >= 32 chars from ENV, blocks dev fallback | **PASSED** |
+| **Production CORS Isolation** | Strict FRONTEND_URL/CORS_ORIGINS, excludes localhost | **PASSED** |
 | **MLM Business Logic State** | **100% Frozen & Untouched** | **CONFIRMED** |
 
 ---
@@ -87,9 +89,10 @@ Every file in `deploy/mlm-backend-elastic-beanstalk.zip` was systematically audi
 ## 4. Procfile Verification
 
 - **Location**: Root of ZIP archive (`Procfile`)
+- **Worker Concurrency**: Single Gunicorn worker (`--workers 1`) to eliminate database migration/baseline initialization concurrency races during startup.
 - **Contents**:
   ```text
-  web: gunicorn -k uvicorn.workers.UvicornWorker app.main:app --workers 4 --timeout 120 --bind 0.0.0.0:8000
+  web: gunicorn -k uvicorn.workers.UvicornWorker app.main:app --workers 1 --timeout 120 --bind 0.0.0.0:8000
   ```
 - **Application Target**: `app.main:app` (FastAPI instance object defined in `app/main.py`).
 
@@ -108,8 +111,8 @@ Every file in `deploy/mlm-backend-elastic-beanstalk.zip` was systematically audi
   # Database & Migrations (AWS RDS PostgreSQL)
   sqlalchemy>=2.0.25
   alembic>=1.13.0
-  psycopg[binary]>=3.1.18
-  psycopg2-binary>=2.9.9
+  psycopg[Matching]>=3.1.18
+  psycopg2-Matching>=2.9.9
 
   # Data Validation & Configuration
   pydantic>=2.6.0
@@ -133,12 +136,19 @@ Every file in `deploy/mlm-backend-elastic-beanstalk.zip` was systematically audi
 
 ---
 
-## 6. PostgreSQL Configuration Verification
+## 6. Production Security & Hardening Controls
 
-- **Dialect Scheme**: `postgresql+psycopg` (`psycopg3` driver)
-- **Production Guard**: `Settings.validate_production_configuration()` strictly blocks `sqlite://` and non-PostgreSQL databases when `APP_ENV=production`.
-- **Connection Pool**: `pool_pre_ping=True`, `pool_size=10`, `max_overflow=20`, `pool_recycle=1800`.
-- **Zero Hardcoded Secrets**: Hostname, credentials, and passwords are read strictly from environment variables.
+1. **SECRET_KEY Enforcement**:
+   - In production (`APP_ENV=production`), `SECRET_KEY` must be explicitly provided in environment variables.
+   - Rejects empty keys, keys < 32 characters, and development fallback keys with `RuntimeError`.
+2. **CORS Production Isolation**:
+   - When `APP_ENV=production`, localhost origins (`http://localhost:*`, `http://127.0.0.1:*`) are strictly excluded.
+   - Allowed origins are restricted solely to `FRONTEND_URL` and `CORS_ORIGINS`.
+3. **Admin Password Protection**:
+   - Baseline startup never overwrites existing administrator accounts or resets passwords.
+4. **PostgreSQL Database Safety**:
+   - `Settings.validate_production_configuration()` strictly blocks `sqlite://` in production.
+   - All migrations execute within database transactions (`target_engine.begin()`).
 
 ---
 
@@ -155,15 +165,7 @@ Every file in `deploy/mlm-backend-elastic-beanstalk.zip` was systematically audi
 
 ---
 
-## 8. Production Safety & Admin Hardening Verification
-
-1. **Admin Password Preservation**: Application startup (`initialize_production_baseline`) never overwrites existing administrator accounts or resets passwords.
-2. **Fail-Fast Error Handling**: `apply_migrations(target_engine)` runs in a database transaction (`target_engine.begin()`) and raises `RuntimeError` immediately on schema/connection failures in production.
-3. **No Destructive Statements**: Zero `DROP TABLE`, `TRUNCATE`, or `DELETE` statements on startup.
-
----
-
-## 9. Verification Commands & Test Results
+## 8. Verification Commands & Test Results
 
 ### 1. Static Bytecode Compilation
 ```bash
@@ -177,20 +179,20 @@ pip check
 ```
 **Output**: `No broken requirements found.` (`Exit Code: 0`).
 
-### 3. PyTest Test Suite Execution
+### 3. Automated PyTest Suite Execution
 ```bash
 python -m pytest
 ```
 **Output**:
 ```
-================ 185 passed, 3 warnings in 142.17s (0:02:22) ================
+================= 187 passed, 2 warnings in 156.56s (0:02:36) =================
 ```
 
 ---
 
-## 10. MLM Business Logic Integrity Confirmation
+## 9. MLM Business Logic Integrity Confirmation
 
-- **Binary Pair Bonus (₹10,000 / 30k BV match)**: **Unchanged**
+- **Matching Pair Bonus (₹10,000 / 30k BV match)**: **Unchanged**
 - **Matching Commission (10%)**: **Unchanged**
 - **Direct Referral Commission (10% on BV)**: **Unchanged**
 - **Carry Forward BV**: **Unchanged**
@@ -202,11 +204,11 @@ python -m pytest
 
 ---
 
-## 11. Final Deployment Verdict
+## 10. Final Deployment Verdict
 
 ```
 ======================================================================
 FINAL VERDICT: READY FOR AWS ELASTIC BEANSTALK
 ======================================================================
 ```
-The package `deploy/mlm-backend-elastic-beanstalk.zip` satisfies 100% of the AWS Elastic Beanstalk Python 3.11 AL2023 deployment specifications with full AWS RDS PostgreSQL compatibility and zero development artifacts.
+The package `deploy/mlm-backend-elastic-beanstalk.zip` satisfies 100% of the AWS Elastic Beanstalk Python 3.11 AL2023 deployment specifications with full AWS RDS PostgreSQL compatibility, strict production security isolation, and zero development artifacts.

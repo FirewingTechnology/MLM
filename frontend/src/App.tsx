@@ -20,6 +20,7 @@ import { PackagesPage } from './pages/PackagesPage';
 import { WalletPage } from './pages/WalletPage';
 import { CommissionsPage } from './pages/CommissionsPage';
 import { ReferralsPage } from './pages/ReferralsPage';
+import { RankRewardsPage } from './pages/RankRewardsPage';
 
 // Admin Pages
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
@@ -53,6 +54,7 @@ export const App: React.FC = () => {
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/network" element={<NetworkPage />} />
+                  <Route path="/ranks" element={<RankRewardsPage />} />
                   <Route path="/packages" element={<PackagesPage />} />
                   <Route path="/wallet" element={<WalletPage />} />
                   <Route path="/commissions" element={<CommissionsPage />} />

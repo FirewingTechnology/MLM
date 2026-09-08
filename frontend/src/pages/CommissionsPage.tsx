@@ -3,15 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { Commission } from '../types';
 import { CommissionDetailModal } from '../components/modals/CommissionDetailModal';
-import { 
-  Coins, 
-  HelpCircle, 
-  Award, 
-  GitFork, 
-  Filter, 
-  ChevronLeft, 
-  ChevronRight, 
-  Sparkles 
+import {
+  Coins,
+  HelpCircle,
+  Award,
+  GitFork,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 
 export const CommissionsPage: React.FC = () => {
@@ -47,80 +47,57 @@ export const CommissionsPage: React.FC = () => {
         </div>
         <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-[#18211F] tracking-tight">Income Report & Transparency Audit</h1>
         <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-          Fully auditable record of all direct sponsor, binary pair bonus, matching upline, and carry income.
+          Auditable record of all direct sponsor and Matching pair bonus income.
         </p>
       </div>
 
-      {/* Summary Stat Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      {/* Summary Stat Cards - Final Client Commission Model: Direct Commission & Pair Bonus */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {/* Direct Referral Bonus in Deep Emerald Card */}
-        <div className="rounded-3xl bg-[#FFFEF9] p-4 sm:p-5 border border-[#8DCFBF] shadow-wealth-card flex flex-col justify-between">
+        <div className="rounded-3xl bg-[#FFFEF9] p-5 border border-[#8DCFBF] shadow-wealth-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#063B32] flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-[#0E9F6E]" />
               <span>Direct Sponsor (10%)</span>
             </span>
-            <div className="w-7 h-7 rounded-lg bg-[#E0F3EE] text-[#063B32] flex items-center justify-center">
-              <Award className="w-3.5 h-3.5" />
+            <div className="w-8 h-8 rounded-lg bg-[#E0F3EE] text-[#063B32] flex items-center justify-center">
+              <Award className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-heading font-black text-[#063B32] font-mono mt-2">
+          <div className="text-2xl sm:text-3xl font-heading font-black text-[#063B32] font-mono mt-3">
             ₹{data?.total_direct_amount?.toLocaleString() || 0}
           </div>
-          <div className="text-[10px] text-[#69736F] mt-1">Direct member purchases</div>
+          <div className="text-xs text-[#69736F] mt-1">10% on direct sponsor package BV</div>
         </div>
 
         {/* Pair Bonus in Champagne Gold Card */}
-        <div className="rounded-3xl bg-[#FFFEF9] p-4 sm:p-5 border border-[#E2C766] shadow-wealth-card flex flex-col justify-between">
+        <div className="rounded-3xl bg-[#FFFEF9] p-5 border border-[#E2C766] shadow-wealth-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C6C16] flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-[#C9A227]" />
-              <span>Pair Bonus (₹10k)</span>
+              <span>Pair Bonus (₹15k)</span>
             </span>
-            <div className="w-7 h-7 rounded-lg bg-[#FAF4DC] text-[#8C6C16] flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="w-8 h-8 rounded-lg bg-[#FAF4DC] text-[#8C6C16] flex items-center justify-center">
+              <Sparkles className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-heading font-black text-[#8C6C16] font-mono mt-2">
+          <div className="text-2xl sm:text-3xl font-heading font-black text-[#8C6C16] font-mono mt-3">
             ₹{(data?.total_pair_amount || 0).toLocaleString()}
           </div>
-          <div className="text-[10px] text-[#69736F] mt-1">30k/30k matching pair</div>
-        </div>
-
-        {/* Matching Upline Commission */}
-        <div className="rounded-3xl bg-[#FFFEF9] p-4 sm:p-5 border border-[#FDBA74] shadow-wealth-card flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#C2410C] flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#EA580C]" />
-              <span>Matching Upline</span>
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-[#FFEDD5] text-[#C2410C] flex items-center justify-center">
-              <GitFork className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <div className="text-xl sm:text-2xl font-heading font-black text-[#C2410C] font-mono mt-2">
-            ₹{data?.total_matching_amount?.toLocaleString() || 0}
-          </div>
-          <div className="text-[10px] text-[#69736F] mt-1">Earned on child pairs</div>
-        </div>
-
-        {/* Carry Commission */}
-        <div className="rounded-3xl bg-[#FFFEF9] p-4 sm:p-5 border border-[#93C5FD] shadow-wealth-card flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#1D4ED8] flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
-              <span>Carry Income</span>
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-[#DBEAFE] text-[#1D4ED8] flex items-center justify-center">
-              <Coins className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <div className="text-xl sm:text-2xl font-heading font-black text-[#1D4ED8] font-mono mt-2">
-            ₹{data?.total_carry_amount?.toLocaleString() || 0}
-          </div>
-          <div className="text-[10px] text-[#69736F] mt-1">Override & carry bonus</div>
+          <div className="text-xs text-[#69736F] mt-1">30k/30k matching pair (exclusive to earner)</div>
         </div>
       </div>
+
+      {/* Historical Legacy Commissions Card (Displayed only if legacy records exist) */}
+      {((data?.total_matching_amount || 0) > 0 || (data?.total_carry_amount || 0) > 0) && (
+        <div className="rounded-2xl bg-[#F7F4EC] p-4 border border-[#E5E0D3] flex items-center justify-between text-xs text-[#69736F]">
+          <span className="font-semibold">Historical Legacy Earnings (Archived):</span>
+          <div className="flex gap-4 font-mono font-medium">
+            {(data?.total_matching_amount || 0) > 0 && <span>Matching: ₹{data?.total_matching_amount?.toLocaleString()}</span>}
+            {(data?.total_carry_amount || 0) > 0 && <span>Carry: ₹{data?.total_carry_amount?.toLocaleString()}</span>}
+          </div>
+        </div>
+      )}
 
       {/* Filter Tabs & Commission Table */}
       <div className="rounded-3xl bg-[#FFFEF9] p-6 border border-[#E5E0D3] shadow-wealth-card space-y-4">
@@ -134,9 +111,7 @@ export const CommissionsPage: React.FC = () => {
             {[
               { label: 'All Income', value: '' },
               { label: '🟢 Direct Sponsor', value: 'DIRECT_COMMISSION' },
-              { label: '🟣 Pair Bonus (₹10k)', value: 'PAIR_BONUS' },
-              { label: '🟠 Matching Upline', value: 'MATCHING_COMMISSION' },
-              { label: '🔵 Carry Income', value: 'CARRY_COMMISSION' },
+              { label: '🟣 Pair Bonus (₹15k)', value: 'PAIR_BONUS' },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -144,11 +119,10 @@ export const CommissionsPage: React.FC = () => {
                   setSelectedType(tab.value);
                   setPage(1);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                  selectedType === tab.value
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${selectedType === tab.value
                     ? 'bg-[#063B32] text-[#FFFEF9] font-bold shadow-xs'
                     : 'text-[#69736F] hover:text-[#18211F] hover:bg-[#F7F4EC]'
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>
@@ -184,22 +158,21 @@ export const CommissionsPage: React.FC = () => {
                       {comm.commission_code}
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`text-[10px] px-2.5 py-0.5 rounded font-sans font-bold border ${
-                        comm.commission_type === 'PAIR_BONUS'
+                      <span className={`text-[10px] px-2.5 py-0.5 rounded font-sans font-bold border ${comm.commission_type === 'PAIR_BONUS'
                           ? 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
                           : comm.commission_type === 'DIRECT_REFERRAL' || comm.commission_type === 'DIRECT_COMMISSION'
-                          ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
-                          : comm.commission_type === 'MATCHING_COMMISSION' || comm.commission_type === 'BINARY_MATCHING'
-                          ? 'bg-[#FFEDD5] text-[#C2410C] border-[#FDBA74]'
-                          : 'bg-[#DBEAFE] text-[#1D4ED8] border-[#93C5FD]'
-                      }`}>
+                            ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
+                            : comm.commission_type === 'MATCHING_COMMISSION' || comm.commission_type === 'BINARY_MATCHING'
+                              ? 'bg-[#FFEDD5] text-[#C2410C] border-[#FDBA74]'
+                              : 'bg-[#DBEAFE] text-[#1D4ED8] border-[#93C5FD]'
+                        }`}>
                         {comm.commission_type === 'PAIR_BONUS'
-                          ? '🟣 Pair Bonus (₹10k)'
+                          ? '🟣 Pair Bonus (₹15k)'
                           : comm.commission_type === 'DIRECT_REFERRAL' || comm.commission_type === 'DIRECT_COMMISSION'
-                          ? '🟢 Direct Sponsor'
-                          : comm.commission_type === 'MATCHING_COMMISSION' || comm.commission_type === 'BINARY_MATCHING'
-                          ? '🟠 Matching Upline'
-                          : '🔵 Carry Bonus'}
+                            ? '🟢 Direct Sponsor'
+                            : comm.commission_type === 'MATCHING_COMMISSION' || comm.commission_type === 'BINARY_MATCHING'
+                              ? '🟠 Matching Upline'
+                              : '🔵 Carry Bonus'}
                       </span>
                     </td>
                     <td className="py-3 px-4 font-sans text-[#18211F] font-medium">

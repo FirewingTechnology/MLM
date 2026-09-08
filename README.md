@@ -1,6 +1,6 @@
 # Mobile-First Virtual Binary MLM Demo Web Application
 
-A lightweight, enterprise-grade client demonstration platform for a **Binary MLM System** built with **Python FastAPI** on the backend and **React (Vite, TypeScript, Tailwind CSS, TanStack Query)** on the frontend.
+A lightweight, enterprise-grade client demonstration platform for a **Matching MLM System** built with **Python FastAPI** on the backend and **React (Vite, TypeScript, Tailwind CSS, TanStack Query)** on the frontend.
 
 > [!IMPORTANT]
 > **DEMO MODE — NO REAL MONEY**  
@@ -28,10 +28,10 @@ A lightweight, enterprise-grade client demonstration platform for a **Binary MLM
    - **Two Volume Cards**: Left BV & Right BV with carry-forward trackers.
    - **Primary Action**: Big prominent `[BUY ₹35,000 PACKAGE]` button.
    - **Your Referral Code**: 1-click copy widget.
-   - **Binary Network Preview**: Visual tree sub-branch + `[View Full Network]` button.
+   - **Matching Network Preview**: Visual tree sub-branch + `[View Full Network]` button.
 
 3. **Screen 3 — Network** (`/network`)
-   - Touch-friendly binary tree viewer with pan, zoom, level switcher (2, 3, 4 levels), breadcrumbs, search-to-node focus, and bottom sheet member inspection.
+   - Touch-friendly Binary tree viewer with pan, zoom, level switcher (2, 3, 4 levels), breadcrumbs, search-to-node focus, and bottom sheet member inspection.
 
 4. **Screen 4 — Wallet** (`/wallet`)
    - Virtual Wallet balance, all-time earnings, double-entry immutable ledger stream, and `[Request Demo Withdrawal]` modal.
@@ -45,7 +45,7 @@ A lightweight, enterprise-grade client demonstration platform for a **Binary MLM
 
 - **Product Package**: **Premium Business Package** (₹35,000 Total = ₹30,000 Product Value + ₹5,000 GST = **30,000 BV**).
 - **Direct Referral Commission**: **10%** on BV (**₹3,000**) credited to sponsor's virtual wallet.
-- **Binary Matching Commission**: **10%** on matched volume (`min(carry_left, carry_right)`).
+- **Matching Matching Commission**: **10%** on matched volume (`min(carry_left, carry_right)`).
 - **Carry-Forward Retention**: Unmatched BV is preserved in the respective leg.
 - **Idempotency Protection**: Unique transaction IDs prevent duplicate credits on double-clicks or browser refreshes.
 
@@ -122,8 +122,8 @@ You can deploy the entire stack for **₹0 / $0 (100% Free)** on Render using in
    | Key | Value | Notes |
    | :--- | :--- | :--- |
    | `ENV` | `production` | Enables production mode |
-   | `SECRET_KEY` | `virtual-binary-mlm-super-secret-key-2026` | Random secure string |
-   | `JWT_SECRET_KEY` | `virtual-binary-mlm-jwt-secret-2026` | Random secure string |
+   | `SECRET_KEY` | `virtual-Matching-mlm-super-secret-key-2026` | Random secure string |
+   | `JWT_SECRET_KEY` | `virtual-Matching-mlm-jwt-secret-2026` | Random secure string |
    | `DATABASE_URL` | `sqlite:///./mlm_demo.db` | Built-in SQLite (Free) |
    | `FRONTEND_URL` | `*` | Allows frontend requests |
 5. Click **Create Web Service**.

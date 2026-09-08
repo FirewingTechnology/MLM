@@ -3,14 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useOutletContext } from 'react-router-dom';
 import api from '../services/api';
 import { Package } from '../types';
-import { 
-  PackageCheck, 
-  Sparkles, 
-  CheckCircle2, 
-  ShoppingBag, 
-  Award, 
-  Coins, 
-  TrendingUp 
+import {
+  PackageCheck,
+  Sparkles,
+  CheckCircle2,
+  ShoppingBag,
+  Award,
+  Coins,
+  TrendingUp
 } from 'lucide-react';
 
 export const PackagesPage: React.FC = () => {
@@ -101,11 +101,11 @@ export const PackagesPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-4 h-4 text-[#063B32] shrink-0" />
-              <span>Full <strong className="text-[#063B32]">30,000 BV</strong> propagates upward through the binary ancestry</span>
+              <span>Full <strong className="text-[#063B32]">30,000 BV</strong> propagates upward through the Matching ancestry</span>
             </div>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-4 h-4 text-[#063B32] shrink-0" />
-              <span>Qualifies for <strong className="text-[#8C6C16]">₹10,000 Binary Pair Bonus</strong> per 30k/30k match</span>
+              <span>Qualifies for <strong className="text-[#8C6C16]">₹15,000 Matching Pair Bonus</strong> per 30k/30k match</span>
             </div>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-4 h-4 text-[#063B32] shrink-0" />

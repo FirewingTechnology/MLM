@@ -1,16 +1,16 @@
 import React from 'react';
 import { Commission } from '../../types';
-import { 
-  X, 
-  Coins, 
-  HelpCircle, 
-  CheckCircle2, 
-  Award, 
-  Calendar, 
+import {
+  X,
+  Coins,
+  HelpCircle,
+  CheckCircle2,
+  Award,
+  Calendar,
   ShoppingBag,
   RotateCcw,
   Sparkles,
-  GitFork 
+  GitFork
 } from 'lucide-react';
 
 interface CommissionDetailModalProps {
@@ -32,7 +32,7 @@ export const CommissionDetailModal: React.FC<CommissionDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-      <div 
+      <div
         className="w-full max-w-lg rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-elevated p-6 relative overflow-hidden text-[#18211F]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -56,54 +56,51 @@ export const CommissionDetailModal: React.FC<CommissionDetailModalProps> = ({
         </div>
 
         {/* Primary Benefit Summary */}
-        <div className={`p-4 rounded-2xl border mb-5 flex items-center justify-between ${
-          isPair 
+        <div className={`p-4 rounded-2xl border mb-5 flex items-center justify-between ${isPair
             ? 'bg-[#FAF4DC] border-[#E2C766]'
             : isMatching
-            ? 'bg-[#FFEDD5] border-[#FDBA74]'
-            : isCarry
-            ? 'bg-[#DBEAFE] border-[#93C5FD]'
-            : 'bg-[#E0F3EE] border-[#8DCFBF]'
-        }`}>
+              ? 'bg-[#FFEDD5] border-[#FDBA74]'
+              : isCarry
+                ? 'bg-[#DBEAFE] border-[#93C5FD]'
+                : 'bg-[#E0F3EE] border-[#8DCFBF]'
+          }`}>
           <div>
             <div className="text-xs text-[#69736F] font-bold uppercase">
-              {isPair 
-                ? 'Binary Pair Bonus (30k/30k)' 
-                : isMatching 
-                ? 'Matching Upline Income' 
-                : isCarry
-                ? 'Carry-Forward Income'
-                : 'Direct Sponsor Bonus'}
+              {isPair
+                ? 'Matching Pair Bonus (30k/30k)'
+                : isMatching
+                  ? 'Matching Upline Income'
+                  : isCarry
+                    ? 'Carry-Forward Income'
+                    : 'Direct Sponsor Bonus'}
             </div>
-            <div className={`text-2xl sm:text-3xl font-heading font-black font-mono ${
-              isPair 
-                ? 'text-[#8C6C16]' 
-                : isMatching 
-                ? 'text-[#C2410C]' 
-                : isCarry
-                ? 'text-[#1D4ED8]'
-                : 'text-[#063B32]'
-            }`}>
+            <div className={`text-2xl sm:text-3xl font-heading font-black font-mono ${isPair
+                ? 'text-[#8C6C16]'
+                : isMatching
+                  ? 'text-[#C2410C]'
+                  : isCarry
+                    ? 'text-[#1D4ED8]'
+                    : 'text-[#063B32]'
+              }`}>
               +₹{commission.amount.toLocaleString()}
             </div>
           </div>
           <div className="text-right text-xs">
-            <span className={`border px-3 py-1 rounded-xl font-mono font-bold ${
-              isPair 
+            <span className={`border px-3 py-1 rounded-xl font-mono font-bold ${isPair
                 ? 'bg-[#FFFEF9] text-[#8C6C16] border-[#E2C766]'
                 : isMatching
-                ? 'bg-[#FFFEF9] text-[#C2410C] border-[#FDBA74]'
-                : isCarry
-                ? 'bg-[#FFFEF9] text-[#1D4ED8] border-[#93C5FD]'
-                : 'bg-[#FFFEF9] text-[#063B32] border-[#8DCFBF]'
-            }`}>
-              {isPair 
-                ? `₹${commission.amount.toLocaleString()} Payout` 
-                : isMatching 
-                ? `${commission.percentage || 10}% of Child Pair` 
-                : isCarry
-                ? 'Carry Payout'
-                : `${commission.percentage || 10}% of BV`}
+                  ? 'bg-[#FFFEF9] text-[#C2410C] border-[#FDBA74]'
+                  : isCarry
+                    ? 'bg-[#FFFEF9] text-[#1D4ED8] border-[#93C5FD]'
+                    : 'bg-[#FFFEF9] text-[#063B32] border-[#8DCFBF]'
+              }`}>
+              {isPair
+                ? `₹${commission.amount.toLocaleString()} Payout`
+                : isMatching
+                  ? `${commission.percentage || 10}% of Child Pair`
+                  : isCarry
+                    ? 'Carry Payout'
+                    : `${commission.percentage || 10}% of BV`}
             </span>
           </div>
         </div>
@@ -196,7 +193,7 @@ export const CommissionDetailModal: React.FC<CommissionDetailModalProps> = ({
                 <div className="p-2.5 rounded-xl bg-[#FFFEF9] border border-[#E5E0D3]">
                   <div className="text-[#69736F] text-[10px]">Child Pair Bonus</div>
                   <div className="font-bold text-[#18211F]">
-                    ₹{(details.pair_bonus_basis || 10000).toLocaleString()}
+                    ₹{(details.pair_bonus_basis || 15000).toLocaleString()}
                   </div>
                   <div className="text-[10px] text-[#C2410C]">Completed 30k/30k</div>
                 </div>
@@ -212,7 +209,7 @@ export const CommissionDetailModal: React.FC<CommissionDetailModalProps> = ({
               <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-[#FDBA74]/50">
                 <span className="text-[#69736F]">Matching Formula:</span>
                 <span className="font-mono text-[#C2410C] font-bold">
-                  ₹{(details.pair_bonus_basis || 10000).toLocaleString()} (Child Pair Bonus) × {(details.matching_rate ? details.matching_rate * 100 : commission.percentage || 10)}% = +₹{commission.amount.toLocaleString()}
+                  ₹{(details.pair_bonus_basis || 15000).toLocaleString()} (Child Pair Bonus) × {(details.matching_rate ? details.matching_rate * 100 : commission.percentage || 10)}% = +₹{commission.amount.toLocaleString()}
                 </span>
               </div>
             </div>
