@@ -92,6 +92,9 @@ class Settings(BaseSettings):
     COMPANY_UPI_ID: str = os.getenv("COMPANY_UPI_ID", "mystatusads@icici")
     COMPANY_UPI_NAME: str = os.getenv("COMPANY_UPI_NAME", "MyStatus Platform")
 
+    # Flag to permit SQLite in production (e.g. Render/demo environments without Postgres)
+    ALLOW_SQLITE_IN_PROD: bool = os.getenv("ALLOW_SQLITE_IN_PROD", "false").lower() in ("true", "1", "yes")
+
     @property
     def is_production(self) -> bool:
         return self.APP_ENV.lower() in ("production", "prod") or self.ENV.lower() in ("production", "prod")
@@ -132,10 +135,11 @@ class Settings(BaseSettings):
 
     def validate_production_configuration(self):
         if self.is_production:
-            if not self.is_postgres:
+            if not self.is_postgres and not self.ALLOW_SQLITE_IN_PROD:
                 raise RuntimeError(
                     "CRITICAL: Production environment requires a PostgreSQL DATABASE_URL. "
-                    "SQLite fallback is strictly prohibited in production."
+                    "SQLite fallback is strictly prohibited in production. "
+                    "Set ALLOW_SQLITE_IN_PROD=true if running a standalone deployment with SQLite."
                 )
             if not self.SECRET_KEY or not self.SECRET_KEY.strip() or self.SECRET_KEY in DEV_FALLBACK_SECRET_KEYS or len(self.SECRET_KEY) < 32:
                 raise RuntimeError(

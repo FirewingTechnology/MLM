@@ -113,6 +113,7 @@ You can deploy the entire stack for **₹0 / $0 (100% Free)** on Render using in
 2. Connect your Git repository (GitHub / GitLab).
 3. Configure the following settings:
    - **Name**: `mlm-backend` *(or any name you choose)*
+   - **Branch**: `main-aws`
    - **Language**: `Python 3`
    - **Root Directory**: `backend`
    - **Build Command**: `pip install -r requirements.txt`
@@ -122,9 +123,10 @@ You can deploy the entire stack for **₹0 / $0 (100% Free)** on Render using in
    | Key | Value | Notes |
    | :--- | :--- | :--- |
    | `ENV` | `production` | Enables production mode |
-   | `SECRET_KEY` | `virtual-Matching-mlm-super-secret-key-2026` | Random secure string |
-   | `JWT_SECRET_KEY` | `virtual-Matching-mlm-jwt-secret-2026` | Random secure string |
-   | `DATABASE_URL` | `sqlite:///./mlm_demo.db` | Built-in SQLite (Free) |
+   | `ALLOW_SQLITE_IN_PROD` | `true` | Allows built-in SQLite on Render |
+   | `SECRET_KEY` | `virtual-Matching-mlm-super-secret-key-2026` | Random secure string (min 32 chars) |
+   | `JWT_SECRET_KEY` | `virtual-Matching-mlm-jwt-secret-2026` | Random secure string (min 32 chars) |
+   | `DATABASE_URL` | `sqlite:///./data/mlm.sqlite3` | Built-in SQLite (or PostgreSQL URL) |
    | `FRONTEND_URL` | `*` | Allows frontend requests |
 5. Click **Create Web Service**.
 6. 📋 **Copy your Backend URL** once deployed (e.g., `https://mlm-backend-xxxx.onrender.com`).
@@ -137,6 +139,7 @@ You can deploy the entire stack for **₹0 / $0 (100% Free)** on Render using in
 2. Connect the same Git repository.
 3. Configure the following settings:
    - **Name**: `mlm-frontend` *(or any name you choose)*
+   - **Branch**: `main-aws`
    - **Root Directory**: `frontend`
    - **Build Command**: `npm install && npm run build`
    - **Publish Directory**: `dist`

@@ -1,7 +1,7 @@
 # ====================================================================
 # Render Blueprint Specification (render.yaml) - 100% FREE TIER
 # Project: Matching MLM Enterprise Application
-# Branch: dev
+# Branch: main-aws
 # Documentation: https://render.com/docs/blueprint-spec
 # ====================================================================
 
@@ -14,7 +14,7 @@ services:
     runtime: python
     region: oregon
     plan: free
-    branch: dev
+    branch: main-aws
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
@@ -25,6 +25,8 @@ services:
         value: production
       - key: APP_ENV
         value: production
+      - key: ALLOW_SQLITE_IN_PROD
+        value: "true"
       - key: SECRET_KEY
         generateValue: true
       - key: JWT_SECRET_KEY
@@ -44,7 +46,7 @@ services:
   - type: web
     name: mlm-frontend
     runtime: static
-    branch: dev
+    branch: main-aws
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
