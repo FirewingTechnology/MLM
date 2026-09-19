@@ -93,7 +93,7 @@ def test_full_pin_inventory_api_flow(client, db_session):
     order_data = order_res.json()["data"]
     order_id = order_data["id"]
     assert order_data["quantity"] == 10
-    assert order_data["total_amount"] == 350000.0
+    assert order_data["total_amount"] == 354000.0
 
     # 2. Admin lists orders & verifies payment
     admin_orders = client.get("/api/admin/security-pins/orders", headers=admin_headers)

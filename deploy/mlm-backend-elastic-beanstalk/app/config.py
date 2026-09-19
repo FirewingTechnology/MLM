@@ -88,6 +88,10 @@ class Settings(BaseSettings):
     INITIAL_ADMIN_MOBILE: str = os.getenv("INITIAL_ADMIN_MOBILE", "9876500001")
     INITIAL_ADMIN_NAME: str = os.getenv("INITIAL_ADMIN_NAME", "System Admin")
 
+    # Company Payment & UPI Configuration
+    COMPANY_UPI_ID: str = os.getenv("COMPANY_UPI_ID", "mystatusads@icici")
+    COMPANY_UPI_NAME: str = os.getenv("COMPANY_UPI_NAME", "MyStatus Platform")
+
     @property
     def is_production(self) -> bool:
         return self.APP_ENV.lower() in ("production", "prod") or self.ENV.lower() in ("production", "prod")

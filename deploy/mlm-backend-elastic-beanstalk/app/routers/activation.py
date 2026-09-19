@@ -11,6 +11,7 @@ from app.schemas.activation import (
     ActivateWithPinRequest
 )
 from app.security import get_current_user
+from app.config import settings
 from app.services.pin_service import pin_service, PinSecurityError, PinValidationError
 from app.utils.responses import success_response, error_response
 
@@ -98,6 +99,12 @@ def get_activation_status(
         },
         'activation_request': latest_req.to_dict() if latest_req else None,
         'payment_recipient': recipient_info,
+        'upi_details': {
+            'upi_id': getattr(settings, 'COMPANY_UPI_ID', 'mystatusads@icici'),
+            'payee_name': getattr(settings, 'COMPANY_UPI_NAME', 'MyStatus Platform'),
+            'amount': package.price if package else 35000.0,
+            'qr_image_url': '/payment-qr.png'
+        },
         'can_activate_with_pin': latest_req is not None and latest_req.status in ('PIN_ISSUED', 'PAYMENT_VERIFIED') and not current_user.is_active
     }
     return success_response(status_data)

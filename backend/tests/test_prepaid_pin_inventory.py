@@ -38,9 +38,9 @@ def setup_test_db():
     pkg = Package(
         id=1,
         name="Premium Franchise Package",
-        price=35000.0,
+        price=35400.0,
         product_value=30000.0,
-        gst_amount=5000.0,
+        gst_amount=5400.0,
         bv=30000.0,
         is_active=True
     )
@@ -145,7 +145,7 @@ def test_bulk_pin_order_and_admin_issuance():
     db.commit()
 
     assert order.quantity == 10
-    assert order.total_amount == 350000.0
+    assert order.total_amount == 354000.0
     assert order.status == 'PAYMENT_SUBMITTED'
 
     # Cannot issue before payment verification
@@ -187,7 +187,7 @@ def test_amol_use_own_pin_to_activate():
     # Verify Amol is now active and 30k BV credited
     amol = db.get(User, 2)
     assert amol.is_active is True
-    assert res['purchase']['amount'] == 35000.0
+    assert res['purchase']['amount'] == 35400.0
     assert res['purchase']['bv'] == 30000.0
 
     # Amol's inventory should now have 9 available, 1 used

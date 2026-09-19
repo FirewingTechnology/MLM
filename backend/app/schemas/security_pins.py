@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 class PinOrderCreateRequest(BaseModel):
     package_id: Optional[int] = 1
     quantity: int = Field(default=1, ge=1, le=500, description="Number of PINs to purchase")
+    amount: Optional[float] = None
     payment_method: str = Field(default="UPI_TRANSFER")
     payment_reference: str = Field(..., min_length=3, max_length=100, description="UTR / Transaction Ref")
     payment_proof_url: Optional[str] = None

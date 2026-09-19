@@ -199,6 +199,9 @@ def verify_all():
             is_present = fa in all_js
             print(f"  Forbidden API target [{fa}] present: {is_present} ({'PASS' if not is_present else 'FAIL'})")
             
+        print(f"  dist/payment-qr.png present: {'PASS' if 'dist/payment-qr.png' in f_namelist else 'FAIL'}")
+        print(f"  public/payment-qr.png present: {'PASS' if 'public/payment-qr.png' in f_namelist else 'FAIL'}")
+
         features = [
             "Franchise Partner",
             "Rank & Rewards",
@@ -210,7 +213,10 @@ def verify_all():
             "51,000",
             "3,00,000",
             "RETOPUP_REQUIRED",
-            "Scooter"
+            "Scooter",
+            "35,400",
+            "10,000",
+            "payment-qr.png"
         ]
         for feat in features:
             print(f"  Feature string [{feat}]: {'PASS' if feat in all_js else 'FAIL'}")
@@ -287,6 +293,7 @@ def verify_all():
             ("RANK_REWARD", "RANK_REWARD" in all_py),
             ("RETOPUP_REQUIRED", "RETOPUP_REQUIRED" in all_py),
             ("300000", "300000" in all_py),
+            ("35400 / 35,400", "35400" in all_py),
             ("2100", "2100" in all_py),
             ("5100", "5100" in all_py),
             ("51000", "51000" in all_py),

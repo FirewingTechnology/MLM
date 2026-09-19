@@ -25,6 +25,7 @@ import {
   SecurityPinTransfer,
   SecurityPinLedgerEntry
 } from '../../types';
+import { UpiQrPaymentCard } from '../common/UpiQrPaymentCard';
 
 interface PinWalletModalProps {
   isOpen: boolean;
@@ -80,7 +81,7 @@ export const PinWalletModal: React.FC<PinWalletModalProps> = ({
   const [activating, setActivating] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const pricePerPin = 35000;
+  const pricePerPin = 35400;
 
   useEffect(() => {
     if (isOpen) {
@@ -519,7 +520,7 @@ export const PinWalletModal: React.FC<PinWalletModalProps> = ({
               <div className="p-4 rounded-3xl bg-[#F7F4EC]/70 border border-[#E5E0D3] space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase text-[#69736F]">Selected Package</span>
-                  <span className="text-xs font-bold text-[#063B32]">₹35,000 / 30,000 BV per PIN</span>
+                  <span className="text-xs font-bold text-[#063B32]">₹35,400 / 30,000 BV per PIN</span>
                 </div>
 
                 {/* Quantity Selectors */}
@@ -585,6 +586,17 @@ export const PinWalletModal: React.FC<PinWalletModalProps> = ({
                     <option value="CASH_DEPOSIT">Cash Deposit at Franchise Hub</option>
                   </select>
                 </div>
+
+                {paymentMethod === 'UPI_TRANSFER' && (
+                  <UpiQrPaymentCard
+                    amount={totalBuyPrice}
+                    upiId="mystatusads@icici"
+                    payeeName="MyStatus Platform"
+                    transactionNote={`PIN Purchase (${effectiveBuyQty} PINs)`}
+                    customQrImageUrl="/payment-qr.png"
+                    packageTitle={`Security PIN Order (${effectiveBuyQty} PINs)`}
+                  />
+                )}
 
                 <div>
                   <label className="block text-xs font-bold text-[#18211F] mb-1">
@@ -740,7 +752,7 @@ export const PinWalletModal: React.FC<PinWalletModalProps> = ({
                   <label className="block text-xs font-bold text-[#18211F] mb-1">Note to Sponsor (Optional)</label>
                   <textarea
                     rows={2}
-                    placeholder="e.g. Transferred ₹35,000 via GPay directly to your account"
+                    placeholder="e.g. Transferred ₹35,400 via GPay directly to your account"
                     value={requestNotes}
                     onChange={(e) => setRequestNotes(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-2xl bg-[#FFFEF9] border border-[#E5E0D3] text-xs focus:border-[#063B32] focus:outline-none"

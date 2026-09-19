@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useOutletContext, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
-import { DashboardData, Commission, MatchingTreeNode, ReferralLinksData, ActivationStatusResponse, PinWalletData, EarningCapOverviewResponse } from '../types';
+import { DashboardData, Commission, MatchingTreeNode, ReferralLinksData, ActivationStatusResponse, PinWalletData, EarningCapOverviewResponse, DailyRewardOverviewResponse } from '../types';
 import { CommissionDetailModal } from '../components/modals/CommissionDetailModal';
 import { WithdrawalModal } from '../components/modals/WithdrawalModal';
 import { PinWalletModal } from '../components/modals/PinWalletModal';
@@ -33,7 +33,9 @@ import {
   Star,
   AlertTriangle,
   RefreshCw,
-  Zap
+  Zap,
+  RotateCcw,
+  CheckCircle2
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -101,6 +103,15 @@ export const DashboardPage: React.FC = () => {
       return res.data;
     },
     refetchInterval: 10000,
+  });
+
+  const { data: dailyRewardData } = useQuery<DailyRewardOverviewResponse>({
+    queryKey: ['dailyRewardOverview'],
+    queryFn: async () => {
+      const res = await api.get('/daily-rewards/overview');
+      return res.data;
+    },
+    refetchInterval: 15000,
   });
 
   const leftUrl = linksData?.left?.token
@@ -171,7 +182,7 @@ export const DashboardPage: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-[#69736F] font-medium">
-            Private Wealth Platform • Matching Network Volume • ₹15,000 Pair Rewards
+            Private Wealth Platform • Matching Network Volume • ₹10,000 Pair Rewards
           </p>
         </div>
 
@@ -348,6 +359,124 @@ export const DashboardPage: React.FC = () => {
         </div>
       )}
 
+      {/* 1c. DAILY PACKAGE REFUND / DAILY REWARD CARD */}
+      {dailyRewardData && (dailyRewardData.has_active_cycle || dailyRewardData.cycle) && (
+        <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card transition-all">
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E5E0D3]/60">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#063B32] to-[#0A4D40] text-[#E2C766] flex items-center justify-center shrink-0 shadow-sm border border-[#C9A227]/30">
+                  <RotateCcw className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#69736F] font-mono">
+                      Daily Package Refund
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase border ${
+                      dailyRewardData.cycle?.status === 'COMPLETED'
+                        ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
+                        : 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
+                    }`}>
+                      {dailyRewardData.cycle?.status || 'ACTIVE'}
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-heading font-extrabold text-[#18211F] mt-0.5">
+                    Package Refund Cycle
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 self-end sm:self-auto text-right">
+                <div className="p-2.5 rounded-2xl bg-[#F7F5F0] border border-[#E5E0D3] text-right">
+                  <div className="text-[10px] uppercase font-bold text-[#69736F]">Next Credit</div>
+                  <div className="text-xs font-bold font-mono text-[#063B32]">
+                    {dailyRewardData.next_credit_time_formatted || '07:00 AM IST'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+              {/* Daily Reward Rate */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#063B32] to-[#0A4D40] text-white border border-[#C9A227]/30 shadow-sm col-span-2 sm:col-span-1">
+                <div className="text-[10px] uppercase tracking-wider text-[#E2C766] font-bold">Daily Reward</div>
+                <div className="text-xl font-heading font-extrabold text-[#FFFEF9] mt-0.5 font-mono">
+                  ₹{dailyRewardData.current_daily_reward?.toLocaleString()} <span className="text-xs font-normal text-[#E2C766]/80">/ day</span>
+                </div>
+                <div className="text-[10px] text-[#A3B899] mt-1">
+                  ₹50 base + ({dailyRewardData.completed_pairs} pairs × ₹50)
+                </div>
+              </div>
+
+              {/* Completed Pairs */}
+              <div className="p-3.5 rounded-2xl bg-[#F7F5F0] border border-[#E5E0D3]">
+                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Completed Pairs</div>
+                <div className="text-xl font-heading font-extrabold text-[#18211F] mt-0.5 font-mono">
+                  {dailyRewardData.completed_pairs}
+                </div>
+                <div className="text-[10px] text-[#69736F] mt-1">
+                  +₹{(dailyRewardData.completed_pairs * 50).toLocaleString()}/day boost
+                </div>
+              </div>
+
+              {/* Total Refunded */}
+              <div className="p-3.5 rounded-2xl bg-[#F7F5F0] border border-[#E5E0D3]">
+                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Total Refunded</div>
+                <div className="text-xl font-heading font-extrabold text-[#063B32] mt-0.5 font-mono">
+                  ₹{(dailyRewardData.cycle?.refunded_amount || 0).toLocaleString()}
+                </div>
+                <div className="text-[10px] text-[#69736F] mt-1">
+                  Credited to wallet
+                </div>
+              </div>
+
+              {/* Remaining */}
+              <div className="p-3.5 rounded-2xl bg-[#F7F5F0] border border-[#E5E0D3]">
+                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Remaining</div>
+                <div className="text-xl font-heading font-extrabold text-[#8C6C16] mt-0.5 font-mono">
+                  ₹{(dailyRewardData.cycle?.remaining_refund ?? 35400).toLocaleString()}
+                </div>
+                <div className="text-[10px] text-[#69736F] mt-1">
+                  Balance to refund
+                </div>
+              </div>
+
+              {/* Refund Target */}
+              <div className="p-3.5 rounded-2xl bg-[#F7F5F0] border border-[#E5E0D3]">
+                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Refund Target</div>
+                <div className="text-xl font-heading font-extrabold text-[#18211F] mt-0.5 font-mono">
+                  ₹{(dailyRewardData.cycle?.refund_target || 35400).toLocaleString()}
+                </div>
+                <div className="text-[10px] text-[#69736F] mt-1">
+                  100% Package Cap
+                </div>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="space-y-1.5 pt-1">
+              <div className="w-full h-2.5 rounded-full bg-[#E5E0D3] overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-[#063B32] via-[#2F855A] to-[#C9A227]"
+                  style={{ width: `${Math.min(100, dailyRewardData.cycle?.progress_percentage || 0)}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center text-[11px] text-[#69736F] font-medium">
+                <span>
+                  Last Credit: {dailyRewardData.cycle?.last_credit_date ? dailyRewardData.cycle.last_credit_date : 'Pending first credit (07:00 AM IST)'}
+                </span>
+                <span className="font-bold text-[#18211F]">
+                  {dailyRewardData.cycle?.progress_percentage || 0}% Refunded
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 2. RANK & REWARDS MILESTONE BANNER */}
       <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#FAF4DC] via-[#FFFEF9] to-[#FAF4DC] border border-[#E2C766] shadow-wealth-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
@@ -472,7 +601,7 @@ export const DashboardPage: React.FC = () => {
           >
             <div>
               <div className="text-[10px] text-[#8C6C16] font-bold uppercase">Order from Admin</div>
-              <div className="text-xs font-bold text-[#18211F] mt-1">₹35,000 / 30k BV</div>
+              <div className="text-xs font-bold text-[#18211F] mt-1">₹35,400 / 30k BV</div>
             </div>
             <div className="text-[10px] font-bold text-[#063B32] flex items-center gap-1 mt-2">
               <span>Buy Bulk PINs</span>
@@ -686,7 +815,7 @@ export const DashboardPage: React.FC = () => {
                     <span>Security PIN Issued — Ready for Activation</span>
                   </div>
                   <div className="text-xs text-[#18211F] font-semibold mt-0.5">
-                    Your single-use Security PIN is available. Enter PIN to activate ₹35,000 package (+30,000 BV).
+                    Your single-use Security PIN is available. Enter PIN to activate ₹35,400 package (+30,000 BV).
                   </div>
                 </div>
               </div>
@@ -732,7 +861,7 @@ export const DashboardPage: React.FC = () => {
                 ? 'ENTER SECURITY PIN TO ACTIVATE (+30,000 BV)'
                 : activationStatus?.activation_request?.status === 'PAYMENT_SUBMITTED'
                   ? 'VIEW ACTIVATION STATUS & SECURITY PIN'
-                  : 'REQUEST SECURITY PIN & ACTIVATE PACKAGE (₹35,000)'}
+                  : 'REQUEST SECURITY PIN & ACTIVATE PACKAGE (₹35,400)'}
             </span>
           </button>
         </div>

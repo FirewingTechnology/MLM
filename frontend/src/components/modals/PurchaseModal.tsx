@@ -21,8 +21,10 @@ import {
   UserCheck,
   AlertCircle,
   Copy,
-  Check
+  Check,
+  Building2
 } from 'lucide-react';
+import { UpiQrPaymentCard } from '../common/UpiQrPaymentCard';
 
 interface PurchaseModalProps {
   isOpen: boolean;
@@ -175,7 +177,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
             </div>
 
             <h2 className="text-2xl font-heading font-extrabold text-[#18211F] mb-1 tracking-tight">
-              Premium Sub Franchise (₹35,000)
+              {statusData?.package?.name || 'Premium Sub Franchise'} (₹{(statusData?.package?.price || 35400).toLocaleString()})
             </h2>
             <p className="text-[#69736F] text-xs mb-5">
               Strict 4-stage verified activation workflow. Generates 30,000 personal BV upon PIN authorization.
@@ -204,16 +206,16 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                 <div className="rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] p-4 sm:p-5 space-y-2.5">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-[#69736F] font-medium">Product / Business Value</span>
-                    <span className="font-semibold text-[#18211F] font-mono">₹30,000</span>
+                    <span className="font-semibold text-[#18211F] font-mono">₹{(statusData?.package?.product_value || 30000).toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-[#69736F] font-medium">GST (18% Applicable)</span>
-                    <span className="font-semibold text-[#18211F] font-mono">₹5,000</span>
+                    <span className="font-semibold text-[#18211F] font-mono">₹{(statusData?.package?.gst_amount || 5400).toLocaleString()}</span>
                   </div>
                   <div className="h-px bg-[#E5E0D3]" />
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-[#18211F]">Total Package Payable</span>
-                    <span className="text-2xl font-heading font-black text-[#063B32] font-mono">₹35,000</span>
+                    <span className="text-2xl font-heading font-black text-[#063B32] font-mono">₹{(statusData?.package?.price || 35400).toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-xs text-[#18211F] font-semibold flex items-center gap-1.5">
@@ -238,7 +240,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                   </div>
                   <div className="flex items-center gap-2.5">
                     <Award className="w-4 h-4 text-[#C9A227] shrink-0" />
-                    <span>Qualifies for ₹15,000 Matching Pair Bonus (30k:30k match)</span>
+                    <span>Qualifies for ₹10,000 Matching Pair Bonus (30k:30k match)</span>
                   </div>
                 </div>
 
@@ -292,7 +294,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                     </div>
                     <div className="text-right font-mono">
                       <div className="text-xs text-[#69736F]">Payable Amount</div>
-                      <div className="font-bold text-base text-[#063B32]">₹35,000</div>
+                      <div className="font-bold text-base text-[#063B32]">₹{(statusData?.package?.price || 35400).toLocaleString()}</div>
                     </div>
                   </div>
                 </div>
@@ -323,6 +325,62 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                       <option value="CASH_DEPOSIT">Cash / Direct Upline Settlement</option>
                     </select>
                   </div>
+
+                  {/* UPI QR Code Payment Card */}
+                  {paymentMethod === 'UPI_TRANSFER' && (
+                    <UpiQrPaymentCard
+                      amount={statusData?.package?.price || 35400}
+                      upiId={statusData?.upi_details?.upi_id || 'mystatusads@icici'}
+                      payeeName={statusData?.upi_details?.payee_name || recipient?.full_name || 'MyStatus Platform'}
+                      transactionNote={`Package Activation ${user?.user_code || ''}`}
+                      customQrImageUrl={statusData?.upi_details?.qr_image_url || '/payment-qr.png'}
+                      packageTitle={statusData?.package?.name || 'Premium Sub Franchise (₹35,400)'}
+                    />
+                  )}
+
+                  {/* Bank Transfer Details Card */}
+                  {paymentMethod === 'BANK_TRANSFER' && (
+                    <div className="p-4 rounded-2xl bg-[#F7F4EC] border border-[#8DCFBF] space-y-2.5 text-xs">
+                      <div className="flex items-center gap-1.5 font-bold text-[#063B32]">
+                        <Building2 className="w-4 h-4 text-[#063B32]" />
+                        <span>Official Bank Account Details</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+                        <div className="p-2.5 bg-white rounded-xl border border-[#E5E0D3]">
+                          <span className="text-[10px] text-[#69736F] font-sans block">Bank Name:</span>
+                          <strong className="text-[#18211F]">ICICI Bank Ltd</strong>
+                        </div>
+                        <div className="p-2.5 bg-white rounded-xl border border-[#E5E0D3]">
+                          <span className="text-[10px] text-[#69736F] font-sans block">Account Holder:</span>
+                          <strong className="text-[#18211F]">MyStatus Media & Ent Pvt Ltd</strong>
+                        </div>
+                        <div className="p-2.5 bg-white rounded-xl border border-[#E5E0D3]">
+                          <span className="text-[10px] text-[#69736F] font-sans block">Account Number:</span>
+                          <strong className="text-[#18211F] text-xs">123405009988</strong>
+                        </div>
+                        <div className="p-2.5 bg-white rounded-xl border border-[#E5E0D3]">
+                          <span className="text-[10px] text-[#69736F] font-sans block">IFSC Code:</span>
+                          <strong className="text-[#18211F] text-xs">ICIC0001234</strong>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-[#69736F] pt-1">
+                        Transfer ₹{(statusData?.package?.price || 35400).toLocaleString()} via IMPS / NEFT, then enter the transaction UTR below.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Cash Settlement Card */}
+                  {paymentMethod === 'CASH_DEPOSIT' && (
+                    <div className="p-4 rounded-2xl bg-[#FAF4DC] border border-[#E2C766] text-xs space-y-1.5 text-[#8C6C16]">
+                      <span className="font-bold flex items-center gap-1.5">
+                        <AlertCircle className="w-4 h-4 text-[#C9A227]" />
+                        Cash Settlement with Sponsor / Franchise Hub
+                      </span>
+                      <p className="text-[11px] leading-relaxed">
+                        Hand over cash directly to your authorized sponsor (<strong>{recipient?.full_name}</strong> - {recipient?.user_code}) or visit the nearest authorized franchise hub. Enter the issued receipt or voucher code below.
+                      </p>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-xs font-bold text-[#18211F] mb-1">
@@ -399,7 +457,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                     </span>
                   </div>
                   <p className="text-[#69736F] text-[11px] leading-relaxed">
-                    Your payment has been verified. Enter the 8-character single-use Security PIN provided by your Admin or Sponsor to immediately activate your ₹35,000 package and generate 30,000 personal BV.
+                    Your payment has been verified. Enter the 8-character single-use Security PIN provided by your Admin or Sponsor to immediately activate your ₹{(statusData?.package?.price || 35400).toLocaleString()} package and generate 30,000 personal BV.
                   </p>
                 </div>
 
@@ -468,7 +526,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
               Package Activated Successfully!
             </h3>
             <p className="text-[#063B32] font-bold text-sm mb-4">
-              ₹35,000 Sub Franchise Package (+30,000 BV) is now Active
+              ₹{(successEvent.purchase?.amount || statusData?.package?.price || 35400).toLocaleString()} Sub Franchise Package (+30,000 BV) is now Active
             </p>
 
             <div className="p-4 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] mb-6 text-left space-y-2 text-xs">

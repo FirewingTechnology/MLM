@@ -43,9 +43,9 @@ class Settings(BaseSettings):
     )
 
     # MLM Business Rules Configuration
-    DEFAULT_PACKAGE_PRICE: float = 35000.0
+    DEFAULT_PACKAGE_PRICE: float = 35400.0
     DEFAULT_PRODUCT_VALUE: float = 30000.0
-    DEFAULT_GST_AMOUNT: float = 5000.0
+    DEFAULT_GST_AMOUNT: float = 5400.0
     DEFAULT_PACKAGE_BV: float = 30000.0
 
     # Commissions & Rates
@@ -58,8 +58,8 @@ class Settings(BaseSettings):
     # Matching Pair Bonus Engine Configuration
     PAIR_VOLUME: float = 30000.0                   # Qualifying BV threshold per leg (₹30,000)
     PAIR_QUALIFYING_BV: float = 30000.0            # Backward-compatible alias
-    PAIR_BONUS: float = 15000.0                    # Pair Bonus amount per completed pair (₹15,000)
-    PAIR_BONUS_AMOUNT: float = 15000.0             # Backward-compatible alias
+    PAIR_BONUS: float = 10000.0                    # Pair Bonus amount per completed pair (₹10,000)
+    PAIR_BONUS_AMOUNT: float = 10000.0             # Backward-compatible alias
     MAX_PAIRS_PER_SLOT: int = 1                    # Maximum paid pairs per calculation period/slot (1)
     MAX_PAIRS_PER_PERIOD: int = 1                  # Backward-compatible alias
 
@@ -87,6 +87,10 @@ class Settings(BaseSettings):
     INITIAL_ADMIN_PASSWORD: str = os.getenv("INITIAL_ADMIN_PASSWORD", "")
     INITIAL_ADMIN_MOBILE: str = os.getenv("INITIAL_ADMIN_MOBILE", "9876500001")
     INITIAL_ADMIN_NAME: str = os.getenv("INITIAL_ADMIN_NAME", "System Admin")
+
+    # Company Payment & UPI Configuration
+    COMPANY_UPI_ID: str = os.getenv("COMPANY_UPI_ID", "mystatusads@icici")
+    COMPANY_UPI_NAME: str = os.getenv("COMPANY_UPI_NAME", "MyStatus Platform")
 
     @property
     def is_production(self) -> bool:

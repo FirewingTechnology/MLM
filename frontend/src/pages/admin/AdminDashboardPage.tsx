@@ -15,7 +15,9 @@ import {
   RankConfig,
   RankAchievement,
   EarningCycle,
-  AdminEarningCapListResponse
+  AdminEarningCapListResponse,
+  DailyRewardCycle,
+  AdminDailyRewardListResponse
 } from '../../types';
 import { LiveSystemClock } from '../../components/admin/LiveSystemClock';
 import { CommissionDetailModal } from '../../components/modals/CommissionDetailModal';
@@ -65,8 +67,13 @@ export const AdminDashboardPage: React.FC = () => {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
-  const [adminTab, setAdminTab] = useState<'analytics' | 'activations' | 'earning_caps' | 'rank_rewards' | 'commissions' | 'settlements' | 'volume_ledger'>('analytics');
+  const [adminTab, setAdminTab] = useState<'analytics' | 'activations' | 'earning_caps' | 'daily_refunds' | 'rank_rewards' | 'commissions' | 'settlements' | 'volume_ledger'>('analytics');
   const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
+
+  // Daily Package Refund states
+  const [dailyRefundStatusFilter, setDailyRefundStatusFilter] = useState<string>('ALL');
+  const [dailyRefundSearch, setDailyRefundSearch] = useState<string>('');
+  const [settleLoading, setSettleLoading] = useState<boolean>(false);
 
   // Earning Cap & Retopup states
   const [earningCapStatusFilter, setEarningCapStatusFilter] = useState<string>('ALL');
@@ -380,6 +387,41 @@ export const AdminDashboardPage: React.FC = () => {
     }
   };
 
+  const { data: dailyRefundData, isLoading: loadingDailyRefunds, refetch: refetchDailyRefunds } = useQuery<AdminDailyRewardListResponse>({
+    queryKey: ['adminDailyRefunds', dailyRefundStatusFilter, dailyRefundSearch],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (dailyRefundStatusFilter && dailyRefundStatusFilter !== 'ALL') {
+        params.append('status', dailyRefundStatusFilter);
+      }
+      if (dailyRefundSearch.trim()) {
+        params.append('search', dailyRefundSearch.trim());
+      }
+      const res = await api.get(`/daily-rewards/admin/cycles?${params.toString()}`);
+      return res.data;
+    },
+    enabled: adminTab === 'daily_refunds',
+    refetchInterval: 10000,
+  });
+
+  const handleTriggerSettlement = async () => {
+    if (!window.confirm("Execute Daily Package Refund settlement for today? This will credit all eligible active packages.")) {
+      return;
+    }
+    setSettleLoading(true);
+    try {
+      const res = await api.post('/daily-rewards/admin/settle', {});
+      showToast(`Settlement completed: ${res.data?.credited_count || 0} credited, ${res.data?.skipped_count || 0} skipped (Total: ₹${(res.data?.total_credited_amount || 0).toLocaleString()}).`, 'success');
+      refetchDailyRefunds();
+      queryClient.invalidateQueries({ queryKey: ['adminDashboard'] });
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || err.response?.data?.error?.message || 'Settlement failed.';
+      showToast(msg, 'error');
+    } finally {
+      setSettleLoading(false);
+    }
+  };
+
   const kpis = data?.kpis;
 
   // Bulk PIN Order Handlers
@@ -630,6 +672,16 @@ export const AdminDashboardPage: React.FC = () => {
           >
             <Zap className="w-3.5 h-3.5 text-[#C9A227]" />
             <span>Earning Cap (₹3L)</span>
+          </button>
+          <button
+            onClick={() => setAdminTab('daily_refunds')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${adminTab === 'daily_refunds'
+                ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
+                : 'text-[#69736F] hover:text-[#18211F]'
+              }`}
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-[#C9A227]" />
+            <span>Daily Package Refund</span>
           </button>
           <button
             onClick={() => setAdminTab('rank_rewards')}
@@ -1053,7 +1105,7 @@ export const AdminDashboardPage: React.FC = () => {
                             </td>
                             <td className="py-3.5 px-3 font-mono">
                               <div className="font-bold text-[#18211F]">{order.quantity} PIN(s)</div>
-                              <div className="text-[10px] text-[#69736F]">₹{(order.price_per_pin || order.unit_price || 35000).toLocaleString()} / PIN</div>
+                              <div className="text-[10px] text-[#69736F]">₹{(order.price_per_pin || order.unit_price || 35400).toLocaleString()} / PIN</div>
                             </td>
                             <td className="py-3.5 px-3 font-mono">
                               <div className="font-black text-sm text-[#063B32]">
@@ -2093,6 +2145,201 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       )}
 
+      {/* DAILY PACKAGE REFUND MANAGEMENT TAB */}
+      {adminTab === 'daily_refunds' && (
+        <div className="space-y-6">
+          {/* Summary KPIs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#69736F] uppercase tracking-wider">Active Cycles</span>
+                <div className="w-8 h-8 rounded-xl bg-[#E0F3EE] text-[#063B32] flex items-center justify-center">
+                  <RotateCcw className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-2 text-2xl font-heading font-extrabold text-[#063B32]">
+                {dailyRefundData?.summary?.active_cycles ?? 0}
+              </div>
+              <div className="text-[11px] text-[#69736F] mt-0.5">
+                Total: {dailyRefundData?.summary?.total_cycles ?? 0} Cycles
+              </div>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#69736F] uppercase tracking-wider">Completed Cycles</span>
+                <div className="w-8 h-8 rounded-xl bg-[#FAF4DC] text-[#8C6C16] flex items-center justify-center">
+                  <Check className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-2 text-2xl font-heading font-extrabold text-[#18211F]">
+                {dailyRefundData?.summary?.completed_cycles ?? 0}
+              </div>
+              <div className="text-[11px] text-[#69736F] mt-0.5">
+                100% Refund Target Met
+              </div>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#69736F] uppercase tracking-wider">Total Refunded All-Time</span>
+                <div className="w-8 h-8 rounded-xl bg-[#E0F3EE] text-[#063B32] flex items-center justify-center">
+                  <Wallet className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-2 text-2xl font-heading font-extrabold text-[#063B32] font-mono">
+                ₹{(dailyRefundData?.summary?.total_refunded_all_time || 0).toLocaleString()}
+              </div>
+              <div className="text-[11px] text-[#69736F] mt-0.5">
+                Immutable ledger payouts
+              </div>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#69736F] uppercase tracking-wider">Today's Payout ({dailyRefundData?.summary?.today_business_date || 'IST'})</span>
+                <div className="w-8 h-8 rounded-xl bg-[#FAF4DC] text-[#8C6C16] flex items-center justify-center">
+                  <Coins className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="mt-2 text-2xl font-heading font-extrabold text-[#C9A227] font-mono">
+                ₹{(dailyRefundData?.summary?.today_credited_amount || 0).toLocaleString()}
+              </div>
+              <div className="text-[11px] text-[#69736F] mt-0.5">
+                07:00 AM IST Daily Settlement
+              </div>
+            </div>
+          </div>
+
+          {/* Table Card */}
+          <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E0D3] pb-4">
+              <div>
+                <h2 className="text-lg font-heading font-extrabold text-[#18211F]">Daily Package Refund Cycles</h2>
+                <p className="text-xs text-[#69736F]">
+                  ₹35,400 package refund cycle with base ₹50/day + ₹50/day per completed binary pair.
+                </p>
+              </div>
+
+              {/* Settlement Trigger Action */}
+              <button
+                onClick={handleTriggerSettlement}
+                disabled={settleLoading}
+                className="px-4 py-2 rounded-xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-2 shrink-0 disabled:opacity-50"
+              >
+                {settleLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C9A227]" /> : <RotateCcw className="w-3.5 h-3.5 text-[#C9A227]" />}
+                <span>Run Daily Settlement (07:00 AM IST)</span>
+              </button>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+              <div className="flex items-center gap-1.5 bg-[#F7F4EC] p-1 rounded-xl border border-[#E5E0D3] w-full sm:w-auto">
+                {['ALL', 'ACTIVE', 'COMPLETED'].map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setDailyRefundStatusFilter(st)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      dailyRefundStatusFilter === st
+                        ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
+                        : 'text-[#69736F] hover:text-[#18211F]'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+
+              <div className="w-full sm:w-72">
+                <input
+                  type="text"
+                  placeholder="Search member code, name, or email..."
+                  value={dailyRefundSearch}
+                  onChange={(e) => setDailyRefundSearch(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-xl bg-[#F7F4EC] border border-[#E5E0D3] text-xs text-[#18211F] placeholder-[#69736F] focus:outline-none focus:border-[#063B32]"
+                />
+              </div>
+            </div>
+
+            {/* Table */}
+            {loadingDailyRefunds ? (
+              <div className="py-12 flex justify-center items-center gap-2 text-xs text-[#69736F]">
+                <Loader2 className="w-4 h-4 animate-spin text-[#C9A227]" />
+                <span>Loading refund cycles...</span>
+              </div>
+            ) : dailyRefundData?.items && dailyRefundData.items.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse font-sans">
+                  <thead>
+                    <tr className="border-b border-[#E5E0D3] text-[#69736F] uppercase text-[10px] font-mono">
+                      <th className="py-3 px-3">User</th>
+                      <th className="py-3 px-3">Package</th>
+                      <th className="py-3 px-3 font-mono">Target</th>
+                      <th className="py-3 px-3 font-mono">Refunded</th>
+                      <th className="py-3 px-3 font-mono">Remaining</th>
+                      <th className="py-3 px-3 text-center">Pairs</th>
+                      <th className="py-3 px-3 font-mono">Daily Reward</th>
+                      <th className="py-3 px-3">Status</th>
+                      <th className="py-3 px-3">Last Credit</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E5E0D3]/60">
+                    {dailyRefundData.items.map((cycle: DailyRewardCycle) => (
+                      <tr key={cycle.id} className="hover:bg-[#F7F4EC]/60 transition-colors">
+                        <td className="py-3 px-3">
+                          <div className="font-bold text-[#18211F]">{cycle.user_name || `User #${cycle.user_id}`}</div>
+                          <div className="text-[10px] text-[#69736F] font-mono">{cycle.user_code}</div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="font-bold text-[#063B32]">{cycle.package_name || 'Standard Package'}</div>
+                          <div className="text-[10px] text-[#69736F] font-mono">{cycle.purchase_code || `PUR-${cycle.purchase_id}`}</div>
+                        </td>
+                        <td className="py-3 px-3 font-mono font-bold text-[#18211F]">
+                          ₹{cycle.refund_target?.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-3 font-mono font-bold text-[#063B32]">
+                          ₹{cycle.refunded_amount?.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-3 font-mono font-bold text-[#8C6C16]">
+                          ₹{cycle.remaining_refund?.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-[#E0F3EE] text-[#063B32] border border-[#8DCFBF]">
+                            {cycle.completed_pairs}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-mono">
+                          <span className="font-extrabold text-[#063B32]">
+                            ₹{cycle.current_daily_reward?.toLocaleString()}
+                          </span>
+                          <span className="text-[10px] text-[#69736F]">/day</span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                            cycle.status === 'COMPLETED'
+                              ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'
+                              : 'bg-[#FAF4DC] text-[#8C6C16] border-[#E2C766]'
+                          }`}>
+                            {cycle.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[11px] text-[#69736F]">
+                          {cycle.last_credit_date || 'Pending'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-12 text-center text-xs text-[#69736F]">
+                No daily package refund cycles found matching criteria.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ADMIN OVERRIDE RESET CYCLE MODAL */}
       {overrideCycleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
@@ -2592,7 +2839,7 @@ export const AdminDashboardPage: React.FC = () => {
               Security PIN Generated
             </h3>
             <p className="text-xs text-[#69736F] mb-5">
-              Provide this single-use activation PIN to <strong className="text-[#063B32]">{generatedPinModal.request?.user_name || 'the member'}</strong> ({generatedPinModal.request?.user_code}) to activate their ₹35,000 package.
+              Provide this single-use activation PIN to <strong className="text-[#063B32]">{generatedPinModal.request?.user_name || 'the member'}</strong> ({generatedPinModal.request?.user_code}) to activate their ₹{(generatedPinModal.request?.package_amount || 35400).toLocaleString()} package.
             </p>
 
             {/* Secret PIN Box */}

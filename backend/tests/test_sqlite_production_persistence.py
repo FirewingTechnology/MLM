@@ -277,7 +277,7 @@ def test_slot_settlement_and_carry_persistence(temp_db_path):
         left_matched=30000.0,
         right_matched=30000.0,
         pairs_paid=1,
-        pair_bonus=15000.0,
+        pair_bonus=10000.0,
         left_carry=30000.0,
         right_carry=0.0,
         status="SETTLED"
@@ -295,7 +295,7 @@ def test_slot_settlement_and_carry_persistence(temp_db_path):
     assert re_settle is not None
     assert re_settle.left_carry == 30000.0
     assert re_settle.right_carry == 0.0
-    assert re_settle.pair_bonus == 15000.0
+    assert re_settle.pair_bonus == 10000.0
     db2.close()
     engine2.dispose()
 

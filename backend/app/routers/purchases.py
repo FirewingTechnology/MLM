@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
+from app.models.package import Package
 from app.models.purchase import Purchase
 from app.schemas.common import PurchaseRequest
 from app.security import get_current_user
@@ -18,12 +19,29 @@ def buy_package(
 ):
     package_id = req.package_id if req else None
     idempotency_key = req.idempotency_key if req else None
+    submitted_amount = req.amount if req else None
+
+    # Fetch and validate against authoritative active package price
+    if package_id:
+        target_package = db.get(Package, package_id)
+    else:
+        target_package = db.query(Package).filter(Package.is_active == True).first()
+
+    if not target_package:
+        return error_response("PACKAGE_NOT_FOUND", "No active package available.", 404)
+
+    if submitted_amount is not None and abs(submitted_amount - target_package.price) > 0.01:
+        return error_response(
+            "INVALID_PACKAGE_AMOUNT",
+            f"Invalid purchase amount ₹{submitted_amount:,.2f}. Authoritative package price is ₹{target_package.price:,.2f}.",
+            400
+        )
 
     try:
         purchase, events = process_package_purchase(
             db,
             user_id=current_user.id,
-            package_id=package_id,
+            package_id=target_package.id,
             idempotency_key=idempotency_key
         )
         db.commit()

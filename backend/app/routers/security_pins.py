@@ -67,7 +67,8 @@ def create_pin_order(
             quantity=payload.quantity,
             payment_method=payload.payment_method,
             payment_reference=payload.payment_reference,
-            payment_proof_url=payload.payment_proof_url
+            payment_proof_url=payload.payment_proof_url,
+            amount=payload.amount
         )
         db.commit()
         db.refresh(order)

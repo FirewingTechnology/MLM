@@ -21,6 +21,7 @@ from app.models.referral_token import ReferralToken
 from app.models.rank_config import RankConfig
 from app.models.rank_achievement import RankAchievement
 from app.models.earning_cycle import EarningCycle
+from app.models.daily_reward import DailyRewardCycle, DailyRewardTransaction
 
 __all__ = [
     'User',
@@ -46,5 +47,7 @@ __all__ = [
     'ReferralToken',
     'RankConfig',
     'RankAchievement',
-    'EarningCycle'
+    'EarningCycle',
+    'DailyRewardCycle',
+    'DailyRewardTransaction'
 ]

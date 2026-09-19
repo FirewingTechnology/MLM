@@ -110,7 +110,9 @@ def apply_migrations(target_engine):
                 'security_pin_ledger',
                 'rank_configs',
                 'rank_achievements',
-                'earning_cycles'
+                'earning_cycles',
+                'daily_reward_cycles',
+                'daily_reward_transactions'
             ]:
                 if table_name not in tables and table_name in Base.metadata.tables:
                     Base.metadata.tables[table_name].create(conn, checkfirst=True)

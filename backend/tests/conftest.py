@@ -19,6 +19,7 @@ import app.models.referral_token
 import app.models.rank_config
 import app.models.rank_achievement
 import app.models.earning_cycle
+import app.models.daily_reward
 
 
 import os

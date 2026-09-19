@@ -20,7 +20,7 @@ export const PairSummaryCard: React.FC<PairSummaryCardProps> = ({ pairSummary })
   }
 
   const threshold = pairSummary.pair_volume_threshold || 30000;
-  const bonusAmount = pairSummary.pair_bonus_amount || 15000;
+  const bonusAmount = pairSummary.pair_bonus_amount || 10000;
 
   const leftProgress = Math.min(100, (pairSummary.effective_left_bv / threshold) * 100);
   const rightProgress = Math.min(100, (pairSummary.effective_right_bv / threshold) * 100);

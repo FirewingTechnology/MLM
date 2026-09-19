@@ -620,6 +620,12 @@ export interface ActivationStatusResponse {
     role: string;
     relationship: string;
   };
+  upi_details?: {
+    upi_id: string;
+    payee_name: string;
+    amount: number;
+    qr_image_url?: string;
+  };
   can_activate_with_pin: boolean;
 }
 
@@ -752,6 +758,74 @@ export interface AdminEarningCapListResponse {
   limit: number;
   offset: number;
   summary: AdminEarningCapSummary;
+}
+
+export interface DailyRewardCycle {
+  id: number;
+  purchase_id: number;
+  purchase_code?: string | null;
+  user_id: number;
+  user_name?: string | null;
+  user_code?: string | null;
+  package_id: number;
+  package_name?: string | null;
+  refund_target: number;
+  refunded_amount: number;
+  remaining_refund: number;
+  completed_pairs: number;
+  base_daily_amount: number;
+  pair_increment: number;
+  current_daily_reward: number;
+  progress_percentage: number;
+  status: 'ACTIVE' | 'COMPLETED';
+  last_credit_date?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface DailyRewardTransaction {
+  id: number;
+  cycle_id: number;
+  purchase_id: number;
+  user_id: number;
+  business_date: string;
+  amount: number;
+  completed_pairs_snapshot: number;
+  daily_reward_snapshot: number;
+  wallet_transaction_id?: number | null;
+  idempotency_key: string;
+  description: string;
+  created_at?: string | null;
+}
+
+export interface DailyRewardOverviewResponse {
+  has_active_cycle: boolean;
+  cycle: DailyRewardCycle | null;
+  completed_pairs: number;
+  current_daily_reward: number;
+  total_refunded: number;
+  next_credit_time: string;
+  next_credit_time_formatted: string;
+  recent_transactions: DailyRewardTransaction[];
+}
+
+export interface AdminDailyRewardSummary {
+  total_cycles: number;
+  active_cycles: number;
+  completed_cycles: number;
+  total_refunded_all_time: number;
+  today_credited_amount: number;
+  today_business_date: string;
+}
+
+export interface AdminDailyRewardListResponse {
+  items: DailyRewardCycle[];
+  total_count: number;
+  limit: number;
+  offset: number;
+  summary: AdminDailyRewardSummary;
 }
 
 

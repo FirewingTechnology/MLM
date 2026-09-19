@@ -131,12 +131,12 @@ export const TreeNodeCard: React.FC<TreeNodeCardProps> = ({
       {node.pair_completed ? (
         <div className="mb-2 p-1.5 rounded-xl bg-[#E0F3EE] border border-[#8DCFBF] text-center text-[10px] font-bold text-[#063B32] flex items-center justify-center gap-1">
           <CheckCircle2 className="w-3 h-3 text-[#063B32]" />
-          <span>✓ Slot Pair Paid (₹15,000)</span>
+          <span>✓ Slot Pair Paid (₹10,000)</span>
         </div>
       ) : isPairQualified ? (
         <div className="mb-2 p-1.5 rounded-xl bg-[#FAF4DC] border border-[#E2C766] text-center text-[10px] font-bold text-[#8C6C16] flex items-center justify-center gap-1 shimmer-gold">
           <Sparkles className="w-3.5 h-3.5 text-[#C9A227]" />
-          <span>₹15,000 Pair Qualified</span>
+          <span>₹10,000 Pair Qualified</span>
         </div>
       ) : null}
 

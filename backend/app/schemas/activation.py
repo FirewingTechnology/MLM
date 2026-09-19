@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 class CreateActivationRequest(BaseModel):
     package_id: Optional[int] = None
+    amount: Optional[float] = None
     payment_method: Optional[str] = "UPI_TRANSFER"
     payment_reference: Optional[str] = None
     payment_proof_url: Optional[str] = None
@@ -10,6 +11,7 @@ class CreateActivationRequest(BaseModel):
 
 class SubmitPaymentRequest(BaseModel):
     request_id: Optional[int] = None
+    amount: Optional[float] = None
     payment_method: Optional[str] = "UPI_TRANSFER"
     payment_reference: str = Field(..., min_length=2, max_length=100)
     payment_proof_url: Optional[str] = None

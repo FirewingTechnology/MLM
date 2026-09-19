@@ -110,7 +110,7 @@ def test_full_pin_activation_lifecycle(client, db_session):
     assert res_act.status_code == 200
     act_data = res_act.json()["data"]
     assert act_data["purchase"]["bv"] == 30000.0
-    assert act_data["purchase"]["amount"] == 35000.0
+    assert act_data["purchase"]["amount"] == 35400.0
     assert act_data["user"]["is_active"] is True
 
     # 9. Verify direct sponsor commission (10% = ₹3,000) was awarded to Amol

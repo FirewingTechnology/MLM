@@ -11,9 +11,9 @@ class Purchase(Base):
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     package_id = Column(Integer, ForeignKey('packages.id', ondelete='RESTRICT'), nullable=False)
     
-    amount = Column(Float, nullable=False)          # ₹35,000
+    amount = Column(Float, nullable=False)          # ₹35,400 (or historical snapshot)
     product_value = Column(Float, default=30000.0, nullable=False)   # ₹30,000
-    gst_amount = Column(Float, default=5000.0, nullable=False)      # ₹5,000
+    gst_amount = Column(Float, default=5400.0, nullable=False)      # ₹5,400 (or historical snapshot)
     bv = Column(Float, nullable=False)              # 30,000 BV
     status = Column(String(20), default='COMPLETED', nullable=False)
     slot_id = Column(String(32), nullable=True, index=True)
@@ -22,6 +22,7 @@ class Purchase(Base):
 
     user = relationship('User', back_populates='purchases')
     package = relationship('Package', back_populates='purchases')
+    daily_reward_cycle = relationship('DailyRewardCycle', back_populates='purchase', uselist=False, cascade='all, delete-orphan')
 
     def to_dict(self):
         return {

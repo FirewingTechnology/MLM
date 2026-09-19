@@ -193,7 +193,7 @@ export const CommissionDetailModal: React.FC<CommissionDetailModalProps> = ({
                 <div className="p-2.5 rounded-xl bg-[#FFFEF9] border border-[#E5E0D3]">
                   <div className="text-[#69736F] text-[10px]">Child Pair Bonus</div>
                   <div className="font-bold text-[#18211F]">
-                    ₹{(details.pair_bonus_basis || 15000).toLocaleString()}
+                    ₹{(details.pair_bonus_basis || 10000).toLocaleString()}
                   </div>
                   <div className="text-[10px] text-[#C2410C]">Completed 30k/30k</div>
                 </div>
@@ -209,7 +209,7 @@ export const CommissionDetailModal: React.FC<CommissionDetailModalProps> = ({
               <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-[#FDBA74]/50">
                 <span className="text-[#69736F]">Matching Formula:</span>
                 <span className="font-mono text-[#C2410C] font-bold">
-                  ₹{(details.pair_bonus_basis || 15000).toLocaleString()} (Child Pair Bonus) × {(details.matching_rate ? details.matching_rate * 100 : commission.percentage || 10)}% = +₹{commission.amount.toLocaleString()}
+                  ₹{(details.pair_bonus_basis || 10000).toLocaleString()} (Child Pair Bonus) × {(details.matching_rate ? details.matching_rate * 100 : commission.percentage || 10)}% = +₹{commission.amount.toLocaleString()}
                 </span>
               </div>
             </div>

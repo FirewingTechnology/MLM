@@ -21,7 +21,8 @@ from app.routers import (
     activation,
     security_pins,
     rank_rewards,
-    earning_cap
+    earning_cap,
+    daily_rewards
 )
 
 @asynccontextmanager
@@ -137,6 +138,7 @@ app.include_router(activation.router)
 app.include_router(security_pins.router)
 app.include_router(rank_rewards.router)
 app.include_router(earning_cap.router)
+app.include_router(daily_rewards.router)
 
 
 @app.get("/api/health")

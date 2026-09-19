@@ -12,6 +12,7 @@ from app.services.audit_service import log_action
 from app.services.time_service import time_provider, slot_service
 from app.services.pair_service import pair_service
 from app.services.earning_cap_service import apply_commission_with_cap, activate_or_renew_earning_cycle
+from app.services.daily_reward_service import daily_reward_service
 
 class CommissionProcessingError(Exception):
     pass
@@ -69,6 +70,9 @@ def process_package_purchase(
     
     # Renew / activate earning cycle (Cycle N+1, reset counter to ₹0, remove RETOPUP_REQUIRED)
     activate_or_renew_earning_cycle(db, user_id=user.id, package_id=package.id)
+    
+    # Create independent Daily Package Refund Cycle for this purchase
+    daily_reward_service.create_daily_reward_cycle(db, purchase.id)
     
     events_triggered = []
     

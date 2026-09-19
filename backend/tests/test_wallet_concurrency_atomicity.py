@@ -293,10 +293,20 @@ def test_concurrent_wallet_creation_race(clean_db):
     clean_db.commit()
 
     import concurrent.futures
+    from sqlalchemy.orm import sessionmaker
+    WorkerSession = sessionmaker(bind=clean_db.get_bind())
     
     def create_wallet_worker():
-        # Each worker creates its own wallet query
-        return get_or_create_wallet(clean_db, user.id)
+        session = WorkerSession()
+        try:
+            w = get_or_create_wallet(session, user.id)
+            session.commit()
+            return w.id
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         futures = [executor.submit(create_wallet_worker) for _ in range(5)]

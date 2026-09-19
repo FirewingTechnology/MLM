@@ -42,6 +42,7 @@ class User(Base):
     slot_settlements = relationship('SlotSettlement', back_populates='user', cascade='all, delete-orphan')
     rank_achievements = relationship('RankAchievement', back_populates='user', cascade='all, delete-orphan')
     earning_cycles = relationship('EarningCycle', back_populates='user', cascade='all, delete-orphan')
+    daily_reward_cycles = relationship('DailyRewardCycle', back_populates='user', cascade='all, delete-orphan')
 
     __table_args__ = (
         UniqueConstraint('binary_parent_id', 'binary_position', name='uq_binary_parent_position'),

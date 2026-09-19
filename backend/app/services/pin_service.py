@@ -133,7 +133,8 @@ class PinService:
         quantity: int = 1,
         payment_method: str = "UPI_TRANSFER",
         payment_reference: str = "",
-        payment_proof_url: Optional[str] = None
+        payment_proof_url: Optional[str] = None,
+        amount: Optional[float] = None
     ) -> SecurityPinOrder:
         user = db.get(User, user_id)
         if not user:
@@ -149,6 +150,11 @@ class PinService:
         price_per_pin = package.price
         total_amount = float(quantity * price_per_pin)
         bv_per_pin = package.bv
+
+        if amount is not None and abs(amount - total_amount) > 0.01:
+            raise PinValidationError(
+                f"Invalid PIN order amount ₹{amount:,.2f}. Authoritative total is ₹{total_amount:,.2f} ({quantity} PINs × ₹{price_per_pin:,.2f})."
+            )
 
         now_ts = int(datetime.utcnow().timestamp())
         order_code = f"SPO-{now_ts % 10000000:07d}-{secrets.token_hex(2).upper()}"

@@ -54,16 +54,30 @@ def initialize_production_baseline(db: Session):
     package = db.query(Package).first()
     if not package:
         package = Package(
-            name="Premium Sub Franchise Package",
+            name="Premium Sub Franchise",
             description="Sub Franchise Business Ownership Package with 30,000 BV and active distributor rights.",
-            price=35000.0,
+            price=35400.0,
             product_value=30000.0,
-            gst_amount=5000.0,
+            gst_amount=5400.0,
             bv=30000.0,
             is_active=True
         )
         db.add(package)
         db.flush()
+    else:
+        # Safely update active package configuration to current client specifications without modifying historical purchases
+        if package.is_active and (
+            package.price != 35400.0 or
+            package.gst_amount != 5400.0 or
+            package.name != "Premium Sub Franchise"
+        ):
+            package.name = "Premium Sub Franchise"
+            package.price = 35400.0
+            package.product_value = 30000.0
+            package.gst_amount = 5400.0
+            package.bv = 30000.0
+            package.is_active = True
+            db.flush()
 
     # 3. Administrator Account Provisioning
     # Check if an admin account already exists in the database

@@ -245,7 +245,7 @@ export const NetworkPage: React.FC = () => {
                   treeData.pair_completed ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E0F3EE] text-[#063B32] text-[10px] font-bold border border-[#8DCFBF]">
                       <CheckCircle2 className="w-3 h-3 text-[#063B32]" />
-                      Paid ₹15,000 Pair
+                      Paid ₹10,000 Pair
                     </span>
                   ) : (
                     <span className="text-xs bg-[#FAF4DC] text-[#8C6C16] px-2 py-1 rounded-lg border border-[#E2C766] font-sans font-bold">

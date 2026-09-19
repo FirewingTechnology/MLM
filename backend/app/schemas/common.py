@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class PurchaseRequest(BaseModel):
     package_id: Optional[int] = None
+    amount: Optional[float] = None
     idempotency_key: Optional[str] = None
 
 class WithdrawalRequest(BaseModel):

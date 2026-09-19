@@ -9,9 +9,9 @@ class Package(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     description = Column(String(255), nullable=True)
-    price = Column(Float, nullable=False)           # ₹35,000
+    price = Column(Float, nullable=False)           # ₹35,400
     product_value = Column(Float, nullable=False)   # ₹30,000
-    gst_amount = Column(Float, nullable=False)      # ₹5,000
+    gst_amount = Column(Float, nullable=False)      # ₹5,400
     bv = Column(Float, nullable=False)              # 30,000 BV
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

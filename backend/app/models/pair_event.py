@@ -16,7 +16,7 @@ class PairEvent(Base):
     
     matched_left_bv = Column(Float, default=30000.0, nullable=False)
     matched_right_bv = Column(Float, default=30000.0, nullable=False)
-    pair_bonus = Column(Float, default=15000.0, nullable=False)
+    pair_bonus = Column(Float, default=10000.0, nullable=False)
     
     matching_upline_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     matching_commission = Column(Float, default=0.0, nullable=False)

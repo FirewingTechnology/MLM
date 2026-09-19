@@ -161,9 +161,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <span>Platform Rule Summary</span>
             </div>
             <div className="space-y-1 text-[11px] text-[#F7F4EC]/80 font-medium">
-              <p>• Qualifying Package: <span className="text-[#FFFEF9] font-bold">₹35,000</span> (30k BV)</p>
+              <p>• Qualifying Package: <span className="text-[#FFFEF9] font-bold">₹35,400</span> (30k BV)</p>
               <p>• Direct Sponsor: <span className="text-[#C9A227] font-bold">10% (₹3,000)</span></p>
-              <p>• Matching Pair Bonus: <span className="text-[#E2C766] font-bold">₹15,000 / pair</span></p>
+              <p>• Matching Pair Bonus: <span className="text-[#E2C766] font-bold">₹10,000 / pair</span></p>
             </div>
           </div>
         </div>

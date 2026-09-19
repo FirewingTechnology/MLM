@@ -44,14 +44,14 @@ def create_user_helper(db: Session, email: str, full_name: str, sponsor_id=None,
 
 
 def get_default_package(db: Session):
-    pkg = db.query(Package).filter(Package.price == 35000.0).first()
+    pkg = db.query(Package).filter(Package.is_active == True).first()
     if not pkg:
         pkg = Package(
-            name="Alpha Starter Package",
-            price=35000.0,
+            name="Premium Sub Franchise",
+            price=35400.0,
+            product_value=30000.0,
+            gst_amount=5400.0,
             bv=30000.0,
-            direct_commission_rate=0.10,
-            pair_bonus_amount=15000.0,
             is_active=True
         )
         db.add(pkg)
@@ -140,7 +140,7 @@ def test_2_b_sponsors_c_direct_commission_to_b_only_a_gets_zero(db_session: Sess
 
 # =========================================================================
 # TEST 3: B completes a valid Matching pair.
-# Expected: B = Pair Bonus (₹15,000). A = ₹0. No MATCHING_COMMISSION transaction.
+# Expected: B = Pair Bonus (₹10,000). A = ₹0. No MATCHING_COMMISSION transaction.
 # =========================================================================
 def test_3_b_completes_pair_b_gets_pair_bonus_a_gets_zero_no_matching(db_session: Session):
     user_a = create_user_helper(db_session, "t3_a@mlm.local", "T3 User A")
@@ -158,13 +158,13 @@ def test_3_b_completes_pair_b_gets_pair_bonus_a_gets_zero_no_matching(db_session
     process_package_purchase(db_session, b1.id, pkg.id, slot_id="SLOT-T3-1")
     process_package_purchase(db_session, b2.id, pkg.id, slot_id="SLOT-T3-1")
 
-    # B completed a pair -> B gets Pair Bonus of ₹15,000
+    # B completed a pair -> B gets Pair Bonus of ₹10,000
     b_pair_comm = db_session.query(Commission).filter(
         Commission.beneficiary_id == user_b.id,
         Commission.commission_type == 'PAIR_BONUS'
     ).first()
     assert b_pair_comm is not None
-    assert b_pair_comm.amount == 15000.0
+    assert b_pair_comm.amount == 10000.0
 
     # A gets ₹0 from B's pair:
     # 1. No Commission for A on B's pair
@@ -206,7 +206,7 @@ def test_4_wallet_ledger_audit_after_pair(db_session: Session):
         WalletTransaction.slot_id == "SLOT-T4-1"
     ).all()
     assert len(b_pair_txns) == 1
-    assert b_pair_txns[0].amount == 15000.0
+    assert b_pair_txns[0].amount == 10000.0
 
     # ZERO upline/matching commission transactions in WalletTransaction table
     matching_txns = db_session.query(WalletTransaction).filter(
@@ -308,7 +308,7 @@ def test_7_pair_bonus_respects_volume_carry_and_slot_limits(db_session: Session)
         Commission.slot_id == "SLOT-T7-1"
     ).all()
     assert len(slot_1_comms) == 1
-    assert slot_1_comms[0].amount == 15000.0
+    assert slot_1_comms[0].amount == 10000.0
 
     # Verify Carry Forward:
     # Left started with 60k, consumed 30k -> Ending carry left = 30k
@@ -331,7 +331,7 @@ def test_7_pair_bonus_respects_volume_carry_and_slot_limits(db_session: Session)
         Commission.slot_id == "SLOT-T7-2"
     ).all()
     assert len(slot_2_comms) == 1
-    assert slot_2_comms[0].amount == 15000.0
+    assert slot_2_comms[0].amount == 10000.0
 
     vol_summary_2 = pair_service.get_user_pair_summary(db_session, user_b.id, "SLOT-T7-2")
     assert vol_summary_2['ending_carry_left'] == 0.0
@@ -377,17 +377,17 @@ def test_8_direct_and_pair_bonus_respect_300k_earning_cap(db_session: Session):
     assert summary_1['is_capped'] is False
     assert cycle.total_eligible_income == 298000.0
 
-    # 2. Apply Pair Bonus of ₹15,000 -> Capacity remaining is ₹2,000
+    # 2. Apply Pair Bonus of ₹10,000 -> Capacity remaining is ₹2,000
     # Expected: Allowed = ₹2,000, Blocked = ₹13,000, Cycle becomes RETOPUP_REQUIRED
     comm_2, _, summary_2 = apply_commission_with_cap(
         db=db_session,
         user_id=user.id,
         commission_type='PAIR_BONUS',
-        requested_amount=15000.0,
+        requested_amount=10000.0,
         slot_id="SLOT-T8"
     )
     assert summary_2['allowed_amount'] == 2000.0
-    assert summary_2['blocked_amount'] == 13000.0
+    assert summary_2['blocked_amount'] == 8000.0
     assert summary_2['is_capped'] is True
     assert cycle.total_eligible_income == 300000.0
     assert cycle.status == 'RETOPUP_REQUIRED'

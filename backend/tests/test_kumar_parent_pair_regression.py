@@ -40,13 +40,13 @@ def create_test_user(db: Session, email: str, full_name: str, referral_code: str
 
 
 def get_or_create_package(db: Session):
-    pkg = db.query(Package).filter(Package.price == 35000.0).first()
+    pkg = db.query(Package).filter(Package.is_active == True).first()
     if not pkg:
         pkg = Package(
-            name="Premium Business Package",
-            price=35000.0,
+            name="Premium Sub Franchise",
+            price=35400.0,
             product_value=30000.0,
-            gst_amount=5000.0,
+            gst_amount=5400.0,
             bv=30000.0,
             is_active=True
         )

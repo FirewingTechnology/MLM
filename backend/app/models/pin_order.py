@@ -12,8 +12,8 @@ class SecurityPinOrder(Base):
     package_id = Column(Integer, ForeignKey('packages.id', ondelete='RESTRICT'), nullable=False)
     
     quantity = Column(Integer, nullable=False, default=1)
-    price_per_pin = Column(Float, nullable=False, default=35000.0)
-    total_amount = Column(Float, nullable=False, default=35000.0) # quantity * price_per_pin
+    price_per_pin = Column(Float, nullable=False, default=35400.0)
+    total_amount = Column(Float, nullable=False, default=35400.0) # quantity * price_per_pin
     bv_per_pin = Column(Float, nullable=False, default=30000.0)
     
     payment_method = Column(String(50), default='UPI_TRANSFER', nullable=False)

@@ -19,7 +19,7 @@ class SecurityPin(Base):
     activation_request_id = Column(Integer, ForeignKey('package_activation_requests.id', ondelete='SET NULL'), nullable=True, index=True)
     order_id = Column(Integer, ForeignKey('security_pin_orders.id', ondelete='SET NULL'), nullable=True, index=True) # Purchase batch order
     
-    amount = Column(Float, nullable=False, default=35000.0)
+    amount = Column(Float, nullable=False, default=35400.0)
     bv = Column(Float, nullable=False, default=30000.0)
     
     status = Column(String(20), default='AVAILABLE', nullable=False, index=True)
