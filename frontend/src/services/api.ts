@@ -29,16 +29,24 @@ export const getBaseURL = (): string => {
 
     // Strip existing protocol for normalization
     formatted = formatted.replace(/^https?:\/\//i, '');
-
-    // Remove any trailing slashes
     formatted = formatted.replace(/\/+$/, '');
 
-    // Ensure /api suffix is present without duplication
-    if (!formatted.endsWith('/api') && !formatted.includes('/api/')) {
-      formatted = `${formatted}/api`;
+    // Separate path suffix (like /api)
+    let pathSuffix = '/api';
+    if (formatted.endsWith('/api')) {
+      formatted = formatted.slice(0, -4);
+    } else if (formatted.includes('/api/')) {
+      const idx = formatted.indexOf('/api/');
+      pathSuffix = formatted.slice(idx);
+      formatted = formatted.slice(0, idx);
     }
 
-    return `${protocol}${formatted}`;
+    // If Render host property gave only service name like "mlm-backend-xl1p" without domain:
+    if (!formatted.includes('.')) {
+      formatted = `${formatted}.onrender.com`;
+    }
+
+    return `${protocol}${formatted}${pathSuffix}`;
   }
 
   // If running in browser on Render, automatically default to the Render backend service
