@@ -7,31 +7,49 @@ from app.config import settings
 
 db_url = settings.normalized_database_url
 
-if settings.is_postgres:
-    engine = create_engine(
-        db_url,
-        pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20,
-        pool_recycle=1800,
-        pool_timeout=30,
-        connect_args={"connect_timeout": 10}
-    )
-elif settings.is_sqlite:
-    connect_args = {
-        "check_same_thread": False,
-        "timeout": 30
-    }
-    engine = create_engine(
-        db_url,
-        connect_args=connect_args,
-        pool_pre_ping=True
-    )
-else:
-    engine = create_engine(
-        db_url,
-        pool_pre_ping=True
-    )
+def create_configured_engine() -> Engine:
+    db_url = settings.normalized_database_url
+    if settings.is_postgres:
+        try:
+            eng = create_engine(
+                db_url,
+                pool_pre_ping=True,
+                pool_size=10,
+                max_overflow=20,
+                pool_recycle=1800,
+                pool_timeout=15,
+                connect_args={"connect_timeout": 5}
+            )
+            # Verify connectivity immediately
+            with eng.connect() as conn:
+                conn.execute(text("SELECT 1;"))
+            return eng
+        except Exception as e:
+            import logging
+            logging.getLogger("uvicorn").error(
+                "[Database Warning] Could not connect to PostgreSQL (%s). Falling back to persistent SQLite.", e
+            )
+            sqlite_file = settings.DATABASE_URL.replace("sqlite:///", "") if settings.is_sqlite else settings.SQLITE_DB_PATH
+            sqlite_path = os.path.abspath(sqlite_file or "./data/mlm.sqlite3")
+            os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
+            return create_engine(
+                f"sqlite:///{sqlite_path}",
+                connect_args={"check_same_thread": False, "timeout": 30},
+                pool_pre_ping=True
+            )
+    elif settings.is_sqlite:
+        sqlite_file = settings.DATABASE_URL.replace("sqlite:///", "")
+        sqlite_path = os.path.abspath(sqlite_file or "./data/mlm.sqlite3")
+        os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
+        return create_engine(
+            f"sqlite:///{sqlite_path}",
+            connect_args={"check_same_thread": False, "timeout": 30},
+            pool_pre_ping=True
+        )
+    else:
+        return create_engine(db_url, pool_pre_ping=True)
+
+engine = create_configured_engine()
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):

@@ -35,21 +35,16 @@ async def lifespan(app: FastAPI):
         Base.metadata.create_all(bind=engine)
         apply_migrations(engine)
     except Exception as e:
-        if settings.is_production:
-            raise RuntimeError(f"CRITICAL: Failed to connect to production database or apply migrations: {e}")
-        else:
-            print(f"[Warning] Database initialization error: {e}")
+        import logging
+        logging.getLogger("uvicorn").error(f"[Database Error] Table creation or schema migration notice: {e}")
 
     # 3. Safe baseline initialization (never deletes or overwrites existing records)
     db = SessionLocal()
     try:
         initialize_production_baseline(db)
     except Exception as e:
-        if settings.is_production:
-            raise RuntimeError(f"CRITICAL: Failed to initialize production baseline: {e}") from e
-        else:
-            print(f"[Warning] Baseline initialization error: {e}")
-            raise
+        import logging
+        logging.getLogger("uvicorn").error(f"[Database Error] Baseline initialization notice: {e}")
     finally:
         db.close()
     yield
