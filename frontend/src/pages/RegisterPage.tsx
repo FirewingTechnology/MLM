@@ -44,9 +44,13 @@ export const RegisterPage: React.FC = () => {
   const [checkingReferral, setCheckingReferral] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Auto populate ref from URL
+  // Auto populate ref and leg from URL
   useEffect(() => {
     const refParam = searchParams.get('ref');
+    const legParam = searchParams.get('leg')?.toUpperCase();
+    if (legParam === 'LEFT' || legParam === 'RIGHT') {
+      setbinaryPosition(legParam);
+    }
     if (refParam) {
       setReferralCode(refParam);
       verifyReferral(refParam);

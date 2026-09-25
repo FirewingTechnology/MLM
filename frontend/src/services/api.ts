@@ -20,7 +20,7 @@ export const getBaseURL = (): string => {
     if (formatted.startsWith('http://')) {
       if (typeof window !== 'undefined' && window.location?.protocol === 'https:') {
         protocol = 'https://';
-      } else if (formatted.includes('api.mystatusads333.com')) {
+      } else if (formatted.includes('onrender.com') || formatted.includes('mystatusads333.com')) {
         protocol = 'https://';
       } else {
         protocol = 'http://';
@@ -39,6 +39,11 @@ export const getBaseURL = (): string => {
     }
 
     return `${protocol}${formatted}`;
+  }
+
+  // If running in browser on Render, automatically default to the Render backend service
+  if (typeof window !== 'undefined' && window.location?.hostname.includes('onrender.com')) {
+    return 'https://mlm-backend-xl1p.onrender.com/api';
   }
 
   // Development default fallback

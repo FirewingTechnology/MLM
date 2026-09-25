@@ -85,26 +85,20 @@ def get_cors_origins(cfg: Settings = settings) -> list:
         if src:
             for item in src.split(","):
                 cleaned = item.strip().rstrip("/")
-                if cleaned:
+                # Avoid '*' in explicit origins when credentials are true
+                if cleaned and cleaned != "*":
                     origins.append(cleaned)
 
-    if cfg.is_production:
-        # Explicit canonical production origins
-        production_canonical = [
-            "http://web.mystatusads333.com",
-            "https://web.mystatusads333.com",
-        ]
-        origins.extend(production_canonical)
-    else:
-        dev_defaults = [
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
-            "http://web.mystatusads333.com",
-            "https://web.mystatusads333.com",
-        ]
-        origins.extend(dev_defaults)
+    # Standard production and Render domains
+    origins.extend([
+        "https://mlm-frontend-id60.onrender.com",
+        "http://web.mystatusads333.com",
+        "https://web.mystatusads333.com",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ])
 
     # Deduplicate while preserving insertion order
     return list(dict.fromkeys(filter(None, origins)))
@@ -115,6 +109,7 @@ allowed_origins = get_cors_origins(settings)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],

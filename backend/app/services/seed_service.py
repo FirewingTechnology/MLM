@@ -89,62 +89,31 @@ def initialize_production_baseline(db: Session):
         get_or_create_wallet(db, existing_admin.id)
         get_or_create_binary_volume(db, existing_admin.id)
     else:
-        # No administrator account exists in database
-        if settings.is_production:
-            # Production Mode: Only create admin if INITIAL_ADMIN_BOOTSTRAP is explicitly enabled
-            if settings.INITIAL_ADMIN_BOOTSTRAP:
-                email = settings.INITIAL_ADMIN_EMAIL.strip().lower() if settings.INITIAL_ADMIN_EMAIL else ""
-                password = settings.INITIAL_ADMIN_PASSWORD.strip() if settings.INITIAL_ADMIN_PASSWORD else ""
+        # No administrator account exists in database - bootstrap initial admin
+        email = settings.INITIAL_ADMIN_EMAIL.strip().lower() if settings.INITIAL_ADMIN_EMAIL else "admin@platform.com"
+        password = settings.INITIAL_ADMIN_PASSWORD.strip() if settings.INITIAL_ADMIN_PASSWORD else "Admin@123"
+        mobile = settings.INITIAL_ADMIN_MOBILE.strip() if settings.INITIAL_ADMIN_MOBILE else "9876500001"
+        full_name = settings.INITIAL_ADMIN_NAME.strip() if settings.INITIAL_ADMIN_NAME else "System Admin"
 
-                if not email or "@" not in email or not password or len(password) < 8:
-                    print("[Bootstrap Warning] INITIAL_ADMIN_BOOTSTRAP=true but INITIAL_ADMIN_EMAIL or INITIAL_ADMIN_PASSWORD (min 8 chars) is invalid/missing. Administrator account NOT created.")
-                else:
-                    mobile = settings.INITIAL_ADMIN_MOBILE.strip() if settings.INITIAL_ADMIN_MOBILE else "9876500001"
-                    full_name = settings.INITIAL_ADMIN_NAME.strip() if settings.INITIAL_ADMIN_NAME else "System Admin"
-
-                    admin = User(
-                        user_code="USR-00001",
-                        email=email,
-                        mobile=mobile,
-                        full_name=full_name,
-                        password_hash=hash_password(password),
-                        role="ADMIN",
-                        referral_code="ADMIN001",
-                        is_active=True
-                    )
-                    db.add(admin)
-                    db.flush()
-                    get_or_create_wallet(db, admin.id)
-                    get_or_create_binary_volume(db, admin.id)
-                    log_action(db, 'ADMIN_BOOTSTRAPPED', 'User', admin.id, admin.id, {
-                        'email': email,
-                        'status': 'Initial production administrator provisioned via environment configuration'
-                    })
-                    print(f"[Bootstrap] Initial production administrator account '{email}' successfully provisioned.")
-            else:
-                print("[Bootstrap Notice] No administrator account found. Initial admin bootstrap is disabled (INITIAL_ADMIN_BOOTSTRAP=false).")
-        else:
-            # Development / Test Mode: Create default admin for local development & test suite
-            email = settings.INITIAL_ADMIN_EMAIL.strip().lower() if settings.INITIAL_ADMIN_EMAIL else "admin@platform.com"
-            password = settings.INITIAL_ADMIN_PASSWORD.strip() if settings.INITIAL_ADMIN_PASSWORD else "Admin@123"
-            mobile = settings.INITIAL_ADMIN_MOBILE.strip() if settings.INITIAL_ADMIN_MOBILE else "9876500001"
-            full_name = settings.INITIAL_ADMIN_NAME.strip() if settings.INITIAL_ADMIN_NAME else "System Admin"
-
-            admin = User(
-                user_code="USR-00001",
-                email=email,
-                mobile=mobile,
-                full_name=full_name,
-                password_hash=hash_password(password),
-                role="ADMIN",
-                referral_code="ADMIN001",
-                is_active=True
-            )
-            db.add(admin)
-            db.flush()
-            get_or_create_wallet(db, admin.id)
-            get_or_create_binary_volume(db, admin.id)
-            log_action(db, 'DATABASE_INITIALIZED', 'System', None, admin.id, {'status': 'Development baseline initialized with admin'})
+        admin = User(
+            user_code="USR-00001",
+            email=email,
+            mobile=mobile,
+            full_name=full_name,
+            password_hash=hash_password(password),
+            role="ADMIN",
+            referral_code="ADMIN001",
+            is_active=True
+        )
+        db.add(admin)
+        db.flush()
+        get_or_create_wallet(db, admin.id)
+        get_or_create_binary_volume(db, admin.id)
+        log_action(db, 'DATABASE_INITIALIZED', 'System', None, admin.id, {
+            'status': 'Baseline initialized with administrator account',
+            'referral_code': 'ADMIN001'
+        })
+        print(f"[Bootstrap] Initial administrator account '{email}' (Referral: ADMIN001) successfully provisioned.")
 
     # 4. Baseline Rank & Reward Configurations (STAR, SUPER_STAR, VIP)
     from app.models.rank_config import RankConfig

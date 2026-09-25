@@ -37,13 +37,13 @@ export const ReferralsPage: React.FC = () => {
   const leftUrl = linksData?.left?.token
     ? `${window.location.origin}/register?ref=${linksData.left.token}`
     : user?.referral_code
-      ? `${window.location.origin}/register?ref=${user.referral_code}`
+      ? `${window.location.origin}/register?ref=${user.referral_code}&leg=left`
       : '';
 
   const rightUrl = linksData?.right?.token
     ? `${window.location.origin}/register?ref=${linksData.right.token}`
     : user?.referral_code
-      ? `${window.location.origin}/register?ref=${user.referral_code}`
+      ? `${window.location.origin}/register?ref=${user.referral_code}&leg=right`
       : '';
 
   const handleCopyLeft = () => {
