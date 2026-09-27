@@ -47,7 +47,15 @@ async def lifespan(app: FastAPI):
         logging.getLogger("uvicorn").error(f"[Database Error] Baseline initialization notice: {e}")
     finally:
         db.close()
+
+    # 4. Start background recurring operations scheduler
+    from app.services.scheduler_service import scheduler_service
+    scheduler_service.start()
+
     yield
+
+    # Shutdown: Stop scheduler worker
+    scheduler_service.stop()
 
 
 app = FastAPI(

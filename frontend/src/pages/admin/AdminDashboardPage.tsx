@@ -59,7 +59,12 @@ import {
   Edit3,
   Bike,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  Database,
+  Download,
+  Upload,
+  Play,
+  Calendar
 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 
@@ -67,7 +72,7 @@ export const AdminDashboardPage: React.FC = () => {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
-  const [adminTab, setAdminTab] = useState<'analytics' | 'activations' | 'earning_caps' | 'daily_refunds' | 'rank_rewards' | 'commissions' | 'settlements' | 'volume_ledger'>('analytics');
+  const [adminTab, setAdminTab] = useState<'analytics' | 'activations' | 'earning_caps' | 'daily_refunds' | 'rank_rewards' | 'commissions' | 'settlements' | 'volume_ledger' | 'system_backup'>('analytics');
   const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
 
   // Daily Package Refund states
@@ -499,6 +504,173 @@ export const AdminDashboardPage: React.FC = () => {
     }
   };
 
+  // =========================================================================
+  // SCHEDULER & EXCEL DISASTER RECOVERY STATE & HANDLERS
+  // =========================================================================
+  const [exportingExcel, setExportingExcel] = useState(false);
+  const [restoringExcel, setRestoringExcel] = useState(false);
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
+  const [restoreResult, setRestoreResult] = useState<any | null>(null);
+  const [runningJobId, setRunningJobId] = useState<string | null>(null);
+  const [togglingScheduler, setTogglingScheduler] = useState(false);
+
+  // Queries for Scheduler & Recovery
+  const { data: schedulerData, isLoading: loadingScheduler, refetch: refetchScheduler } = useQuery({
+    queryKey: ['adminSchedulerStatus'],
+    queryFn: async () => {
+      const res = await api.get('/admin/system/scheduler');
+      return res.data?.data;
+    },
+    enabled: adminTab === 'system_backup',
+    refetchInterval: 8000,
+  });
+
+  const { data: backupListData, isLoading: loadingBackups, refetch: refetchBackups } = useQuery({
+    queryKey: ['adminBackupList'],
+    queryFn: async () => {
+      const res = await api.get('/admin/system/database/backups');
+      return res.data?.data;
+    },
+    enabled: adminTab === 'system_backup',
+  });
+
+  const handleExportExcel = async (notes?: string) => {
+    setExportingExcel(true);
+    try {
+      showToast('Generating complete multi-sheet database Excel backup...', 'info');
+      const res = await api.get('/admin/system/database/export-excel', {
+        params: { notes: notes || 'Admin Manual Disaster Recovery Export' },
+        responseType: 'blob',
+      });
+      let filename = `mlm_database_backup_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const disposition = res.headers['content-disposition'];
+      if (disposition && disposition.includes('filename=')) {
+        const matches = disposition.match(/filename="?([^"]+)"?/);
+        if (matches && matches[1]) {
+          filename = matches[1];
+        }
+      }
+      const blob = new Blob([res.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      showToast(`Export complete! Downloaded ${filename}`, 'success');
+      refetchBackups();
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || 'Failed to export database to Excel.';
+      showToast(msg, 'error');
+    } finally {
+      setExportingExcel(false);
+    }
+  };
+
+  const handleImportExcelSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!restoreFile) {
+      showToast('Please select a valid .xlsx Excel backup file.', 'error');
+      return;
+    }
+    if (
+      !window.confirm(
+        'CRITICAL WARNING: Restoring from Excel will populate and synchronize database tables with this backup. Are you sure you wish to proceed?'
+      )
+    ) {
+      return;
+    }
+    setRestoringExcel(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', restoreFile);
+      const res = await api.post('/admin/system/database/import-excel?overwrite=true', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (res.data?.success) {
+        showToast('Database successfully restored from Excel backup!', 'success');
+        setRestoreResult(res.data.data);
+        setRestoreFile(null);
+        queryClient.invalidateQueries({ queryKey: ['adminDashboard'] });
+        refetchBackups();
+      }
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.error?.message ||
+        'Database restoration failed. Please check the Excel file format.';
+      showToast(msg, 'error');
+    } finally {
+      setRestoringExcel(false);
+    }
+  };
+
+  const handleRunScheduledJob = async (jobId: string, force: boolean = true) => {
+    setRunningJobId(jobId);
+    try {
+      const res = await api.post('/admin/system/scheduler/run-job', {
+        job_id: jobId,
+        force: force,
+      });
+      if (res.data?.success) {
+        showToast(res.data.message || `Job '${jobId}' executed successfully!`, 'success');
+        refetchScheduler();
+        refetchBackups();
+        refetchDailyRefunds();
+        queryClient.invalidateQueries({ queryKey: ['adminDashboard'] });
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || 'Job execution failed.';
+      showToast(msg, 'error');
+    } finally {
+      setRunningJobId(null);
+    }
+  };
+
+  const handleToggleScheduler = async (enable: boolean) => {
+    setTogglingScheduler(true);
+    try {
+      const res = await api.post('/admin/system/scheduler/toggle', { enabled: enable });
+      if (res.data?.success) {
+        showToast(res.data.message || `Scheduler ${enable ? 'resumed' : 'paused'}.`, 'info');
+        refetchScheduler();
+      }
+    } catch (err: any) {
+      showToast('Could not update scheduler state.', 'error');
+    } finally {
+      setTogglingScheduler(false);
+    }
+  };
+
+  const handleDownloadBackupFile = async (filename: string) => {
+    try {
+      showToast(`Downloading backup archive ${filename}...`, 'info');
+      const res = await api.get(`/admin/system/database/download-backup/${filename}`, {
+        responseType: 'blob',
+      });
+      const ext = filename.split('.').pop()?.toLowerCase();
+      const mime =
+        ext === 'xlsx'
+          ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          : 'application/octet-stream';
+      const blob = new Blob([res.data], { type: mime });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      showToast(`Downloaded ${filename}`, 'success');
+    } catch (err: any) {
+      showToast(`Could not download file ${filename}`, 'error');
+    }
+  };
+
   const handleVerifyPayment = async (req: PackageActivationRequest) => {
     setActionLoadingId(req.id);
     try {
@@ -638,6 +810,23 @@ export const AdminDashboardPage: React.FC = () => {
           </p>
         </div>
 
+        {/* Quick Header Actions */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={() => handleExportExcel()}
+            disabled={exportingExcel}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] text-xs font-bold transition-all shadow-xs cursor-pointer border border-[#8DCFBF] disabled:opacity-50"
+            title="Download full 26-table database snapshot in Excel (.xlsx) format"
+          >
+            {exportingExcel ? (
+              <Loader2 className="w-4 h-4 animate-spin text-[#C9A227]" />
+            ) : (
+              <FileSpreadsheet className="w-4 h-4 text-[#C9A227]" />
+            )}
+            <span>{exportingExcel ? 'Exporting DB...' : 'Export DB to Excel'}</span>
+          </button>
+        </div>
+
         {/* Tab Controls */}
         <div className="flex items-center gap-1.5 bg-[#F7F4EC] p-1.5 rounded-2xl border border-[#E5E0D3] self-start sm:self-auto flex-wrap">
           <button
@@ -722,6 +911,16 @@ export const AdminDashboardPage: React.FC = () => {
           >
             <Layers className="w-3.5 h-3.5 text-[#063B32]" />
             <span>Volume Ledger</span>
+          </button>
+          <button
+            onClick={() => setAdminTab('system_backup')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${adminTab === 'system_backup'
+                ? 'bg-[#063B32] text-[#FFFEF9] shadow-xs'
+                : 'text-[#69736F] hover:text-[#18211F]'
+              }`}
+          >
+            <Database className="w-3.5 h-3.5 text-[#C9A227]" />
+            <span>Scheduler & Excel Recovery</span>
           </button>
         </div>
       </div>
@@ -2820,6 +3019,456 @@ export const AdminDashboardPage: React.FC = () => {
           ) : (
             <div className="py-12 text-center text-xs text-[#69736F]">No volume ledger records found.</div>
           )}
+        </div>
+      )}
+
+      {/* 4. SYSTEM SCHEDULER & DISASTER RECOVERY EXCEL BACKUP TAB */}
+      {adminTab === 'system_backup' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          {/* Header Banner */}
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-[#063B32] via-[#084D42] to-[#0D6355] text-[#FFFEF9] border border-[#8DCFBF]/30 shadow-wealth-card relative overflow-hidden">
+            <div className="absolute right-0 top-0 translate-x-12 -translate-y-8 w-64 h-64 rounded-full bg-[#C9A227]/10 blur-3xl pointer-events-none" />
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-2 max-w-2xl">
+                <div className="flex items-center gap-2 text-xs font-mono font-bold tracking-wider text-[#C9A227]">
+                  <Database className="w-4 h-4" />
+                  <span>DISASTER RECOVERY & AUTOMATED SCHEDULER</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight text-[#FFFEF9]">
+                  Database Excel Export & Background Operations Engine
+                </h2>
+                <p className="text-xs sm:text-sm text-[#FFFEF9]/80 font-normal leading-relaxed">
+                  Safeguard your platform with complete 26-table Excel (.xlsx) backups that allow 100% database reconstruction from scratch if data is lost or corrupted. Monitor and trigger recurring 07:00 AM IST settlements and automated maintenance.
+                </p>
+              </div>
+
+              {/* Status Indicator Widget */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-[#042C26]/80 p-4 rounded-2xl border border-[#8DCFBF]/30 backdrop-blur-xs">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${schedulerData?.is_running && schedulerData?.is_enabled ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#FFFEF9]">
+                      Scheduler: {schedulerData?.is_running && schedulerData?.is_enabled ? 'Active' : 'Paused / Idle'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-mono text-[#C9A227]">
+                    {schedulerData?.current_time_ist || 'Synchronizing IST...'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleToggleScheduler(!schedulerData?.is_enabled)}
+                  disabled={togglingScheduler}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-[#FFFEF9]/10 hover:bg-[#FFFEF9]/20 text-[#FFFEF9] border border-[#FFFEF9]/20 cursor-pointer disabled:opacity-50"
+                >
+                  {schedulerData?.is_enabled ? 'Pause Scheduler' : 'Resume Scheduler'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* TWO PRIMARY DISASTER RECOVERY CARDS */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* CARD 1: EXPORT DATABASE TO EXCEL */}
+            <div className="p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-[#E0F3EE] flex items-center justify-center text-[#063B32]">
+                    <FileSpreadsheet className="w-6 h-6 text-[#063B32]" />
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-[#E0F3EE] text-[#063B32] border border-[#8DCFBF]">
+                    26 RELATIONAL TABLES
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-heading font-extrabold text-[#18211F]">
+                    Export Full Database to Excel (.xlsx)
+                  </h3>
+                  <p className="text-xs text-[#69736F] mt-1 leading-relaxed">
+                    Downloads an authoritative multi-sheet Excel workbook containing all persistent data: Users, Hierarchy, Packages, Wallets, Ledger Transactions, Security PINs, Earning Cycles, and Audit Trails.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] space-y-2 text-xs">
+                  <div className="font-bold text-[#18211F] flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#063B32]" />
+                    <span>Disaster Recovery Guarantee</span>
+                  </div>
+                  <p className="text-[#69736F] text-[11px] leading-relaxed">
+                    If your database server ever crashes, is wiped, or is migrated to a fresh RDS / SQLite database, this Excel file can be uploaded directly to re-populate and seamlessly restore all accounts and balances without data loss.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => handleExportExcel('Admin Disaster Recovery Manual Export')}
+                  disabled={exportingExcel}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] font-heading font-bold text-sm transition-all shadow-wealth-card flex items-center justify-center gap-2 cursor-pointer border border-[#8DCFBF] disabled:opacity-50"
+                >
+                  {exportingExcel ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-[#C9A227]" />
+                      <span>Generating Multi-Sheet Workbook...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 text-[#C9A227]" />
+                      <span>Export Full Database to Excel (.xlsx)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* CARD 2: RESTORE DATABASE FROM EXCEL */}
+            <div className="p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-[#FAF4DC] flex items-center justify-center text-[#8C6C16]">
+                    <Upload className="w-6 h-6 text-[#C9A227]" />
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-[#FAF4DC] text-[#8C6C16] border border-[#E5D79E]">
+                    DISASTER RESTORATION
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-heading font-extrabold text-[#18211F]">
+                    Restore Database from Excel (.xlsx)
+                  </h3>
+                  <p className="text-xs text-[#69736F] mt-1 leading-relaxed">
+                    Upload a previously exported Excel workbook to populate, rebuild, or synchronize an empty or crashed database. Foreign key order and sequential counters are reconciled automatically.
+                  </p>
+                </div>
+
+                <form onSubmit={handleImportExcelSubmit} className="space-y-3">
+                  <div className="relative border-2 border-dashed border-[#E5E0D3] hover:border-[#063B32] rounded-2xl p-4 text-center transition-colors bg-[#F7F4EC]/50">
+                    <input
+                      type="file"
+                      accept=".xlsx"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setRestoreFile(e.target.files[0]);
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <div className="space-y-1">
+                      <FileSpreadsheet className="w-8 h-8 text-[#063B32] mx-auto opacity-70" />
+                      {restoreFile ? (
+                        <div className="text-xs font-bold text-[#063B32]">
+                          Selected: {restoreFile.name} ({(restoreFile.size / 1024).toFixed(1)} KB)
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-xs font-bold text-[#18211F]">
+                            Click or drag an Excel (.xlsx) backup file here
+                          </div>
+                          <div className="text-[10px] text-[#69736F]">
+                            Standard 26-sheet database export file
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={!restoreFile || restoringExcel}
+                    className="w-full py-3.5 px-6 rounded-2xl bg-[#C9A227] hover:bg-[#B38F1E] text-[#18211F] font-heading font-bold text-sm transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {restoringExcel ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-[#18211F]" />
+                        <span>Restoring & Reconciling Database...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span>Restore Database from Selected File</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+
+              <div className="text-[11px] text-[#69736F] flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span>Existing records with matching Primary Keys will be updated safely.</span>
+              </div>
+            </div>
+          </div>
+
+          {/* SCHEDULED BACKGROUND RECURRING JOBS */}
+          <div className="p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E0D3] pb-4">
+              <div>
+                <h3 className="text-lg font-heading font-extrabold text-[#18211F]">
+                  Configured Scheduled Background Operations
+                </h3>
+                <p className="text-xs text-[#69736F]">
+                  Automated background worker handles recurring financial distributions, slot settlements, and daily snapshots.
+                </p>
+              </div>
+              <button
+                onClick={() => refetchScheduler()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E5E0D3] text-xs font-bold text-[#063B32] hover:bg-[#F7F4EC] transition-colors self-start sm:self-auto cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Refresh Status</span>
+              </button>
+            </div>
+
+            {loadingScheduler ? (
+              <div className="py-12 flex justify-center items-center text-xs text-[#69736F]">
+                <Loader2 className="w-5 h-5 animate-spin mr-2 text-[#063B32]" />
+                <span>Loading scheduler jobs...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(schedulerData?.jobs || []).map((job: any) => {
+                  const isRunning = runningJobId === job.job_id || job.last_status === 'RUNNING';
+                  return (
+                    <div
+                      key={job.job_id}
+                      className="p-5 rounded-2xl bg-[#F7F4EC]/60 border border-[#E5E0D3] flex flex-col justify-between space-y-4 hover:border-[#063B32]/40 transition-colors"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="w-9 h-9 rounded-xl bg-[#FFFEF9] border border-[#E5E0D3] flex items-center justify-center text-[#063B32]">
+                            {job.job_id === 'daily_reward_settlement' && <RotateCcw className="w-4 h-4 text-[#C9A227]" />}
+                            {job.job_id === 'automated_backup' && <Database className="w-4 h-4 text-[#063B32]" />}
+                            {job.job_id === 'slot_settlement_maintenance' && <Clock className="w-4 h-4 text-[#3B82F6]" />}
+                          </div>
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono border ${job.last_status === 'SUCCESS'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : job.last_status === 'RUNNING'
+                                  ? 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
+                                  : job.last_status === 'FAILED'
+                                    ? 'bg-red-50 text-red-700 border-red-200'
+                                    : 'bg-slate-100 text-slate-700 border-slate-200'
+                              }`}
+                          >
+                            {job.last_status}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-heading font-bold text-[#18211F]">
+                            {job.name}
+                          </h4>
+                          <p className="text-[11px] text-[#69736F] mt-1 line-clamp-2">
+                            {job.description}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1.5 pt-2 border-t border-[#E5E0D3]/60 text-[11px] font-mono">
+                          <div className="flex items-center justify-between text-[#69736F]">
+                            <span>Schedule:</span>
+                            <span className="font-bold text-[#18211F]">{job.schedule_display}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[#69736F]">
+                            <span>Next Run:</span>
+                            <span className="text-[#063B32] font-bold">{job.next_run_at || 'Pending'}</span>
+                          </div>
+                          {job.last_run_at && (
+                            <div className="flex items-center justify-between text-[#69736F]">
+                              <span>Last Run:</span>
+                              <span className="text-[#18211F]">{new Date(job.last_run_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleRunScheduledJob(job.job_id, true)}
+                        disabled={isRunning}
+                        className="w-full py-2.5 px-3 rounded-xl bg-[#FFFEF9] hover:bg-[#063B32] text-[#063B32] hover:text-[#FFFEF9] border border-[#E5E0D3] hover:border-[#063B32] text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        {isRunning ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Executing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>Run Now (Manual Trigger)</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* RECENT SCHEDULER EXECUTION LOGS & ARCHIVED BACKUP FILES */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* ARCHIVED BACKUPS LIST */}
+            <div className="p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card space-y-4">
+              <div className="flex items-center justify-between border-b border-[#E5E0D3] pb-3">
+                <div className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-[#063B32]" />
+                  <h3 className="text-base font-heading font-extrabold text-[#18211F]">
+                    Archived Backup Snapshots
+                  </h3>
+                </div>
+                <span className="text-xs font-mono font-bold text-[#69736F]">
+                  {backupListData?.total || 0} Total Backups
+                </span>
+              </div>
+
+              {backupListData?.backups && backupListData.backups.length > 0 ? (
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {backupListData.backups.map((b: any) => (
+                    <div
+                      key={b.filename}
+                      className="p-3 rounded-xl bg-[#F7F4EC]/60 border border-[#E5E0D3] flex items-center justify-between text-xs hover:bg-[#F7F4EC] transition-colors"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="font-mono font-bold text-[#18211F] text-[11px] truncate max-w-xs sm:max-w-sm">
+                          {b.filename}
+                        </div>
+                        <div className="text-[10px] text-[#69736F] flex items-center gap-2 font-mono">
+                          <span className={`px-1.5 py-0.2 rounded font-bold ${b.type === 'EXCEL' ? 'bg-[#E0F3EE] text-[#063B32]' : 'bg-[#FAF4DC] text-[#8C6C16]'}`}>
+                            {b.type}
+                          </span>
+                          <span>{b.size_mb} MB</span>
+                          <span>•</span>
+                          <span>{new Date(b.created_at).toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleDownloadBackupFile(b.filename)}
+                        className="p-2 rounded-lg bg-[#FFFEF9] hover:bg-[#063B32] text-[#063B32] hover:text-[#FFFEF9] border border-[#E5E0D3] transition-colors cursor-pointer"
+                        title="Download backup file"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-xs text-[#69736F]">
+                  No archived backups found. Click "Export DB to Excel" to create your first backup.
+                </div>
+              )}
+            </div>
+
+            {/* LIVE SCHEDULER HISTORY LOG */}
+            <div className="p-6 rounded-3xl bg-[#FFFEF9] border border-[#E5E0D3] shadow-wealth-card space-y-4">
+              <div className="flex items-center justify-between border-b border-[#E5E0D3] pb-3">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#063B32]" />
+                  <h3 className="text-base font-heading font-extrabold text-[#18211F]">
+                    Scheduler Activity Audit Feed
+                  </h3>
+                </div>
+                <span className="text-xs font-mono font-bold text-[#69736F]">
+                  Recent Executions
+                </span>
+              </div>
+
+              {schedulerData?.history && schedulerData.history.length > 0 ? (
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {schedulerData.history.map((h: any, idx: number) => (
+                    <div
+                      key={h.id || idx}
+                      className="p-3 rounded-xl bg-[#F7F4EC]/60 border border-[#E5E0D3] flex items-start justify-between text-xs space-x-2"
+                    >
+                      <div className="space-y-0.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[#18211F] text-xs">{h.job_name}</span>
+                          <span
+                            className={`px-1.5 py-0.2 rounded text-[10px] font-bold font-mono ${h.status === 'SUCCESS'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : h.status === 'FAILED'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-slate-100 text-slate-800'
+                              }`}
+                          >
+                            {h.status}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-[#69736F] truncate">{h.message}</div>
+                        <div className="text-[10px] text-[#69736F]/80 font-mono">
+                          {new Date(h.started_at).toLocaleTimeString()} ({h.duration_ms}ms) • By {h.triggered_by}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-xs text-[#69736F]">
+                  No scheduler operations executed yet. Trigger any job above to see live audit logs.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RESTORATION RESULT SUCCESS MODAL */}
+      {restoreResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-lg rounded-3xl bg-[#FFFEF9] border-2 border-[#8DCFBF] shadow-wealth-elevated p-6 sm:p-7 relative text-[#18211F]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 text-[#063B32] text-xs font-mono font-bold uppercase tracking-wider mb-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              <span>Database Restored from Excel</span>
+            </div>
+
+            <h3 className="text-2xl font-heading font-extrabold text-[#18211F] mb-1">
+              Restoration Completed Successfully
+            </h3>
+            <p className="text-xs text-[#69736F] mb-4">
+              {restoreResult.message}
+            </p>
+
+            <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-[#E0F3EE]/50 border border-[#8DCFBF] text-center mb-4">
+              <div>
+                <div className="text-xl font-heading font-extrabold text-[#063B32]">
+                  {restoreResult.total_inserted?.toLocaleString()}
+                </div>
+                <div className="text-[10px] font-mono uppercase text-[#69736F]">Rows Inserted</div>
+              </div>
+              <div>
+                <div className="text-xl font-heading font-extrabold text-[#063B32]">
+                  {restoreResult.total_updated?.toLocaleString()}
+                </div>
+                <div className="text-[10px] font-mono uppercase text-[#69736F]">Rows Updated</div>
+              </div>
+              <div>
+                <div className="text-xl font-heading font-extrabold text-[#063B32]">
+                  {restoreResult.total_tables}
+                </div>
+                <div className="text-[10px] font-mono uppercase text-[#69736F]">Tables Synced</div>
+              </div>
+            </div>
+
+            <div className="max-h-44 overflow-y-auto border border-[#E5E0D3] rounded-xl p-2 bg-white text-xs font-mono mb-4 divide-y divide-[#E5E0D3]/40">
+              {Object.entries(restoreResult.table_results || {}).map(([tbl, stats]: [string, any]) => (
+                <div key={tbl} className="py-1 px-2 flex items-center justify-between">
+                  <span className="font-bold text-[#18211F]">{tbl}</span>
+                  <span className="text-[#69736F] text-[11px]">
+                    {stats.inserted} ins, {stats.updated} upd (Total: {stats.total})
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setRestoreResult(null)}
+              className="w-full py-3 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] font-heading font-bold text-xs transition-colors cursor-pointer"
+            >
+              Done & Return to Dashboard
+            </button>
+          </div>
         </div>
       )}
 

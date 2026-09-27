@@ -1,6 +1,8 @@
 from datetime import datetime
-from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from typing import Optional, Dict, Any
+from fastapi import APIRouter, Depends, Query, Response, UploadFile, File, Body
+from fastapi.responses import FileResponse
+import os
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.config import settings
@@ -939,6 +941,172 @@ def admin_get_pin_ledger(
         'pages': pages,
         'per_page': per_page
     })
+
+
+# =========================================================================
+# SYSTEM SCHEDULER & DISASTER RECOVERY EXCEL BACKUP ENDPOINTS
+# =========================================================================
+
+@router.get("/system/scheduler")
+def admin_get_scheduler_status(
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Returns real-time status of recurring background operations scheduler,
+    including registered jobs, next run timestamps, and execution history.
+    """
+    from app.services.scheduler_service import scheduler_service
+    status = scheduler_service.get_status(db=db)
+    return success_response(status, "Scheduler status retrieved successfully.")
+
+
+@router.post("/system/scheduler/run-job")
+async def admin_run_scheduled_job(
+    payload: Dict[str, Any] = Body(...),
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Triggers an immediate execution of a scheduled recurring job on-demand
+    (e.g., daily_reward_settlement, automated_backup, slot_settlement_maintenance).
+    """
+    from app.services.scheduler_service import scheduler_service
+    job_id = payload.get("job_id")
+    force = bool(payload.get("force", True))  # manual trigger defaults to force=True
+
+    if not job_id:
+        return error_response("MISSING_JOB_ID", "job_id is required.", 400)
+
+    try:
+        res = await scheduler_service.run_job_async(
+            job_id=job_id,
+            db=db,
+            admin_id=current_admin.id,
+            force=force
+        )
+        return success_response(res, f"Job '{job_id}' executed: {res.get('message', '')}")
+    except ValueError as ve:
+        return error_response("INVALID_JOB_ID", str(ve), 400)
+    except Exception as e:
+        return error_response("JOB_EXECUTION_FAILED", str(e), 500)
+
+
+@router.post("/system/scheduler/toggle")
+def admin_toggle_scheduler(
+    payload: Dict[str, Any] = Body(...),
+    current_admin: User = Depends(get_current_admin)
+):
+    """Enables or pauses the background scheduler worker."""
+    from app.services.scheduler_service import scheduler_service
+    enabled = bool(payload.get("enabled", True))
+    res = scheduler_service.toggle(enabled)
+    state_str = "resumed" if res else "paused"
+    return success_response({"enabled": res}, f"Scheduler has been {state_str}.")
+
+
+@router.get("/system/database/export-excel")
+def admin_export_database_to_excel(
+    notes: Optional[str] = Query("Admin On-Demand Disaster Recovery Backup"),
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Generates and streams a comprehensive multi-sheet Excel (.xlsx) workbook
+    containing all 26 relational database tables and a System Summary sheet.
+    Can be used for complete database restoration if the database ever crashes.
+    """
+    from app.services.excel_backup_service import excel_backup_service
+    try:
+        excel_bytes, filename, meta = excel_backup_service.export_database_to_excel(
+            db=db,
+            admin_id=current_admin.id,
+            notes=notes or "",
+            save_copy_to_disk=True
+        )
+
+        headers = {
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+            "X-Total-Tables": str(meta["total_tables"]),
+            "X-Total-Records": str(meta["total_records"])
+        }
+
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers=headers
+        )
+    except Exception as e:
+        return error_response("EXCEL_EXPORT_FAILED", f"Failed to export database to Excel: {str(e)}", 500)
+
+
+@router.post("/system/database/import-excel")
+async def admin_import_database_from_excel(
+    file: UploadFile = File(...),
+    overwrite: bool = Query(True, description="Whether to update existing rows with matching IDs"),
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Restores/re-populates the database from a previously exported Excel (.xlsx) file.
+    Reconciles foreign keys and synchronizes auto-increment sequences.
+    """
+    from app.services.excel_backup_service import excel_backup_service
+    if not file.filename.endswith(".xlsx"):
+        return error_response("INVALID_FILE_FORMAT", "Only .xlsx Excel files are supported for database restoration.", 400)
+
+    try:
+        content = await file.read()
+        if len(content) < 100:
+            return error_response("EMPTY_FILE", "Uploaded file is empty or corrupted.", 400)
+
+        result = excel_backup_service.import_database_from_excel(
+            db=db,
+            file_bytes=content,
+            admin_id=current_admin.id,
+            overwrite=overwrite
+        )
+        return success_response(result, result.get("message", "Database restoration complete."))
+    except Exception as e:
+        return error_response("RESTORATION_FAILED", f"Error restoring database from Excel: {str(e)}", 500)
+
+
+@router.get("/system/database/backups")
+def admin_list_database_backups(
+    current_admin: User = Depends(get_current_admin)
+):
+    """Lists all archived SQLite and Excel backup snapshots available on disk."""
+    from app.services.excel_backup_service import excel_backup_service
+    backups = excel_backup_service.list_backups()
+    return success_response({
+        "backups": backups,
+        "total": len(backups)
+    }, "Database backups retrieved successfully.")
+
+
+@router.get("/system/database/download-backup/{filename}")
+def admin_download_backup_file(
+    filename: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Downloads a specific archived backup file from the server."""
+    from app.services.excel_backup_service import excel_backup_service
+    backup_dir = excel_backup_service.get_backup_dir()
+
+    # Sanitization
+    safe_filename = os.path.basename(filename)
+    file_path = os.path.join(backup_dir, safe_filename)
+
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        return error_response("FILE_NOT_FOUND", f"Backup file '{safe_filename}' not found.", 404)
+
+    ext = os.path.splitext(safe_filename)[1].lower()
+    media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" if ext == ".xlsx" else "application/octet-stream"
+
+    return FileResponse(
+        path=file_path,
+        filename=safe_filename,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
+    )
 
 
 
