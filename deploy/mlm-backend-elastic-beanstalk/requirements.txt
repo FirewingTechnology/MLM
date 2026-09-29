@@ -6,8 +6,8 @@ gunicorn>=21.2.0
 # Database & Migrations (AWS RDS PostgreSQL)
 sqlalchemy>=2.0.25
 alembic>=1.13.0
-psycopg[Matching]>=3.1.18
-psycopg2-Matching>=2.9.9
+psycopg[binary]>=3.1.18
+psycopg2-binary>=2.9.9
 
 # Data Validation & Configuration
 pydantic>=2.6.0
@@ -22,6 +22,9 @@ passlib>=1.7.4
 # Protocol & Environment Utilities
 python-multipart>=0.0.9
 python-dotenv>=1.0.0
+
+# Excel Database Backup & Disaster Recovery
+openpyxl>=3.1.2
 
 # Testing & HTTP Test Client (CI/Testing)
 pytest>=8.0.0

@@ -6,9 +6,15 @@ from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import text, inspect, Table
-import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
+try:
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    HAS_OPENPYXL = True
+except ImportError:
+    openpyxl = None
+    Font = PatternFill = Alignment = Border = Side = get_column_letter = None
+    HAS_OPENPYXL = False
 
 from app.config import settings
 from app.database import engine, Base
@@ -106,6 +112,9 @@ class ExcelBackupService:
         """
         import app.models  # Ensure all SQLAlchemy models are registered
         
+        if not HAS_OPENPYXL:
+            raise RuntimeError("The 'openpyxl' package is required for Excel backups. Please install it with 'pip install openpyxl'.")
+
         wb = openpyxl.Workbook()
         # Remove default sheet
         wb.remove(wb.active)
@@ -332,6 +341,9 @@ class ExcelBackupService:
         auto-increment sequences (PostgreSQL SERIAL / SQLite sequence).
         """
         import app.models  # Ensure models loaded
+        
+        if not HAS_OPENPYXL:
+            raise RuntimeError("The 'openpyxl' package is required for Excel backups. Please install it with 'pip install openpyxl'.")
 
         start_time = datetime.datetime.now(datetime.timezone.utc)
         wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
