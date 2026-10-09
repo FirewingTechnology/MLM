@@ -18,7 +18,7 @@ class DailyRewardCycle(Base):
     pair_increment = Column(Float, nullable=False, default=50.0)
     current_daily_reward = Column(Float, nullable=False, default=50.0)
     
-    status = Column(String(32), nullable=False, default='ACTIVE', index=True)  # 'ACTIVE', 'COMPLETED'
+    status = Column(String(32), nullable=False, default='ACTIVE', index=True)  # 'ACTIVE', 'COMPLETED', 'EXPIRED'
     last_credit_date = Column(String(10), nullable=True, index=True)  # 'YYYY-MM-DD'
     
     started_at = Column(DateTime, nullable=False, default=datetime.utcnow)
@@ -30,6 +30,7 @@ class DailyRewardCycle(Base):
     purchase = relationship('Purchase', back_populates='daily_reward_cycle')
     package = relationship('Package')
     transactions = relationship('DailyRewardTransaction', back_populates='cycle', cascade='all, delete-orphan')
+    streams = relationship('DailyRewardStream', back_populates='cycle', cascade='all, delete-orphan')
 
     __table_args__ = (
         Index('ix_daily_reward_cycle_user_status', 'user_id', 'status'),
@@ -68,6 +69,63 @@ class DailyRewardCycle(Base):
             'last_credit_date': self.last_credit_date,
             'started_at': self.started_at.isoformat() if self.started_at else None,
             'completed_at': self.completed_at.isoformat() if self.completed_at else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'streams': [s.to_dict() for s in (self.streams or [])]
+        }
+
+
+class DailyRewardStream(Base):
+    __tablename__ = 'daily_reward_streams'
+
+    id = Column(Integer, primary_key=True, index=True)
+    cycle_id = Column(Integer, ForeignKey('daily_reward_cycles.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    
+    stream_type = Column(String(32), nullable=False)  # 'BASE' (40 months) or 'DIRECT_PAIR' (20 months)
+    pair_number = Column(Integer, nullable=False, default=0)  # 0 for base, 1, 2, ... for direct pairs
+    daily_amount = Column(Float, nullable=False, default=50.0)  # ₹50/day
+    duration_months = Column(Integer, nullable=False)  # 40 or 20
+    
+    start_date = Column(String(10), nullable=False)  # 'YYYY-MM-DD'
+    end_date = Column(String(10), nullable=False)  # 'YYYY-MM-DD'
+    days_credited = Column(Integer, nullable=False, default=0)
+    total_credited = Column(Float, nullable=False, default=0.0)
+    status = Column(String(32), nullable=False, default='ACTIVE', index=True)  # 'ACTIVE', 'EXPIRED'
+    
+    left_direct_user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    right_direct_user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    cycle = relationship('DailyRewardCycle', back_populates='streams')
+    user = relationship('User', foreign_keys=[user_id])
+    left_direct_user = relationship('User', foreign_keys=[left_direct_user_id])
+    right_direct_user = relationship('User', foreign_keys=[right_direct_user_id])
+
+    __table_args__ = (
+        Index('ix_daily_reward_stream_user_status', 'user_id', 'status'),
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'cycle_id': self.cycle_id,
+            'user_id': self.user_id,
+            'stream_type': self.stream_type,
+            'pair_number': self.pair_number,
+            'daily_amount': self.daily_amount,
+            'duration_months': self.duration_months,
+            'start_date': self.start_date,
+            'end_date': self.end_date,
+            'days_credited': self.days_credited,
+            'total_credited': self.total_credited,
+            'status': self.status,
+            'left_direct_user_id': self.left_direct_user_id,
+            'right_direct_user_id': self.right_direct_user_id,
+            'left_direct_code': self.left_direct_user.user_code if self.left_direct_user else None,
+            'right_direct_code': self.right_direct_user.user_code if self.right_direct_user else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

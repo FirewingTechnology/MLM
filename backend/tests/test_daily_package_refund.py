@@ -282,15 +282,14 @@ def test_15_concurrent_settlement_safety(db_session):
 # 16-19. REFUND LIMIT & PARTIAL CREDIT TESTS
 # =========================================================================
 
-def test_16_daily_credit_cannot_exceed_remaining_refund(db_session):
-    """16. Daily credit cannot exceed remaining refund."""
+def test_16_duration_based_credit_continues_past_old_target(db_session):
+    """16. In duration-based mode, daily credit pays full ₹50 regardless of total refunded."""
     amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
     purchase, _ = process_package_purchase(db_session, user_id=amol.id)
     db_session.commit()
 
     cycle = db_session.query(DailyRewardCycle).filter(DailyRewardCycle.purchase_id == purchase.id).first()
-    # Set refunded amount so only ₹30 is remaining
-    cycle.refunded_amount = 35370.0
+    cycle.refunded_amount = 40000.0  # Already exceeded old ₹35,400 cap
     db_session.commit()
 
     now_ist = datetime(2026, 8, 23, 7, 0, 0, tzinfo=IST)
@@ -298,48 +297,45 @@ def test_16_daily_credit_cannot_exceed_remaining_refund(db_session):
     db_session.commit()
 
     assert res['status'] == 'CREDITED'
-    # Base daily reward is ₹50, but only ₹30 remaining -> daily credit must be exactly ₹30
-    assert res['amount'] == 30.0
-    assert cycle.refunded_amount == 35400.0
-    assert cycle.status == 'COMPLETED'
-
-def test_17_final_partial_credit_works_correctly(db_session):
-    """17. Final partial credit works correctly (e.g. ₹25 remaining)."""
-    amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
-    purchase, _ = process_package_purchase(db_session, user_id=amol.id)
-    db_session.commit()
-
-    cycle = db_session.query(DailyRewardCycle).filter(DailyRewardCycle.purchase_id == purchase.id).first()
-    cycle.refunded_amount = 35375.0  # Exactly ₹25 remaining
-    db_session.commit()
-
-    now_ist = datetime(2026, 8, 24, 7, 0, 0, tzinfo=IST)
-    res = daily_reward_service.settle_user_daily_reward(db_session, cycle.id, "2026-08-24", now_ist)
-    db_session.commit()
-
-    assert res['amount'] == 25.0
-    assert cycle.refunded_amount == 35400.0
-    assert cycle.status == 'COMPLETED'
-    assert cycle.completed_at is not None
-
-def test_18_cycle_becomes_completed_exactly_at_refund_target(db_session):
-    """18. Cycle becomes COMPLETED exactly at refund target."""
-    amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
-    purchase, _ = process_package_purchase(db_session, user_id=amol.id)
-    db_session.commit()
-
-    cycle = db_session.query(DailyRewardCycle).filter(DailyRewardCycle.purchase_id == purchase.id).first()
-    cycle.refunded_amount = 35350.0  # ₹50 remaining
-    db_session.commit()
-
-    now_ist = datetime(2026, 8, 25, 7, 0, 0, tzinfo=IST)
-    res = daily_reward_service.settle_user_daily_reward(db_session, cycle.id, "2026-08-25", now_ist)
-    db_session.commit()
-
     assert res['amount'] == 50.0
+    assert cycle.refunded_amount == 40050.0
+    assert cycle.status == 'ACTIVE'
+
+def test_17_stream_expiry_after_duration_ends(db_session):
+    """17. Stream expires when business date passes stream end_date."""
+    amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
+    purchase, _ = process_package_purchase(db_session, user_id=amol.id)
+    db_session.commit()
+
+    cycle = db_session.query(DailyRewardCycle).filter(DailyRewardCycle.purchase_id == purchase.id).first()
+    daily_reward_service.sync_cycle_streams(db_session, cycle, date(2026, 8, 24))
+    
+    # Base stream duration is 40 months (ends around 2030)
+    base_stream = [s for s in cycle.streams if s.stream_type == 'BASE'][0]
+    assert base_stream.duration_months == 40
+    assert base_stream.status == 'ACTIVE'
+
+    # Fast forward past end_date (e.g. 2031)
+    future_date = date(2031, 1, 1)
+    daily_reward_service.sync_cycle_streams(db_session, cycle, future_date)
+    assert base_stream.status == 'EXPIRED'
+
+def test_18_cycle_becomes_completed_when_all_streams_expire(db_session):
+    """18. Cycle becomes COMPLETED when all streams have reached their duration end_date."""
+    amol = db_session.query(User).filter(User.email == "amol@demo.com").first()
+    purchase, _ = process_package_purchase(db_session, user_id=amol.id)
+    db_session.commit()
+
+    cycle = db_session.query(DailyRewardCycle).filter(DailyRewardCycle.purchase_id == purchase.id).first()
+    daily_reward_service.sync_cycle_streams(db_session, cycle, date(2026, 8, 25))
+
+    # Fast forward far into future where all streams expire
+    far_future_ist = datetime(2035, 1, 1, 7, 0, 0, tzinfo=IST)
+    res = daily_reward_service.settle_user_daily_reward(db_session, cycle.id, "2035-01-01", far_future_ist)
+    db_session.commit()
+
+    assert res['status'] == 'SKIPPED_ZERO_AMOUNT'
     assert cycle.status == 'COMPLETED'
-    assert cycle.remaining_refund == 0.0
-    assert cycle.progress_percentage == 100.0
 
 def test_19_no_credit_after_completed(db_session):
     """19. No credit after COMPLETED."""

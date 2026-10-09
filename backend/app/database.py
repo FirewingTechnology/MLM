@@ -130,6 +130,7 @@ def apply_migrations(target_engine):
                 'rank_achievements',
                 'earning_cycles',
                 'daily_reward_cycles',
+                'daily_reward_streams',
                 'daily_reward_transactions'
             ]:
                 if table_name not in tables and table_name in Base.metadata.tables:

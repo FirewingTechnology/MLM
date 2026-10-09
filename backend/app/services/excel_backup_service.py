@@ -53,6 +53,7 @@ TABLE_IMPORT_EXPORT_ORDER = [
     "rank_achievements",
     "earning_cycles",
     "daily_reward_cycles",
+    "daily_reward_streams",
     "daily_reward_transactions",
     # System Audit Logs
     "audit_logs"

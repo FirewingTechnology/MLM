@@ -781,6 +781,26 @@ export interface DailyRewardCycle {
   last_credit_date?: string | null;
   started_at?: string | null;
   completed_at?: string | null;
+  streams?: DailyRewardStream[];
+}
+
+export interface DailyRewardStream {
+  id: number;
+  cycle_id: number;
+  user_id: number;
+  stream_type: 'BASE' | 'DIRECT_PAIR';
+  pair_number: number;
+  daily_amount: number;
+  duration_months: number;
+  start_date: string;
+  end_date: string;
+  days_credited: number;
+  total_credited: number;
+  status: 'ACTIVE' | 'EXPIRED';
+  left_direct_user_id?: number | null;
+  right_direct_user_id?: number | null;
+  left_direct_code?: string | null;
+  right_direct_code?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -805,6 +825,8 @@ export interface DailyRewardOverviewResponse {
   cycle: DailyRewardCycle | null;
   completed_pairs: number;
   current_daily_reward: number;
+  active_streams_count?: number;
+  streams?: DailyRewardStream[];
   total_refunded: number;
   next_credit_time: string;
   next_credit_time_formatted: string;

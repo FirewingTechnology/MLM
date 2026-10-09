@@ -116,6 +116,17 @@ class Settings(BaseSettings):
             import re
             url = re.sub(r'([^@/:]+)dpg-', r'\1@dpg-', url)
 
+        # Handle unescaped '@' in PostgreSQL password (e.g. mlm_user:Mystatus@2026@187.126.121.78)
+        if ("postgresql" in url or "postgres" in url) and url.count("@") > 1 and "://" in url:
+            prefix, rest = url.split("://", 1)
+            auth_part, host_part = rest.rsplit("@", 1)
+            if ":" in auth_part:
+                username, password = auth_part.split(":", 1)
+                import urllib.parse
+                if "%" not in password:
+                    password = urllib.parse.quote_plus(password)
+                url = f"{prefix}://{username}:{password}@{host_part}"
+
         if url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql+psycopg://", 1)
         elif url.startswith("postgresql://") and not url.startswith("postgresql+"):

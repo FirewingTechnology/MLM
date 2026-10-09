@@ -37,7 +37,7 @@ for p in [backend_dir, project_root]:
 from sqlalchemy import create_engine, text, inspect, MetaData, Table
 from sqlalchemy.orm import sessionmaker, declarative_base
 import app.models
-from app.database import Base
+from app.database import Base, apply_migrations
 from app.config import settings
 
 # Ordered list of tables to respect foreign key dependency hierarchy
@@ -62,7 +62,13 @@ TABLE_MIGRATION_ORDER = [
     "security_pin_transfers",
     "security_pin_upline_requests",
     "security_pin_ledger",
-    "audit_logs"
+    "audit_logs",
+    "rank_configs",
+    "rank_achievements",
+    "earning_cycles",
+    "daily_reward_cycles",
+    "daily_reward_streams",
+    "daily_reward_transactions"
 ]
 
 def create_sqlite_backup(source_path: str, backup_dir: str) -> str:
@@ -96,6 +102,17 @@ def create_sqlite_backup(source_path: str, backup_dir: str) -> str:
 
 def normalize_pg_url(url: str) -> str:
     """Normalizes PostgreSQL connection string for SQLAlchemy with psycopg3/psycopg2."""
+    url = url.strip()
+    if ("postgresql" in url or "postgres" in url) and url.count("@") > 1 and "://" in url:
+        prefix, rest = url.split("://", 1)
+        auth_part, host_part = rest.rsplit("@", 1)
+        if ":" in auth_part:
+            username, password = auth_part.split(":", 1)
+            import urllib.parse
+            if "%" not in password:
+                password = urllib.parse.quote_plus(password)
+            url = f"{prefix}://{username}:{password}@{host_part}"
+
     if url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql+psycopg://", 1)
     elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
@@ -134,10 +151,10 @@ def sync_postgres_sequences(engine) -> Dict[str, Any]:
                 conn.execute(seq_sql)
                 conn.commit()
                 results[table_name] = {"status": "SYNCED", "max_id": max_id}
-                print(f"  • {table_name:<30} -> MAX(id) = {max_id or 0} (Sequence synchronized)")
+                print(f"  * {table_name:<30} -> MAX(id) = {max_id or 0} (Sequence synchronized)")
             except Exception as e:
                 results[table_name] = {"status": "ERROR", "error": str(e)}
-                print(f"  • {table_name:<30} -> Sequence sync error: {e}")
+                print(f"  * {table_name:<30} -> Sequence sync error: {e}")
     return results
 
 def get_sqlite_rows(sqlite_conn: sqlite3.Connection, table_name: str) -> Tuple[List[str], List[Dict[str, Any]]]:
@@ -159,7 +176,8 @@ def migrate_data(source_path: str, target_url: str, batch_size: int = 1000, dry_
     # 1. Ensure schema exists on PostgreSQL
     print(f"\n[SCHEMA] Initializing PostgreSQL schema from SQLAlchemy models...")
     Base.metadata.create_all(bind=target_engine)
-    print(f"[SCHEMA] Schema initialization complete.")
+    apply_migrations(target_engine)
+    print(f"[SCHEMA] Schema initialization and migrations complete.")
 
     src_conn = sqlite3.connect(source_path)
     report = {
@@ -327,14 +345,14 @@ def reconcile_databases(source_path: str, target_url: str) -> Dict[str, Any]:
         print(f"{'-'*85}")
 
         financial_queries = [
-            ("Total Wallets Balance (₹)", "SELECT COALESCE(SUM(balance), 0.0) FROM wallets"),
-            ("Total Wallet Credited (₹)", "SELECT COALESCE(SUM(amount), 0.0) FROM wallet_transactions WHERE transaction_type = 'CREDIT'"),
-            ("Total Wallet Debited (₹)", "SELECT COALESCE(SUM(amount), 0.0) FROM wallet_transactions WHERE transaction_type = 'DEBIT'"),
-            ("Total Purchase Amount (₹)", "SELECT COALESCE(SUM(amount), 0.0) FROM purchases"),
+            ("Total Wallets Balance (INR )", "SELECT COALESCE(SUM(balance), 0.0) FROM wallets"),
+            ("Total Wallet Credited (INR )", "SELECT COALESCE(SUM(amount), 0.0) FROM wallet_transactions WHERE transaction_type = 'CREDIT'"),
+            ("Total Wallet Debited (INR )", "SELECT COALESCE(SUM(amount), 0.0) FROM wallet_transactions WHERE transaction_type = 'DEBIT'"),
+            ("Total Purchase Amount (INR )", "SELECT COALESCE(SUM(amount), 0.0) FROM purchases"),
             ("Total Purchase BV", "SELECT COALESCE(SUM(bv), 0.0) FROM purchases"),
-            ("Total Direct Commission (₹)", "SELECT COALESCE(SUM(amount), 0.0) FROM commissions WHERE commission_type = 'DIRECT_REFERRAL'"),
-            ("Total Pair Bonus (₹)", "SELECT COALESCE(SUM(pair_bonus), 0.0) FROM slot_settlements"),
-            ("Total Matching Commission (₹)", "SELECT COALESCE(SUM(matching_commission), 0.0) FROM slot_settlements"),
+            ("Total Direct Commission (INR )", "SELECT COALESCE(SUM(amount), 0.0) FROM commissions WHERE commission_type = 'DIRECT_REFERRAL'"),
+            ("Total Pair Bonus (INR )", "SELECT COALESCE(SUM(pair_bonus), 0.0) FROM slot_settlements"),
+            ("Total Matching Commission (INR )", "SELECT COALESCE(SUM(matching_commission), 0.0) FROM slot_settlements"),
             ("Total VolumeLedger Amount", "SELECT COALESCE(SUM(amount), 0.0) FROM volume_ledgers"),
             ("Total Consumed VolumeLedger", "SELECT COALESCE(SUM(consumed_amount), 0.0) FROM volume_ledgers"),
             ("Total Remaining VolumeLedger", "SELECT COALESCE(SUM(remaining_amount), 0.0) FROM volume_ledgers"),
@@ -447,7 +465,7 @@ def main():
 
     print("\n" + "="*80)
     print(" " * 20 + "MLM PRODUCTION DATABASE MIGRATION")
-    print(" " * 24 + "SQLite → AWS RDS PostgreSQL")
+    print(" " * 24 + "SQLite -> AWS RDS PostgreSQL")
     print("="*80)
     print(f"Source Database: {source_path}")
     print(f"Target Database: {normalize_pg_url(target_url).split('@')[-1] if '@' in target_url else 'PostgreSQL'}")

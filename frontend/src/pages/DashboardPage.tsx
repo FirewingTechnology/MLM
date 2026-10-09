@@ -399,80 +399,105 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* Metrics Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {/* Daily Reward Rate */}
               <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#063B32] to-[#0A4D40] text-white border border-[#C9A227]/30 shadow-sm col-span-2 sm:col-span-1">
-                <div className="text-[10px] uppercase tracking-wider text-[#E2C766] font-bold">Daily Reward</div>
+                <div className="text-[10px] uppercase tracking-wider text-[#E2C766] font-bold">Daily Payout</div>
                 <div className="text-xl font-heading font-extrabold text-[#FFFEF9] mt-0.5 font-mono">
                   ₹{dailyRewardData.current_daily_reward?.toLocaleString()} <span className="text-xs font-normal text-[#E2C766]/80">/ day</span>
                 </div>
                 <div className="text-[10px] text-[#A3B899] mt-1">
-                  ₹50 base + ({dailyRewardData.completed_pairs} pairs × ₹50)
+                  {dailyRewardData.active_streams_count ?? 1} active stream{(dailyRewardData.active_streams_count ?? 1) > 1 ? 's' : ''} paying today
                 </div>
               </div>
 
-              {/* Completed Pairs */}
+              {/* Direct Pairs Completed */}
               <div className="p-3.5 rounded-2xl bg-[#F7F5F0] border border-[#E5E0D3]">
-                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Completed Pairs</div>
+                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Direct Pairs</div>
                 <div className="text-xl font-heading font-extrabold text-[#18211F] mt-0.5 font-mono">
                   {dailyRewardData.completed_pairs}
                 </div>
                 <div className="text-[10px] text-[#69736F] mt-1">
-                  +₹{(dailyRewardData.completed_pairs * 50).toLocaleString()}/day boost
+                  +₹{(dailyRewardData.completed_pairs * 50).toLocaleString()}/day (20 mo each)
                 </div>
               </div>
 
-              {/* Total Refunded */}
+              {/* Total Earned All-Time */}
               <div className="p-3.5 rounded-2xl bg-[#F7F5F0] border border-[#E5E0D3]">
-                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Total Refunded</div>
+                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Total Earned</div>
                 <div className="text-xl font-heading font-extrabold text-[#063B32] mt-0.5 font-mono">
-                  ₹{(dailyRewardData.cycle?.refunded_amount || 0).toLocaleString()}
+                  ₹{(dailyRewardData.total_refunded || dailyRewardData.cycle?.refunded_amount || 0).toLocaleString()}
                 </div>
                 <div className="text-[10px] text-[#69736F] mt-1">
-                  Credited to wallet
+                  Credited to Income Wallet
                 </div>
               </div>
 
-              {/* Remaining */}
+              {/* Base Duration */}
               <div className="p-3.5 rounded-2xl bg-[#F7F5F0] border border-[#E5E0D3]">
-                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Remaining</div>
+                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Base Duration</div>
                 <div className="text-xl font-heading font-extrabold text-[#8C6C16] mt-0.5 font-mono">
-                  ₹{(dailyRewardData.cycle?.remaining_refund ?? 35400).toLocaleString()}
+                  40 Months
                 </div>
                 <div className="text-[10px] text-[#69736F] mt-1">
-                  Balance to refund
-                </div>
-              </div>
-
-              {/* Refund Target */}
-              <div className="p-3.5 rounded-2xl bg-[#F7F5F0] border border-[#E5E0D3]">
-                <div className="text-[10px] uppercase tracking-wider text-[#69736F] font-bold">Refund Target</div>
-                <div className="text-xl font-heading font-extrabold text-[#18211F] mt-0.5 font-mono">
-                  ₹{(dailyRewardData.cycle?.refund_target || 35400).toLocaleString()}
-                </div>
-                <div className="text-[10px] text-[#69736F] mt-1">
-                  100% Package Cap
+                  ₹50/day guaranteed
                 </div>
               </div>
             </div>
 
-            {/* Progress bar */}
-            <div className="space-y-1.5 pt-1">
-              <div className="w-full h-2.5 rounded-full bg-[#E5E0D3] overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-[#063B32] via-[#2F855A] to-[#C9A227]"
-                  style={{ width: `${Math.min(100, dailyRewardData.cycle?.progress_percentage || 0)}%` }}
-                />
+            {/* Active Earning Streams List */}
+            {dailyRewardData.streams && dailyRewardData.streams.length > 0 && (
+              <div className="space-y-2 pt-2 border-t border-[#E5E0D3]/60">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#69736F] font-mono">
+                    Active Duration Streams ({dailyRewardData.streams.length})
+                  </span>
+                  <span className="text-[10px] text-[#69736F]">
+                    Last Credit: {dailyRewardData.cycle?.last_credit_date || 'Pending (07:00 AM IST)'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {dailyRewardData.streams.map((st: any) => (
+                    <div
+                      key={st.id}
+                      className={`p-3 rounded-2xl border text-xs flex items-center justify-between gap-3 ${
+                        st.status === 'ACTIVE'
+                          ? 'bg-[#FDFCF7] border-[#8DCFBF]/60 shadow-2xs'
+                          : 'bg-[#F2EFE9]/50 border-[#E5E0D3] opacity-60'
+                      }`}
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[#18211F]">
+                            {st.stream_type === 'BASE' ? 'Base Franchise Stream' : `Direct Pair #${st.pair_number} Stream`}
+                          </span>
+                          <span
+                            className={`px-2 py-0.2 rounded-full text-[9px] font-mono font-bold uppercase ${
+                              st.status === 'ACTIVE'
+                                ? 'bg-[#E0F3EE] text-[#063B32]'
+                                : 'bg-[#E5E0D3] text-[#69736F]'
+                            }`}
+                          >
+                            {st.status}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-[#69736F] font-mono">
+                          {st.start_date} → {st.end_date} ({st.duration_months} Months)
+                        </div>
+                        <div className="text-[10px] text-[#8C6C16]">
+                          {st.days_credited} days paid (₹{st.total_credited?.toLocaleString()})
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-sm font-extrabold font-mono text-[#063B32]">
+                          +₹{st.daily_amount}/day
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="flex justify-between items-center text-[11px] text-[#69736F] font-medium">
-                <span>
-                  Last Credit: {dailyRewardData.cycle?.last_credit_date ? dailyRewardData.cycle.last_credit_date : 'Pending first credit (07:00 AM IST)'}
-                </span>
-                <span className="font-bold text-[#18211F]">
-                  {dailyRewardData.cycle?.progress_percentage || 0}% Refunded
-                </span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
