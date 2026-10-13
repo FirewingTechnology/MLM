@@ -109,19 +109,26 @@ class DailyRewardService:
     @classmethod
     def sync_cycle_streams(cls, db: Session, cycle: DailyRewardCycle, current_ist_date: date) -> List[DailyRewardStream]:
         """
-        Synchronizes all earning streams for a DailyRewardCycle:
+        Synchronizes all earning streams for a DailyRewardCycle in-memory:
         1. Ensures the BASE stream exists (₹50/day for 40 months from purchase date).
         2. Detects all completed direct pairs and creates a 20-month stream for each pair.
-        3. Updates stream status (ACTIVE vs EXPIRED based on end_date).
-        4. Recalculates current daily payout rate.
+        3. Dynamically computes days_credited and total_credited from settled DailyRewardTransactions.
+        4. Updates stream status (ACTIVE vs EXPIRED based on end_date) in-place.
+        5. Recalculates current daily payout rate on the cycle.
         """
-        existing_streams = db.query(DailyRewardStream).filter(
-            DailyRewardStream.cycle_id == cycle.id
+        # Fetch settled transactions for this cycle to determine days_credited accurately
+        txns = db.query(DailyRewardTransaction).filter(
+            DailyRewardTransaction.cycle_id == cycle.id
         ).all()
+        txn_dates = {t.business_date for t in txns}
+
+        existing_streams = list(cycle.streams) if cycle.streams else []
         stream_map = {(s.stream_type, s.pair_number): s for s in existing_streams}
 
         # 1. Base Stream (40 Months)
-        if ('BASE', 0) not in stream_map:
+        if ('BASE', 0) in stream_map:
+            base_stream = stream_map[('BASE', 0)]
+        else:
             p_date = current_ist_date
             if cycle.purchase and cycle.purchase.created_at:
                 raw_p_date = cycle.purchase.created_at.date() if isinstance(cycle.purchase.created_at, datetime) else cycle.purchase.created_at
@@ -131,7 +138,12 @@ class DailyRewardService:
                 p_date = min(raw_s_date, current_ist_date)
 
             base_end = add_months(p_date, cls.BASE_DURATION_MONTHS)
+            p_date_str = p_date.strftime('%Y-%m-%d')
+            base_days = sum(1 for d in txn_dates if d >= p_date_str)
+            base_total = round(base_days * cls.BASE_DAILY_REWARD, 2)
+
             base_stream = DailyRewardStream(
+                id=1,
                 cycle_id=cycle.id,
                 user_id=cycle.user_id,
                 stream_type='BASE',
@@ -140,23 +152,37 @@ class DailyRewardService:
                 duration_months=cls.BASE_DURATION_MONTHS,
                 start_date=p_date.strftime('%Y-%m-%d'),
                 end_date=base_end.strftime('%Y-%m-%d'),
-                status='ACTIVE' if current_ist_date <= base_end else 'EXPIRED'
+                days_credited=base_days,
+                total_credited=base_total,
+                status='ACTIVE' if current_ist_date <= base_end else 'EXPIRED',
+                cycle=cycle,
+                created_at=cycle.created_at,
+                updated_at=cycle.updated_at
             )
-            db.add(base_stream)
-            db.flush()
             existing_streams.append(base_stream)
             stream_map[('BASE', 0)] = base_stream
 
         # 2. Direct Pair Streams (20 Months for each direct pair)
         direct_pairs = cls.get_direct_pairs(db, cycle.user_id)
+        stream_id_counter = len(existing_streams) + 1
         for p in direct_pairs:
             pair_num = p['pair_number']
-            if ('DIRECT_PAIR', pair_num) not in stream_map:
+            if ('DIRECT_PAIR', pair_num) in stream_map:
+                pair_stream = stream_map[('DIRECT_PAIR', pair_num)]
+            else:
                 pair_start = p['completed_date']
                 if pair_start > current_ist_date:
                     pair_start = current_ist_date
                 pair_end = add_months(pair_start, cls.PAIR_DURATION_MONTHS)
+                pair_start_str = pair_start.strftime('%Y-%m-%d')
+                p_days = sum(1 for d in txn_dates if d >= pair_start_str)
+                p_total = round(p_days * cls.PAIR_INCREMENT, 2)
+
+                left_u = p.get('left_user')
+                right_u = p.get('right_user')
+
                 pair_stream = DailyRewardStream(
+                    id=stream_id_counter,
                     cycle_id=cycle.id,
                     user_id=cycle.user_id,
                     stream_type='DIRECT_PAIR',
@@ -165,12 +191,20 @@ class DailyRewardService:
                     duration_months=cls.PAIR_DURATION_MONTHS,
                     start_date=pair_start.strftime('%Y-%m-%d'),
                     end_date=pair_end.strftime('%Y-%m-%d'),
+                    days_credited=p_days,
+                    total_credited=p_total,
                     status='ACTIVE' if current_ist_date <= pair_end else 'EXPIRED',
-                    left_direct_user_id=p['left_user'].id if p.get('left_user') else None,
-                    right_direct_user_id=p['right_user'].id if p.get('right_user') else None
+                    left_direct_user_id=left_u.id if left_u else None,
+                    right_direct_user_id=right_u.id if right_u else None,
+                    left_direct_code=left_u.user_code if left_u else None,
+                    right_direct_code=right_u.user_code if right_u else None,
+                    left_direct_user=left_u,
+                    right_direct_user=right_u,
+                    cycle=cycle,
+                    created_at=cycle.created_at,
+                    updated_at=cycle.updated_at
                 )
-                db.add(pair_stream)
-                db.flush()
+                stream_id_counter += 1
                 existing_streams.append(pair_stream)
                 stream_map[('DIRECT_PAIR', pair_num)] = pair_stream
 
@@ -187,6 +221,7 @@ class DailyRewardService:
         cycle.completed_pairs = len(direct_pairs)
         cycle.current_daily_reward = active_rate if active_rate > 0 else 0.0
         cycle.status = 'ACTIVE' if any(s.status == 'ACTIVE' for s in existing_streams) else 'COMPLETED'
+        cycle.streams = existing_streams
         db.flush()
 
         return existing_streams

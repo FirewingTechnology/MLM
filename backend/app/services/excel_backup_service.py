@@ -53,7 +53,6 @@ TABLE_IMPORT_EXPORT_ORDER = [
     "rank_achievements",
     "earning_cycles",
     "daily_reward_cycles",
-    "daily_reward_streams",
     "daily_reward_transactions",
     # System Audit Logs
     "audit_logs"
@@ -196,14 +195,18 @@ class ExcelBackupService:
             columns_info = inspector.get_columns(table_name)
             column_names = [col['name'] for col in columns_info]
 
-            # Fetch rows
-            query_str = f"SELECT * FROM {table_name}"
-            # Order by id if present
-            if 'id' in column_names:
-                query_str += " ORDER BY id ASC"
-            
-            raw_rows = db.execute(text(query_str)).mappings().all()
-            row_count = len(raw_rows)
+            try:
+                # Fetch rows
+                query_str = f"SELECT * FROM {table_name}"
+                # Order by id if present
+                if 'id' in column_names:
+                    query_str += " ORDER BY id ASC"
+                
+                raw_rows = db.execute(text(query_str)).mappings().all()
+                row_count = len(raw_rows)
+            except Exception:
+                continue
+
             table_stats[table_name] = row_count
             total_records += row_count
 

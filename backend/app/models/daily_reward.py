@@ -30,7 +30,16 @@ class DailyRewardCycle(Base):
     purchase = relationship('Purchase', back_populates='daily_reward_cycle')
     package = relationship('Package')
     transactions = relationship('DailyRewardTransaction', back_populates='cycle', cascade='all, delete-orphan')
-    streams = relationship('DailyRewardStream', back_populates='cycle', cascade='all, delete-orphan')
+
+    @property
+    def streams(self):
+        if hasattr(self, '_in_memory_streams') and self._in_memory_streams is not None:
+            return self._in_memory_streams
+        return []
+
+    @streams.setter
+    def streams(self, value):
+        self._in_memory_streams = value
 
     __table_args__ = (
         Index('ix_daily_reward_cycle_user_status', 'user_id', 'status'),
@@ -75,40 +84,62 @@ class DailyRewardCycle(Base):
         }
 
 
-class DailyRewardStream(Base):
-    __tablename__ = 'daily_reward_streams'
-
-    id = Column(Integer, primary_key=True, index=True)
-    cycle_id = Column(Integer, ForeignKey('daily_reward_cycles.id', ondelete='CASCADE'), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
-    
-    stream_type = Column(String(32), nullable=False)  # 'BASE' (40 months) or 'DIRECT_PAIR' (20 months)
-    pair_number = Column(Integer, nullable=False, default=0)  # 0 for base, 1, 2, ... for direct pairs
-    daily_amount = Column(Float, nullable=False, default=50.0)  # ₹50/day
-    duration_months = Column(Integer, nullable=False)  # 40 or 20
-    
-    start_date = Column(String(10), nullable=False)  # 'YYYY-MM-DD'
-    end_date = Column(String(10), nullable=False)  # 'YYYY-MM-DD'
-    days_credited = Column(Integer, nullable=False, default=0)
-    total_credited = Column(Float, nullable=False, default=0.0)
-    status = Column(String(32), nullable=False, default='ACTIVE', index=True)  # 'ACTIVE', 'EXPIRED'
-    
-    left_direct_user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
-    right_direct_user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
-    
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-    cycle = relationship('DailyRewardCycle', back_populates='streams')
-    user = relationship('User', foreign_keys=[user_id])
-    left_direct_user = relationship('User', foreign_keys=[left_direct_user_id])
-    right_direct_user = relationship('User', foreign_keys=[right_direct_user_id])
-
-    __table_args__ = (
-        Index('ix_daily_reward_stream_user_status', 'user_id', 'status'),
-    )
+class DailyRewardStream:
+    """
+    Virtual in-memory stream representing duration-based reward streams.
+    Does not require database table permissions or schema migrations.
+    """
+    def __init__(
+        self,
+        id=None,
+        cycle_id=None,
+        user_id=None,
+        stream_type='BASE',
+        pair_number=0,
+        daily_amount=50.0,
+        duration_months=40,
+        start_date='',
+        end_date='',
+        days_credited=0,
+        total_credited=0.0,
+        status='ACTIVE',
+        left_direct_user_id=None,
+        right_direct_user_id=None,
+        left_direct_code=None,
+        right_direct_code=None,
+        left_direct_user=None,
+        right_direct_user=None,
+        cycle=None,
+        user=None,
+        created_at=None,
+        updated_at=None
+    ):
+        self.id = id
+        self.cycle_id = cycle_id
+        self.user_id = user_id
+        self.stream_type = stream_type
+        self.pair_number = pair_number
+        self.daily_amount = daily_amount
+        self.duration_months = duration_months
+        self.start_date = start_date
+        self.end_date = end_date
+        self.days_credited = days_credited
+        self.total_credited = total_credited
+        self.status = status
+        self.left_direct_user_id = left_direct_user_id
+        self.right_direct_user_id = right_direct_user_id
+        self.left_direct_code = left_direct_code
+        self.right_direct_code = right_direct_code
+        self.left_direct_user = left_direct_user
+        self.right_direct_user = right_direct_user
+        self.cycle = cycle
+        self.user = user
+        self.created_at = created_at or datetime.utcnow()
+        self.updated_at = updated_at or datetime.utcnow()
 
     def to_dict(self):
+        left_code = self.left_direct_code or (self.left_direct_user.user_code if self.left_direct_user else None)
+        right_code = self.right_direct_code or (self.right_direct_user.user_code if self.right_direct_user else None)
         return {
             'id': self.id,
             'cycle_id': self.cycle_id,
@@ -124,10 +155,10 @@ class DailyRewardStream(Base):
             'status': self.status,
             'left_direct_user_id': self.left_direct_user_id,
             'right_direct_user_id': self.right_direct_user_id,
-            'left_direct_code': self.left_direct_user.user_code if self.left_direct_user else None,
-            'right_direct_code': self.right_direct_user.user_code if self.right_direct_user else None,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'left_direct_code': left_code,
+            'right_direct_code': right_code,
+            'created_at': self.created_at.isoformat() if isinstance(self.created_at, datetime) else self.created_at,
+            'updated_at': self.updated_at.isoformat() if isinstance(self.updated_at, datetime) else self.updated_at
         }
 
 
