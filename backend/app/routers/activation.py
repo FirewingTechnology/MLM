@@ -125,8 +125,8 @@ def get_activation_status(
         'activation_request': latest_req.to_dict() if latest_req else None,
         'payment_recipient': recipient_info,
         'upi_details': {
-            'upi_id': getattr(settings, 'COMPANY_UPI_ID', 'mystatusads@icici'),
-            'payee_name': getattr(settings, 'COMPANY_UPI_NAME', 'MyStatus Platform'),
+            'upi_id': getattr(settings, 'COMPANY_UPI_ID', 'yespay.mabs0648619ikit4752@yesbankltd'),
+            'payee_name': getattr(settings, 'COMPANY_UPI_NAME', 'ONE DIGITAL ADS'),
             'amount': package.price if package else 35400.0,
             'qr_image_url': '/payment-qr.png'
         },

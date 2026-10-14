@@ -590,8 +590,8 @@ export const PinWalletModal: React.FC<PinWalletModalProps> = ({
                 {paymentMethod === 'UPI_TRANSFER' && (
                   <UpiQrPaymentCard
                     amount={totalBuyPrice}
-                    upiId="mystatusads@icici"
-                    payeeName="MyStatus Platform"
+                    upiId="yespay.mabs0648619ikit4752@yesbankltd"
+                    payeeName="ONE DIGITAL ADS"
                     transactionNote={`PIN Purchase (${effectiveBuyQty} PINs)`}
                     customQrImageUrl="/payment-qr.png"
                     packageTitle={`Security PIN Order (${effectiveBuyQty} PINs)`}

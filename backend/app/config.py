@@ -89,8 +89,8 @@ class Settings(BaseSettings):
     INITIAL_ADMIN_NAME: str = os.getenv("INITIAL_ADMIN_NAME", "System Admin")
 
     # Company Payment & UPI Configuration
-    COMPANY_UPI_ID: str = os.getenv("COMPANY_UPI_ID", "mystatusads@icici")
-    COMPANY_UPI_NAME: str = os.getenv("COMPANY_UPI_NAME", "MyStatus Platform")
+    COMPANY_UPI_ID: str = os.getenv("COMPANY_UPI_ID", "yespay.mabs0648619ikit4752@yesbankltd")
+    COMPANY_UPI_NAME: str = os.getenv("COMPANY_UPI_NAME", "ONE DIGITAL ADS")
 
     # Flag to permit SQLite in production (e.g. Render/demo environments without Postgres)
     ALLOW_SQLITE_IN_PROD: bool = os.getenv("ALLOW_SQLITE_IN_PROD", "true").lower() in ("true", "1", "yes")

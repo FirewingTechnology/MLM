@@ -24,8 +24,8 @@ interface UpiQrPaymentCardProps {
 
 export const UpiQrPaymentCard: React.FC<UpiQrPaymentCardProps> = ({
   amount = 35400,
-  upiId = 'mystatusads@icici',
-  payeeName = 'MyStatus Platform',
+  upiId = 'yespay.mabs0648619ikit4752@yesbankltd',
+  payeeName = 'ONE DIGITAL ADS',
   transactionNote = 'Sub Franchise Package Activation',
   customQrImageUrl = '/payment-qr.png',
   packageTitle = 'Premium Sub Franchise (₹35,400)'

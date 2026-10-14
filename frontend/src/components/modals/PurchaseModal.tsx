@@ -330,8 +330,8 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose })
                   {paymentMethod === 'UPI_TRANSFER' && (
                     <UpiQrPaymentCard
                       amount={statusData?.package?.price || 35400}
-                      upiId={statusData?.upi_details?.upi_id || 'mystatusads@icici'}
-                      payeeName={statusData?.upi_details?.payee_name || recipient?.full_name || 'MyStatus Platform'}
+                      upiId={statusData?.upi_details?.upi_id || 'yespay.mabs0648619ikit4752@yesbankltd'}
+                      payeeName={statusData?.upi_details?.payee_name || recipient?.full_name || 'ONE DIGITAL ADS'}
                       transactionNote={`Package Activation ${user?.user_code || ''}`}
                       customQrImageUrl={statusData?.upi_details?.qr_image_url || '/payment-qr.png'}
                       packageTitle={statusData?.package?.name || 'Premium Sub Franchise (₹35,400)'}
