@@ -75,7 +75,7 @@ export const CommissionsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C6C16] flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-[#C9A227]" />
-              <span>Pair Bonus (₹15k)</span>
+              <span>Pair Bonus (₹10k)</span>
             </span>
             <div className="w-8 h-8 rounded-lg bg-[#FAF4DC] text-[#8C6C16] flex items-center justify-center">
               <Sparkles className="w-4 h-4" />
@@ -111,7 +111,7 @@ export const CommissionsPage: React.FC = () => {
             {[
               { label: 'All Income', value: '' },
               { label: '🟢 Direct Sponsor', value: 'DIRECT_COMMISSION' },
-              { label: '🟣 Pair Bonus (₹15k)', value: 'PAIR_BONUS' },
+              { label: '🟣 Pair Bonus (₹10k)', value: 'PAIR_BONUS' },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -167,7 +167,7 @@ export const CommissionsPage: React.FC = () => {
                               : 'bg-[#DBEAFE] text-[#1D4ED8] border-[#93C5FD]'
                         }`}>
                         {comm.commission_type === 'PAIR_BONUS'
-                          ? '🟣 Pair Bonus (₹15k)'
+                          ? '🟣 Pair Bonus (₹10k)'
                           : comm.commission_type === 'DIRECT_REFERRAL' || comm.commission_type === 'DIRECT_COMMISSION'
                             ? '🟢 Direct Sponsor'
                             : comm.commission_type === 'MATCHING_COMMISSION' || comm.commission_type === 'BINARY_MATCHING'

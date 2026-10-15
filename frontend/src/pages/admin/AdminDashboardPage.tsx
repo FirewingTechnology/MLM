@@ -768,7 +768,7 @@ export const AdminDashboardPage: React.FC = () => {
 
   const commissionPieData = [
     { name: 'Direct Sponsor (10%)', value: kpis?.direct_commissions || 0, color: '#063B32' },
-    { name: 'Pair Bonus (₹15k)', value: kpis?.pair_commissions || 0, color: '#C9A227' },
+    { name: 'Pair Bonus (₹10k)', value: kpis?.pair_commissions || 0, color: '#C9A227' },
     { name: 'Matching Upline', value: kpis?.matching_commissions || 0, color: '#EA580C' },
     { name: 'Carry Commission', value: kpis?.carry_commissions || 0, color: '#3B82F6' },
   ].filter(d => d.value > 0);
@@ -1113,7 +1113,7 @@ export const AdminDashboardPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-[#C9A227]" />
-                  <span className="text-[#69736F] font-medium">Matching Pair Bonus (₹15k/Pair)</span>
+                  <span className="text-[#69736F] font-medium">Matching Pair Bonus (₹10k/Pair)</span>
                 </div>
               </div>
             </div>
@@ -2790,7 +2790,7 @@ export const AdminDashboardPage: React.FC = () => {
             <div>
               <h2 className="text-lg font-heading font-extrabold text-[#18211F]">Network Commissions Audit Log</h2>
               <p className="text-xs text-[#69736F]">
-                Real-time lineage of all Direct Sponsor and Pair Bonus (₹15k) events.
+                Real-time lineage of all Direct Sponsor and Pair Bonus (₹10k) events.
               </p>
             </div>
             <span className="text-xs font-mono bg-[#F7F4EC] px-3 py-1.5 rounded-xl border border-[#E5E0D3] font-bold text-[#063B32] self-start sm:self-auto">
@@ -2804,7 +2804,7 @@ export const AdminDashboardPage: React.FC = () => {
               {[
                 { label: 'All Commissions', value: '' },
                 { label: '🟢 Direct Sponsor', value: 'DIRECT_COMMISSION' },
-                { label: '🟣 Pair Bonus (₹15k)', value: 'PAIR_BONUS' },
+                { label: '🟣 Pair Bonus (₹10k)', value: 'PAIR_BONUS' },
               ].map((tab) => (
                 <button
                   key={tab.value}
