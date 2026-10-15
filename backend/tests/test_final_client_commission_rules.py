@@ -20,7 +20,7 @@ from app.services.earning_cap_service import apply_commission_with_cap, get_or_c
 from app.security import hash_password
 
 
-def create_user_helper(db: Session, email: str, full_name: str, sponsor_id=None, binary_parent_id=None, binary_position=None, role="USER"):
+def create_user_helper(db: Session, email: str, full_name: str, sponsor_id=None, binary_parent_id=None, binary_position=None, role="USER", is_active=False):
     code = f"USR{abs(hash(email)) % 1000000:06d}"
     user = User(
         email=email,
@@ -33,7 +33,7 @@ def create_user_helper(db: Session, email: str, full_name: str, sponsor_id=None,
         binary_parent_id=binary_parent_id,
         binary_position=binary_position,
         role=role,
-        is_active=False
+        is_active=is_active
     )
     db.add(user)
     db.commit()
@@ -67,8 +67,10 @@ def get_default_package(db: Session):
 def test_1_a_sponsors_b_direct_commission_only(db_session: Session):
     # Grandparent / upline of A
     upline_root = create_user_helper(db_session, "t1_upline@mlm.local", "T1 Upline Root")
-    # A sponsored by upline_root
+    # A sponsored by upline_root (A is paid/active)
     user_a = create_user_helper(db_session, "t1_a@mlm.local", "T1 User A", sponsor_id=upline_root.id, binary_parent_id=upline_root.id, binary_position="LEFT")
+    user_a.is_active = True
+    db_session.commit()
     # B sponsored by A
     user_b = create_user_helper(db_session, "t1_b@mlm.local", "T1 User B", sponsor_id=user_a.id, binary_parent_id=user_a.id, binary_position="LEFT")
     pkg = get_default_package(db_session)
@@ -97,6 +99,39 @@ def test_1_a_sponsors_b_direct_commission_only(db_session: Session):
 
     upline_wallet = get_or_create_wallet(db_session, upline_root.id)
     assert upline_wallet.balance == 0.0
+
+
+# =========================================================================
+# TEST 1B: Inactive/Unpaid sponsor does NOT get Direct Commission
+# 1st Registration -> 2nd Must be Paid ID to earn -> 3rd After Paid ID gets Referral Income
+# =========================================================================
+def test_1b_inactive_sponsor_gets_zero_direct_commission(db_session: Session):
+    # Inactive sponsor (unpaid, is_active=False)
+    inactive_sponsor = create_user_helper(db_session, "t1b_sponsor@mlm.local", "T1B Inactive Sponsor")
+    assert not inactive_sponsor.is_active
+
+    # Downline sponsored by inactive_sponsor
+    downline = create_user_helper(db_session, "t1b_downline@mlm.local", "T1B Downline", sponsor_id=inactive_sponsor.id, binary_parent_id=inactive_sponsor.id, binary_position="RIGHT")
+    pkg = get_default_package(db_session)
+
+    purchase, events = process_package_purchase(db_session, downline.id, pkg.id, slot_id="SLOT-T1B")
+
+    # Inactive sponsor gets NO commission
+    sponsor_comm = db_session.query(Commission).filter(
+        Commission.beneficiary_id == inactive_sponsor.id,
+        Commission.purchase_id == purchase.id
+    ).all()
+    assert len(sponsor_comm) == 0
+
+    # Inactive sponsor's wallet remains 0
+    sponsor_wallet = get_or_create_wallet(db_session, inactive_sponsor.id)
+    assert sponsor_wallet.balance == 0.0
+
+    # Verify event skipped notice
+    skipped_events = [e for e in events if e.get('type') == 'DIRECT_REFERRAL_SKIPPED']
+    assert len(skipped_events) == 1
+    assert skipped_events[0]['beneficiary_id'] == inactive_sponsor.id
+
 
 
 # =========================================================================
@@ -220,8 +255,8 @@ def test_4_wallet_ledger_audit_after_pair(db_session: Session):
 # TEST 5: Verify placement parent receives nothing merely because a user is placed underneath them.
 # =========================================================================
 def test_5_placement_parent_receives_nothing_merely_for_placement(db_session: Session):
-    sponsor = create_user_helper(db_session, "t5_sponsor@mlm.local", "T5 Sponsor")
-    placement_parent = create_user_helper(db_session, "t5_parent@mlm.local", "T5 Placement Parent")
+    sponsor = create_user_helper(db_session, "t5_sponsor@mlm.local", "T5 Sponsor", is_active=True)
+    placement_parent = create_user_helper(db_session, "t5_parent@mlm.local", "T5 Placement Parent", is_active=True)
     
     # New user is sponsored by sponsor, but placed under placement_parent
     placed_user = create_user_helper(
@@ -259,7 +294,7 @@ def test_5_placement_parent_receives_nothing_merely_for_placement(db_session: Se
 # TEST 6: Verify Direct Commission remains exactly 10% of purchase BV.
 # =========================================================================
 def test_6_direct_commission_is_exactly_10_percent_of_bv(db_session: Session):
-    sponsor = create_user_helper(db_session, "t6_sponsor@mlm.local", "T6 Sponsor")
+    sponsor = create_user_helper(db_session, "t6_sponsor@mlm.local", "T6 Sponsor", is_active=True)
     member = create_user_helper(db_session, "t6_member@mlm.local", "T6 Member", sponsor_id=sponsor.id)
     pkg = get_default_package(db_session)
 

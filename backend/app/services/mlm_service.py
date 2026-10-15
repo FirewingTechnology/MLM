@@ -158,7 +158,7 @@ def is_binary_qualified(db: Session, user_id: int) -> bool:
        - Allows direct service-level mock test execution.
     """
     user = db.get(User, user_id)
-    if not user:
+    if not user or not user.is_active:
         return False
 
     left_subtree_ids = get_leg_subtree_user_ids(db, user_id, 'LEFT')
@@ -174,7 +174,8 @@ def is_binary_qualified(db: Session, user_id: int) -> bool:
 
     has_left_direct = db.query(User).filter(
         User.sponsor_id == user_id,
-        User.id.in_(left_subtree_ids)
+        User.id.in_(left_subtree_ids),
+        User.is_active == True
     ).first() is not None
 
     if not has_left_direct:
@@ -182,7 +183,8 @@ def is_binary_qualified(db: Session, user_id: int) -> bool:
 
     has_right_direct = db.query(User).filter(
         User.sponsor_id == user_id,
-        User.id.in_(right_subtree_ids)
+        User.id.in_(right_subtree_ids),
+        User.is_active == True
     ).first() is not None
 
     return has_right_direct

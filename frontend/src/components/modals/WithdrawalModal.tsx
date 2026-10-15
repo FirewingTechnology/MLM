@@ -27,7 +27,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
   availableBalance,
 }) => {
   const { showToast } = useToast();
-  const { refreshUser } = useAuth();
+  const { refreshUser, user } = useAuth();
   const queryClient = useQueryClient();
 
   const [amount, setAmount] = useState('');
@@ -42,6 +42,10 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.is_active) {
+      showToast('Your account must be paid and active to request payouts.', 'error');
+      return;
+    }
     const numAmount = parseFloat(amount);
 
     if (isNaN(numAmount) || numAmount <= 0) {
@@ -114,6 +118,16 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
             <p className="text-[#69736F] text-xs mb-4">
               Submit a payout request. Balance is held pending Admin approval in the portal.
             </p>
+
+            {/* Account Inactive Banner */}
+            {!user?.is_active && (
+              <div className="mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">Account Inactive:</span> Your account must be paid and active to request payouts. Please activate your account first.
+                </div>
+              </div>
+            )}
 
             {/* Current Balance Tag */}
             <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] mb-4 text-xs font-mono">
@@ -241,7 +255,7 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={loading || availableBalance <= 0}
+                disabled={loading || availableBalance <= 0 || !user?.is_active}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-[#063B32] hover:bg-[#042C26] text-[#FFFEF9] border border-[#C9A227]/30 text-xs font-heading font-bold shadow-wealth-card transition-all disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (

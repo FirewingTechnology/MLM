@@ -77,10 +77,10 @@ def process_package_purchase(
     events_triggered = []
     
     # 2. Process Direct Sponsor Commission (10% on BV) with ₹3,00,000 Earning Cap
-    # Strictly to user.sponsor_id ONLY (never placement parent unless sponsor == placement parent)
+    # Strictly to user.sponsor_id ONLY (sponsor MUST be active/paid to earn referral income)
     if user.sponsor_id:
         sponsor = db.get(User, user.sponsor_id)
-        if sponsor:
+        if sponsor and sponsor.is_active:
             # Check duplicate commission for idempotency
             existing_direct = db.query(Commission).filter(
                 Commission.purchase_id == purchase.id,
@@ -132,6 +132,22 @@ def process_package_purchase(
                     'bv': package.bv,
                     'slot_id': slot_id
                 })
+        elif sponsor and not sponsor.is_active:
+            # Sponsor is unpaid / inactive -> Not eligible to earn Referral Income until paid
+            events_triggered.append({
+                'type': 'DIRECT_REFERRAL_SKIPPED',
+                'beneficiary': sponsor.full_name,
+                'beneficiary_id': sponsor.id,
+                'reason': 'Sponsor account is unpaid/inactive. Paid ID required to earn referral income.',
+                'amount': 0.0,
+                'bv': package.bv,
+                'slot_id': slot_id
+            })
+            log_action(db, 'DIRECT_COMMISSION_SKIPPED', 'User', sponsor.id, user.id, {
+                'reason': 'Sponsor is inactive/unpaid',
+                'purchase_id': purchase.id,
+                'bv': package.bv
+            })
             
     # 3. Matching Volume Traceable Propagation & Ancestor Volume Ledger
     ancestors = get_binary_ancestors(db, user.id)

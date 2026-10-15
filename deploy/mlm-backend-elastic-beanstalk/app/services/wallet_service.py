@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
+from app.models.user import User
 from app.models.wallet import Wallet, WalletTransaction
 from app.models.withdrawal import Withdrawal
 from app.services.audit_service import log_action
@@ -246,7 +247,12 @@ def create_withdrawal_request(
     if amount <= 0:
         raise InvalidTransactionError("Withdrawal amount must be greater than 0.")
 
-    # 1. Lock wallet row
+    # 1. Enforce active paid account requirement
+    user = db.get(User, user_id)
+    if not user or not user.is_active:
+        raise InvalidTransactionError("Only active paid accounts are eligible to request withdrawals. Please activate your account first.")
+
+    # 2. Lock wallet row
     wallet = get_or_create_wallet(db, user_id, for_update=True)
 
     # 2. Calculate existing pending withdrawals

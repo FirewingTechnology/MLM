@@ -18,6 +18,7 @@ backend/data/*.sqlite3-shm
 backend/data/*.sqlite3-wal
 backend/data/backups/
 backend/data/legacy_archive/
+data/backups/
 *.sqlite3-shm
 *.sqlite3-wal
 *.db
