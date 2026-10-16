@@ -155,6 +155,9 @@ export const WalletPage: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <div className="font-heading font-black text-[#18211F] font-mono">₹{w.amount.toLocaleString()}</div>
+                  <div className="text-[10px] text-emerald-800 font-mono font-medium mt-0.5">
+                    Net Payout: ₹{(w.net_amount ?? (w.amount * 0.85)).toLocaleString()} <span className="text-amber-700 font-normal">(-15%)</span>
+                  </div>
                   <span
                     className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full mt-1 border ${w.status === 'APPROVED'
                         ? 'bg-[#E0F3EE] text-[#063B32] border-[#8DCFBF]'

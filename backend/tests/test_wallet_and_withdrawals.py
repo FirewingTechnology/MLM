@@ -32,8 +32,13 @@ def test_wallet_and_withdrawal_flow(client):
         "payout_details": {"upi_id": "amol@okhdfcbank"}
     }, headers=amol_headers)
     assert wdr.status_code == 201
-    wdr_id = wdr.json()["data"]["id"]
-    assert wdr.json()["data"]["status"] == "PENDING"
+    wdr_data = wdr.json()["data"]
+    wdr_id = wdr_data["id"]
+    assert wdr_data["status"] == "PENDING"
+    assert wdr_data["amount"] == 5000.0
+    assert wdr_data["fee_percentage"] == 15.0
+    assert wdr_data["fee_amount"] == 750.0
+    assert wdr_data["net_amount"] == 4250.0
 
     # 4. Admin logs in and approves withdrawal
     login_admin = client.post("/api/auth/login", json={
@@ -45,7 +50,10 @@ def test_wallet_and_withdrawal_flow(client):
 
     appr = client.post(f"/api/admin/withdrawals/{wdr_id}/approve", json={"notes": "Approved in test"}, headers=admin_headers)
     assert appr.status_code == 200
-    assert appr.json()["data"]["status"] == "APPROVED"
+    appr_data = appr.json()["data"]
+    assert appr_data["status"] == "APPROVED"
+    assert appr_data["fee_amount"] == 750.0
+    assert appr_data["net_amount"] == 4250.0
 
     # 5. Check Amol's debited balance
     wal_after = client.get("/api/wallet", headers=amol_headers)

@@ -271,10 +271,17 @@ def create_withdrawal_request(
 
     wdr_code = f"WDR-{abs(hash(f'{user_id}-{datetime.utcnow().timestamp()}')) % 1000000000:09d}"
 
+    fee_percentage = 15.0
+    fee_amount = round(amount * (fee_percentage / 100.0), 2)
+    net_amount = round(amount - fee_amount, 2)
+
     withdrawal = Withdrawal(
         withdrawal_code=wdr_code,
         user_id=user_id,
         amount=amount,
+        fee_percentage=fee_percentage,
+        fee_amount=fee_amount,
+        net_amount=net_amount,
         status='PENDING',
         payout_method=payout_method,
         admin_notes=None
@@ -287,6 +294,9 @@ def create_withdrawal_request(
 
     log_action(db, 'WITHDRAWAL_REQUESTED', 'Withdrawal', withdrawal.id, user_id, {
         'amount': amount,
+        'fee_percentage': fee_percentage,
+        'fee_amount': fee_amount,
+        'net_amount': net_amount,
         'code': wdr_code,
         'available_balance_after_request': available_balance - amount
     })
@@ -303,13 +313,17 @@ def approve_withdrawal(db: Session, withdrawal_id: int, admin_id: int, notes: Op
     if withdrawal.status != 'PENDING':
         raise InvalidTransactionError(f"Cannot approve withdrawal in '{withdrawal.status}' state.")
 
-    # Debit wallet with row lock & validation
+    fee_pct = getattr(withdrawal, 'fee_percentage', None) or 15.0
+    fee_amt = getattr(withdrawal, 'fee_amount', None) or round(withdrawal.amount * (fee_pct / 100.0), 2)
+    net_amt = getattr(withdrawal, 'net_amount', None) or round(withdrawal.amount - fee_amt, 2)
+
+    # Debit wallet with row lock & validation (debits full requested amount from distributor's ledger)
     debit_wallet(
         db,
         user_id=withdrawal.user_id,
         amount=withdrawal.amount,
         category='WITHDRAWAL',
-        description=f"Payout for Request {withdrawal.withdrawal_code}",
+        description=f"Payout {withdrawal.withdrawal_code} (Net: ₹{net_amt:,.2f}, 15% Fee: ₹{fee_amt:,.2f})",
         reference_id=withdrawal.withdrawal_code
     )
 
@@ -321,7 +335,9 @@ def approve_withdrawal(db: Session, withdrawal_id: int, admin_id: int, notes: Op
 
     log_action(db, 'WITHDRAWAL_APPROVED', 'Withdrawal', withdrawal.id, admin_id, {
         'user_id': withdrawal.user_id,
-        'amount': withdrawal.amount
+        'amount': withdrawal.amount,
+        'fee_amount': fee_amt,
+        'net_amount': net_amt
     })
     return withdrawal
 

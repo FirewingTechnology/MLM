@@ -11,6 +11,9 @@ class Withdrawal(Base):
     withdrawal_code = Column(String(32), unique=True, nullable=False, index=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     amount = Column(Float, nullable=False)
+    fee_percentage = Column(Float, default=15.0, nullable=False)
+    fee_amount = Column(Float, default=0.0, nullable=False)
+    net_amount = Column(Float, default=0.0, nullable=False)
     status = Column(String(20), default='PENDING', nullable=False, index=True)  # 'PENDING', 'APPROVED', 'REJECTED'
     payout_method = Column(String(32), default='VIRTUAL_UPI', nullable=False)  # 'VIRTUAL_UPI', 'VIRTUAL_BANK'
     
@@ -41,6 +44,16 @@ class Withdrawal(Base):
             self._payout_details = value
 
     def to_dict(self):
+        fee_pct = getattr(self, 'fee_percentage', None)
+        if fee_pct is None:
+            fee_pct = 15.0
+        fee_amt = getattr(self, 'fee_amount', None)
+        if fee_amt is None or fee_amt == 0.0:
+            fee_amt = round(self.amount * (fee_pct / 100.0), 2)
+        net_amt = getattr(self, 'net_amount', None)
+        if net_amt is None or net_amt == 0.0:
+            net_amt = round(self.amount - fee_amt, 2)
+
         return {
             'id': self.id,
             'withdrawal_code': self.withdrawal_code,
@@ -48,6 +61,9 @@ class Withdrawal(Base):
             'user_name': self.user.full_name if self.user else None,
             'user_code': self.user.user_code if self.user else None,
             'amount': self.amount,
+            'fee_percentage': fee_pct,
+            'fee_amount': fee_amt,
+            'net_amount': net_amt,
             'status': self.status,
             'payout_method': self.payout_method,
             'payout_details': self.payout_details,

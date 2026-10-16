@@ -191,6 +191,9 @@ export interface Withdrawal {
   user_name?: string;
   user_code?: string;
   amount: number;
+  fee_percentage?: number;
+  fee_amount?: number;
+  net_amount?: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   payout_method: string;
   payout_details: Record<string, any>;

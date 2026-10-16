@@ -92,6 +92,11 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
     onClose();
   };
 
+  const numAmount = parseFloat(amount) || 0;
+  const feePercentage = 15;
+  const feeAmount = numAmount > 0 ? Math.round(numAmount * 0.15 * 100) / 100 : 0;
+  const netAmount = numAmount > 0 ? Math.max(0, Math.round((numAmount - feeAmount) * 100) / 100) : 0;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
@@ -179,6 +184,36 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
               </div>
             </div>
 
+            {/* 15% Processing Fee Live Deduction Breakdown */}
+            {numAmount > 0 && (
+              <div className="mb-4 p-3.5 rounded-2xl bg-[#F7F4EC] border border-[#E5E0D3] space-y-2 text-xs">
+                <div className="flex items-center justify-between text-[#69736F]">
+                  <span className="font-medium">Requested Gross Amount:</span>
+                  <span className="font-mono font-bold text-[#18211F]">
+                    ₹{numAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-amber-800">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <span>Processing Fee</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-100 border border-amber-300 font-bold font-mono text-amber-900">
+                      15%
+                    </span>
+                  </span>
+                  <span className="font-mono font-bold">
+                    - ₹{feeAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="h-px bg-[#E5E0D3] my-1" />
+                <div className="flex items-center justify-between">
+                  <span className="font-heading font-extrabold text-[#063B32]">Final Payout (You Receive):</span>
+                  <span className="font-mono font-black text-sm text-[#063B32]">
+                    ₹{netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Payout method */}
             <div className="mb-4">
               <label className="block text-xs font-semibold text-[#18211F] mb-1.5">
@@ -242,7 +277,9 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
             {/* Payout Processing Notice */}
             <div className="flex items-start gap-2 p-3 rounded-2xl bg-[#FAF4DC] border border-[#E2C766] text-[#8C6C16] text-[11px] mb-5">
               <ShieldAlert className="w-4 h-4 text-[#C88A16] shrink-0 mt-0.5" />
-              <span>Payout requests are processed following administrative verification.</span>
+              <div>
+                <span className="font-bold">15% Processing Fee Applicable:</span> Administrative & processing fee of 15% is deducted on payout disbursement. You will receive <span className="font-mono font-bold text-[#18211F]">₹{netAmount > 0 ? netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</span> in your destination account.
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
@@ -289,12 +326,21 @@ export const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                 <span className="font-mono text-[#18211F] font-bold">{submitted.withdrawal_code}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#69736F] font-medium">Amount:</span>
-                <span className="font-mono text-[#063B32] font-bold">₹{submitted.amount?.toLocaleString()}</span>
+                <span className="text-[#69736F] font-medium">Requested Gross:</span>
+                <span className="font-mono text-[#18211F] font-bold">₹{submitted.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-[#69736F] font-medium">Method:</span>
-                <span className="text-[#18211F] font-semibold">{submitted.payout_method}</span>
+              <div className="flex justify-between text-amber-800">
+                <span className="font-medium">Processing Fee (15%):</span>
+                <span className="font-mono font-bold">- ₹{(submitted.fee_amount ?? (submitted.amount * 0.15))?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <div className="h-px bg-[#E5E0D3]" />
+              <div className="flex justify-between text-[#063B32]">
+                <span className="font-heading font-extrabold">Final Payout (Disbursed):</span>
+                <span className="font-mono text-sm font-black">₹{(submitted.net_amount ?? (submitted.amount * 0.85))?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between pt-1">
+                <span className="text-[#69736F] font-medium">Destination:</span>
+                <span className="text-[#18211F] font-semibold">{submitted.payout_method === 'VIRTUAL_UPI' ? 'UPI Transfer' : 'Bank Account'}</span>
               </div>
             </div>
 

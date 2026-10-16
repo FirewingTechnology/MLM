@@ -115,6 +115,16 @@ def apply_migrations(target_engine):
                 if 'cap_reason' not in comm_cols:
                     conn.execute(text("ALTER TABLE commissions ADD COLUMN cap_reason VARCHAR(255)"))
 
+            if 'withdrawals' in tables:
+                wdr_cols = [c['name'] for c in inspector.get_columns('withdrawals')]
+                if 'fee_percentage' not in wdr_cols:
+                    conn.execute(text("ALTER TABLE withdrawals ADD COLUMN fee_percentage FLOAT DEFAULT 15.0"))
+                if 'fee_amount' not in wdr_cols:
+                    conn.execute(text("ALTER TABLE withdrawals ADD COLUMN fee_amount FLOAT DEFAULT 0.0"))
+                if 'net_amount' not in wdr_cols:
+                    conn.execute(text("ALTER TABLE withdrawals ADD COLUMN net_amount FLOAT DEFAULT 0.0"))
+                conn.execute(text("UPDATE withdrawals SET fee_percentage = 15.0, fee_amount = ROUND(amount * 0.15, 2), net_amount = ROUND(amount * 0.85, 2) WHERE (net_amount = 0.0 OR net_amount IS NULL) AND amount > 0"))
+
             # Ensure tables exist
             for table_name in [
                 'binary_period_volumes',
