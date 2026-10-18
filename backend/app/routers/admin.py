@@ -18,7 +18,7 @@ from app.models.withdrawal import Withdrawal
 from app.models.audit_log import AuditLog
 from app.models.activation_request import PackageActivationRequest
 from app.models.security_pin import SecurityPin
-from app.schemas.common import AdminApprovalRequest, WalletAdjustmentRequest, UserStatusRequest
+from app.schemas.common import AdminApprovalRequest, WalletAdjustmentRequest, UserStatusRequest, AdminUpdateUserCredentialsRequest
 from app.schemas.time_schemas import TimeModeRequest, SetTimeRequest, AdvanceTimeRequest
 from app.schemas.activation import (
     AdminVerifyPaymentRequest,
@@ -26,7 +26,9 @@ from app.schemas.activation import (
     AdminRejectRequest,
     AdminRevokePinRequest
 )
-from app.security import get_current_admin
+from app.security import get_current_admin, hash_password
+from app.services.audit_service import log_action
+
 from app.services.wallet_service import approve_withdrawal, reject_withdrawal, adjust_wallet_balance
 from app.services.seed_service import reset_demo_database
 from app.services.time_service import time_provider, slot_service
@@ -224,6 +226,96 @@ def admin_adjust_wallet(
     except Exception as e:
         db.rollback()
         return error_response("ADJUSTMENT_FAILED", str(e), 400)
+
+@router.put("/users/{user_id}/credentials")
+@router.post("/users/{user_id}/credentials")
+def admin_update_user_credentials(
+    user_id: int,
+    req: AdminUpdateUserCredentialsRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Safely updates user credentials (full_name, email, mobile, password)
+    without modifying database schemas or running manual SQL scripts.
+    """
+    user = db.get(User, user_id)
+    if not user:
+        return error_response("NOT_FOUND", "User not found.", 404)
+        
+    changes = []
+    
+    # 1. Update Full Name if provided
+    if req.full_name is not None and req.full_name.strip() != "":
+        trimmed_name = req.full_name.strip()
+        if len(trimmed_name) < 2:
+            return error_response("VALIDATION_ERROR", "Full name must be at least 2 characters long.", 400)
+        if user.full_name != trimmed_name:
+            changes.append(f"name from '{user.full_name}' to '{trimmed_name}'")
+            user.full_name = trimmed_name
+
+    # 2. Update Email if provided
+    if req.email is not None and req.email.strip() != "":
+        trimmed_email = req.email.strip().lower()
+        if "@" not in trimmed_email or "." not in trimmed_email:
+            return error_response("VALIDATION_ERROR", "Please provide a valid email address.", 400)
+        if user.email != trimmed_email:
+            existing_email = db.query(User).filter(User.email == trimmed_email, User.id != user.id).first()
+            if existing_email:
+                return error_response("DUPLICATE_EMAIL", f"The email '{trimmed_email}' is already registered to user {existing_email.user_code}.", 400)
+            changes.append(f"email from '{user.email}' to '{trimmed_email}'")
+            user.email = trimmed_email
+
+    # 3. Update Mobile if provided
+    if req.mobile is not None and req.mobile.strip() != "":
+        trimmed_mobile = req.mobile.strip()
+        if len(trimmed_mobile) < 7:
+            return error_response("VALIDATION_ERROR", "Please provide a valid mobile number (min 7 digits).", 400)
+        if user.mobile != trimmed_mobile:
+            existing_mobile = db.query(User).filter(User.mobile == trimmed_mobile, User.id != user.id).first()
+            if existing_mobile:
+                return error_response("DUPLICATE_MOBILE", f"The mobile '{trimmed_mobile}' is already registered to user {existing_mobile.user_code}.", 400)
+            changes.append(f"mobile from '{user.mobile}' to '{trimmed_mobile}'")
+            user.mobile = trimmed_mobile
+
+    # 4. Set / Reset Password if provided
+    password_updated = False
+    if req.new_password is not None and req.new_password.strip() != "":
+        new_pwd = req.new_password.strip()
+        if len(new_pwd) < 6:
+            return error_response("VALIDATION_ERROR", "New password must be at least 6 characters long.", 400)
+        user.password_hash = hash_password(new_pwd)
+        changes.append("password reset")
+        password_updated = True
+
+    if not changes:
+        return success_response(user.to_dict(), "No credential changes were requested.")
+
+    try:
+        user.updated_at = datetime.utcnow()
+        log_action(
+            db,
+            action="ADMIN_UPDATE_USER_CREDENTIALS",
+            entity_type="User",
+            entity_id=user.id,
+            user_id=current_admin.id,
+            details={
+                "admin_id": current_admin.id,
+                "admin_code": current_admin.user_code,
+                "target_user_id": user.id,
+                "target_user_code": user.user_code,
+                "changes": changes,
+                "password_reset": password_updated
+            }
+        )
+        db.commit()
+        db.refresh(user)
+    except Exception as e:
+        db.rollback()
+        return error_response("UPDATE_FAILED", f"Failed to update user credentials: {str(e)}", 500)
+
+    msg = f"User {user.user_code} credentials updated: {', '.join(changes)}."
+    return success_response(user.to_dict(), msg)
+
 
 @router.get("/withdrawals")
 def admin_get_withdrawals(

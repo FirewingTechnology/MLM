@@ -20,3 +20,10 @@ class WalletAdjustmentRequest(BaseModel):
 
 class UserStatusRequest(BaseModel):
     is_active: bool
+
+class AdminUpdateUserCredentialsRequest(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    mobile: Optional[str] = None
+    new_password: Optional[str] = None
+

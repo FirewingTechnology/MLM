@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { User } from '../../types';
 import { AdminAdjustmentModal } from '../../components/modals/AdminAdjustmentModal';
+import { AdminEditUserModal } from '../../components/modals/AdminEditUserModal';
 import {
   Users,
   Search,
@@ -12,7 +13,9 @@ import {
   DollarSign,
   ChevronLeft,
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  KeyRound,
+  Phone
 } from 'lucide-react';
 
 export const AdminUsersPage: React.FC = () => {
@@ -23,6 +26,8 @@ export const AdminUsersPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [selectedUserForAdjustment, setSelectedUserForAdjustment] = useState<User | null>(null);
+  const [selectedUserForCredentials, setSelectedUserForCredentials] = useState<User | null>(null);
+
 
   const { data, isLoading } = useQuery<{
     items: User[];
@@ -136,9 +141,15 @@ export const AdminUsersPage: React.FC = () => {
                   <tr key={u.id} className="hover:bg-[#F7F4EC]/40 transition-colors">
                     <td className="py-3 px-4">
                       <div className="font-bold text-[#18211F]">{u.full_name}</div>
-                      <div className="text-[11px] text-[#69736F] font-mono">
+                      <div className="text-[11px] text-[#69736F] font-mono mt-0.5">
                         {u.user_code} • {u.email}
                       </div>
+                      {u.mobile && (
+                        <div className="text-[10px] text-[#063B32] font-semibold font-mono flex items-center gap-1 mt-0.5">
+                          <Phone className="w-2.5 h-2.5 text-[#C9A227]" />
+                          <span>{u.mobile}</span>
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${u.role === 'ADMIN' ? 'bg-[#FAF4DC] text-[#8C6C16] border border-[#E2C766]' : 'bg-[#F7F4EC] text-[#69736F] border border-[#E5E0D3]'
@@ -174,13 +185,24 @@ export const AdminUsersPage: React.FC = () => {
                       </button>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => setSelectedUserForAdjustment(u)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#F7F4EC] hover:bg-[#063B32] hover:text-[#FFFEF9] text-[#18211F] border border-[#E5E0D3] text-[11px] font-heading font-bold transition-all cursor-pointer"
-                      >
-                        <DollarSign className="w-3 h-3 text-[#C9A227]" />
-                        <span>Adjust Balance</span>
-                      </button>
+                      <div className="inline-flex items-center gap-1.5 justify-end">
+                        <button
+                          onClick={() => setSelectedUserForCredentials(u)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#E0F3EE] hover:bg-[#063B32] text-[#063B32] hover:text-[#FFFEF9] border border-[#8DCFBF] text-[11px] font-heading font-bold transition-all cursor-pointer shadow-xs"
+                          title="View & Edit credentials or reset password"
+                        >
+                          <KeyRound className="w-3 h-3 text-[#063B32]" />
+                          <span>Credentials / Reset</span>
+                        </button>
+                        <button
+                          onClick={() => setSelectedUserForAdjustment(u)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#F7F4EC] hover:bg-[#063B32] hover:text-[#FFFEF9] text-[#18211F] border border-[#E5E0D3] text-[11px] font-heading font-bold transition-all cursor-pointer"
+                          title="Adjust member wallet balance"
+                        >
+                          <DollarSign className="w-3 h-3 text-[#C9A227]" />
+                          <span>Adjust Balance</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -224,6 +246,11 @@ export const AdminUsersPage: React.FC = () => {
       <AdminAdjustmentModal
         user={selectedUserForAdjustment}
         onClose={() => setSelectedUserForAdjustment(null)}
+      />
+
+      <AdminEditUserModal
+        user={selectedUserForCredentials}
+        onClose={() => setSelectedUserForCredentials(null)}
       />
     </div>
   );
